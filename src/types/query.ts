@@ -33,6 +33,13 @@ export interface CategoryStats {
   queryCount: number;
   clicksChange: number;
   clicksChangePercent: number;
+  impressionsChangePercent: number;
+  avgPositionCurrent: number;
+  avgPositionPrevious: number;
+  positionChange: number;
+  avgCtrCurrent: number;
+  avgCtrPrevious: number;
+  ctrChange: number;
 }
 
 export interface ClassificationConfig {
