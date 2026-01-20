@@ -26,15 +26,23 @@ const DEFAULT_CONFIG: ClassificationConfig = {
 const NEWS_ENTITY_PATTERNS = [
   // Political figures
   'trump', 'biden', 'putin', 'zelensky', 'maduro', 'xi jinping', 'macron', 'sunak',
+  'starmer', 'keir starmer', 'jenrick', 'robert jenrick',
   // Countries in news context
   'iran', 'ukraine', 'russia', 'china', 'venezuela', 'israel', 'gaza', 'syria',
-  'yemen', 'taiwan', 'greenland', 'north korea',
-  // News-related suffixes
-  'news', 'latest', 'update', 'updates', 'breaking', 'today', 'live',
+  'yemen', 'taiwan', 'greenland', 'north korea', 'islamic republic',
+  // News-related keywords
+  'news', 'latest', 'update', 'updates', 'breaking', 'today', 'live', 'local',
   // War/conflict terms
-  'war', 'invasion', 'conflict', 'crisis', 'attack', 'military',
+  'war', 'invasion', 'conflict', 'crisis', 'attack', 'military', 'army',
   // Generic news indicators
-  'president', 'minister', 'election', 'vote', 'poll', 'government'
+  'president', 'minister', 'election', 'vote', 'poll', 'government',
+  // Organizations/Institutions
+  'nhs', 'ftse', 'ftse 100',
+  // Newsworthy topics (politics, finance, health, environment)
+  'immigration', 'asylum', 'asylum seeker', 'pension', 'retirement', 'tax',
+  'interest rate', 'eviction', 'storm', 'cancer', 'microplastics',
+  // News entities
+  'epstein', 'jeffrey epstein', 'epstein files'
 ];
 
 export function classifyQuery(

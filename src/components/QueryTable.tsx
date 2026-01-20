@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { CategoryBadge } from './CategoryBadge';
 import type { QueryData, QueryCategory } from '@/types/query';
 import { cn } from '@/lib/utils';
@@ -14,10 +15,13 @@ interface QueryTableProps {
 type SortKey = 'query' | 'clicksCurrent' | 'clicksChange' | 'impressionsCurrent' | 'impressionsChange' | 'category';
 type SortDirection = 'asc' | 'desc';
 
+const ITEMS_PER_PAGE = 100;
+
 export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChange }: QueryTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('clicksCurrent');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -171,8 +175,8 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedData.slice(0, 100).map((row, index) => (
-              <tr key={index} className="animate-fade-in" style={{ animationDelay: `${index * 10}ms` }}>
+            {filteredAndSortedData.slice(0, visibleCount).map((row, index) => (
+              <tr key={index} className="animate-fade-in" style={{ animationDelay: `${Math.min(index, 20) * 10}ms` }}>
                 <td className="font-medium max-w-xs truncate">{row.query}</td>
                 <td><CategoryBadge category={row.category} /></td>
                 <td className="text-right font-mono">{row.clicksCurrent.toLocaleString()}</td>
@@ -183,9 +187,17 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
             ))}
           </tbody>
         </table>
-        {filteredAndSortedData.length > 100 && (
-          <div className="p-4 text-center text-sm text-muted-foreground bg-muted/30">
-            Showing first 100 of {filteredAndSortedData.length} queries
+        {filteredAndSortedData.length > visibleCount && (
+          <div className="p-4 text-center bg-muted/30">
+            <p className="text-sm text-muted-foreground mb-3">
+              Showing {visibleCount} of {filteredAndSortedData.length} queries
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+            >
+              Show next {Math.min(ITEMS_PER_PAGE, filteredAndSortedData.length - visibleCount)} queries
+            </Button>
           </div>
         )}
       </div>
