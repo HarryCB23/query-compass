@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download } from 'lucide-react';
+import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download, Target, Percent } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
 import { BrandedTermsInput } from '@/components/BrandedTermsInput';
 import { StatCard } from '@/components/StatCard';
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart';
 import { CategoryChangeChart } from '@/components/CategoryChangeChart';
+import { CategoryMetricsPanel } from '@/components/CategoryMetricsPanel';
 import { QueryTable } from '@/components/QueryTable';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { parseCSV, parseNumber, parsePercentage, classifyQuery } from '@/lib/queryClassifier';
@@ -107,21 +108,45 @@ export default function Index() {
     });
   }, [queryData, brandedTerms]);
 
-  // Calculate category stats
+  // Calculate category stats with all metrics
   const categoryStats = useMemo((): CategoryStats[] => {
     const categories: QueryCategory[] = ['branded', 'informational', 'news', 'product', 'commercial', 'transactional', 'other'];
     
     return categories.map(category => {
       const categoryQueries = reclassifiedData.filter(q => q.category === category);
+      const count = categoryQueries.length;
+      
       const totalClicksCurrent = categoryQueries.reduce((sum, q) => sum + q.clicksCurrent, 0);
       const totalClicksPrevious = categoryQueries.reduce((sum, q) => sum + q.clicksPrevious, 0);
       const totalImpressionsCurrent = categoryQueries.reduce((sum, q) => sum + q.impressionsCurrent, 0);
       const totalImpressionsPrevious = categoryQueries.reduce((sum, q) => sum + q.impressionsPrevious, 0);
       
+      // Weighted average position (by impressions)
+      const weightedPositionCurrent = categoryQueries.reduce((sum, q) => sum + (q.positionCurrent * q.impressionsCurrent), 0);
+      const weightedPositionPrevious = categoryQueries.reduce((sum, q) => sum + (q.positionPrevious * q.impressionsPrevious), 0);
+      const avgPositionCurrent = totalImpressionsCurrent > 0 ? weightedPositionCurrent / totalImpressionsCurrent : 0;
+      const avgPositionPrevious = totalImpressionsPrevious > 0 ? weightedPositionPrevious / totalImpressionsPrevious : 0;
+      
+      // CTR calculated from totals
+      const avgCtrCurrent = totalImpressionsCurrent > 0 ? (totalClicksCurrent / totalImpressionsCurrent) * 100 : 0;
+      const avgCtrPrevious = totalImpressionsPrevious > 0 ? (totalClicksPrevious / totalImpressionsPrevious) * 100 : 0;
+      
       const clicksChange = totalClicksCurrent - totalClicksPrevious;
       const clicksChangePercent = totalClicksPrevious > 0 
         ? ((totalClicksCurrent - totalClicksPrevious) / totalClicksPrevious) * 100 
         : totalClicksCurrent > 0 ? 100 : 0;
+      
+      const impressionsChangePercent = totalImpressionsPrevious > 0 
+        ? ((totalImpressionsCurrent - totalImpressionsPrevious) / totalImpressionsPrevious) * 100 
+        : totalImpressionsCurrent > 0 ? 100 : 0;
+      
+      const positionChange = avgPositionPrevious > 0 
+        ? ((avgPositionCurrent - avgPositionPrevious) / avgPositionPrevious) * 100 
+        : 0;
+      
+      const ctrChange = avgCtrPrevious > 0 
+        ? ((avgCtrCurrent - avgCtrPrevious) / avgCtrPrevious) * 100 
+        : avgCtrCurrent > 0 ? 100 : 0;
       
       return {
         category,
@@ -129,19 +154,36 @@ export default function Index() {
         totalClicksPrevious,
         totalImpressionsCurrent,
         totalImpressionsPrevious,
-        queryCount: categoryQueries.length,
+        queryCount: count,
         clicksChange,
         clicksChangePercent,
+        impressionsChangePercent,
+        avgPositionCurrent,
+        avgPositionPrevious,
+        positionChange,
+        avgCtrCurrent,
+        avgCtrPrevious,
+        ctrChange,
       };
     });
   }, [reclassifiedData]);
 
-  // Overall stats
+  // Overall stats with position and CTR
   const overallStats = useMemo(() => {
     const totalClicksCurrent = reclassifiedData.reduce((sum, q) => sum + q.clicksCurrent, 0);
     const totalClicksPrevious = reclassifiedData.reduce((sum, q) => sum + q.clicksPrevious, 0);
     const totalImpressionsCurrent = reclassifiedData.reduce((sum, q) => sum + q.impressionsCurrent, 0);
     const totalImpressionsPrevious = reclassifiedData.reduce((sum, q) => sum + q.impressionsPrevious, 0);
+    
+    // Weighted average position
+    const weightedPositionCurrent = reclassifiedData.reduce((sum, q) => sum + (q.positionCurrent * q.impressionsCurrent), 0);
+    const weightedPositionPrevious = reclassifiedData.reduce((sum, q) => sum + (q.positionPrevious * q.impressionsPrevious), 0);
+    const avgPositionCurrent = totalImpressionsCurrent > 0 ? weightedPositionCurrent / totalImpressionsCurrent : 0;
+    const avgPositionPrevious = totalImpressionsPrevious > 0 ? weightedPositionPrevious / totalImpressionsPrevious : 0;
+    
+    // CTR from totals
+    const avgCtrCurrent = totalImpressionsCurrent > 0 ? (totalClicksCurrent / totalImpressionsCurrent) * 100 : 0;
+    const avgCtrPrevious = totalImpressionsPrevious > 0 ? (totalClicksPrevious / totalImpressionsPrevious) * 100 : 0;
     
     const clicksChange = totalClicksPrevious > 0 
       ? ((totalClicksCurrent - totalClicksPrevious) / totalClicksPrevious) * 100 
@@ -149,6 +191,12 @@ export default function Index() {
     const impressionsChange = totalImpressionsPrevious > 0 
       ? ((totalImpressionsCurrent - totalImpressionsPrevious) / totalImpressionsPrevious) * 100 
       : 0;
+    const positionChange = avgPositionPrevious > 0 
+      ? ((avgPositionCurrent - avgPositionPrevious) / avgPositionPrevious) * 100 
+      : 0;
+    const ctrChange = avgCtrPrevious > 0 
+      ? ((avgCtrCurrent - avgCtrPrevious) / avgCtrPrevious) * 100 
+      : avgCtrCurrent > 0 ? 100 : 0;
     
     return {
       totalClicksCurrent,
@@ -158,8 +206,20 @@ export default function Index() {
       clicksChange,
       impressionsChange,
       queryCount: reclassifiedData.length,
+      avgPositionCurrent,
+      avgPositionPrevious,
+      positionChange,
+      avgCtrCurrent,
+      avgCtrPrevious,
+      ctrChange,
     };
   }, [reclassifiedData]);
+
+  // Get selected category stats
+  const selectedCategoryStats = useMemo(() => {
+    if (categoryFilter === 'all') return null;
+    return categoryStats.find(s => s.category === categoryFilter) || null;
+  }, [categoryFilter, categoryStats]);
 
   // Category counts for filter
   const categoryCounts = useMemo(() => {
@@ -347,8 +407,8 @@ export default function Index() {
               </Button>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Stats Grid - 6 key metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <StatCard
                 title="Total Queries"
                 value={overallStats.queryCount}
@@ -365,6 +425,19 @@ export default function Index() {
                 value={overallStats.totalImpressionsCurrent}
                 change={overallStats.impressionsChange}
                 icon={<Eye className="w-5 h-5 text-primary" />}
+              />
+              <StatCard
+                title="Avg Position"
+                value={overallStats.avgPositionCurrent.toFixed(1)}
+                change={overallStats.positionChange}
+                changeLabel="lower is better"
+                icon={<Target className="w-5 h-5 text-primary" />}
+              />
+              <StatCard
+                title="Avg CTR"
+                value={`${overallStats.avgCtrCurrent.toFixed(2)}%`}
+                change={overallStats.ctrChange}
+                icon={<Percent className="w-5 h-5 text-primary" />}
               />
               <StatCard
                 title="Biggest Shift"
@@ -412,6 +485,11 @@ export default function Index() {
                 counts={categoryCounts}
               />
             </div>
+
+            {/* Category Metrics Panel - shows when category selected */}
+            {selectedCategoryStats && (
+              <CategoryMetricsPanel stats={selectedCategoryStats} />
+            )}
 
             {/* Query Table */}
             <div className="p-6 bg-card border rounded-xl">
