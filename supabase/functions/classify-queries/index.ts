@@ -5,125 +5,50 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ClassifyRequest {
+interface NERRequest {
   queries: string[];
-  brandedTerms: string[];
-  productTerms: string[];
 }
 
-interface ClassificationResult {
+interface Entity {
+  type: 'PERSON' | 'ORGANIZATION' | 'LOCATION' | 'EVENT';
+  name: string;
+}
+
+interface NERResult {
   query: string;
-  category: 'branded' | 'informational' | 'news' | 'product' | 'commercial' | 'transactional' | 'other';
-  entities?: { type: string; name: string }[];
-  productMatch?: string;
+  entities: Entity[];
+  isNewsEntity: boolean;
 }
 
-// Pattern-based classification for non-AI fallback
-const INFORMATIONAL_PATTERNS = [
-  'what is', 'what are', 'how to', 'how do', 'why', 'when', 'where',
-  'guide', 'tutorial', 'explained', 'meaning', 'definition', 'examples',
-  'difference between', 'vs', 'compare', 'which is better',
-  'tips', 'ideas', 'ways to', 'steps to', 'learn', 'understand'
-];
-
-const COMMERCIAL_PATTERNS = [
-  'best', 'top', 'review', 'reviews', 'comparison', 'alternatives',
-  'versus', 'pros and cons', 'worth it', 'ranking',
-  'rated', 'recommended', 'should i', 'which'
-];
-
-const TRANSACTIONAL_PATTERNS = [
-  'buy', 'purchase', 'order', 'price', 'cost', 'cheap', 'deal', 'deals',
-  'discount', 'sale', 'subscribe', 'subscription', 'download', 'install',
-  'get', 'shop', 'store', 'free', 'trial', 'coupon', 'promo'
-];
-
-function classifyWithPatterns(
-  query: string, 
-  brandedTerms: string[],
-  productTerms: string[]
-): ClassificationResult['category'] {
-  const normalized = query.toLowerCase().trim();
-  
-  // Branded
-  for (const term of brandedTerms) {
-    if (normalized.includes(term.toLowerCase())) {
-      return 'branded';
-    }
-  }
-  
-  // Product
-  for (const term of productTerms) {
-    if (normalized.includes(term.toLowerCase())) {
-      return 'product';
-    }
-  }
-  
-  // Transactional
-  for (const pattern of TRANSACTIONAL_PATTERNS) {
-    if (normalized.includes(pattern)) {
-      return 'transactional';
-    }
-  }
-  
-  // Commercial
-  for (const pattern of COMMERCIAL_PATTERNS) {
-    if (normalized.includes(pattern)) {
-      return 'commercial';
-    }
-  }
-  
-  // Informational
-  for (const pattern of INFORMATIONAL_PATTERNS) {
-    if (normalized.includes(pattern)) {
-      return 'informational';
-    }
-  }
-  
-  return 'other';
-}
-
-async function classifyWithOpenAI(
-  queries: string[],
-  brandedTerms: string[],
-  productTerms: string[]
-): Promise<ClassificationResult[]> {
+async function extractEntitiesWithOpenAI(queries: string[]): Promise<NERResult[]> {
   const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
   
   if (!OPENAI_API_KEY) {
-    console.log('No OpenAI API key, falling back to pattern matching');
+    console.error('OPENAI_API_KEY not configured');
     return queries.map(query => ({
       query,
-      category: classifyWithPatterns(query, brandedTerms, productTerms)
+      entities: [],
+      isNewsEntity: false
     }));
   }
   
-  const systemPrompt = `You are a search query classifier. Classify each query into one of these categories:
-- branded: Contains brand terms (${brandedTerms.join(', ')})
-- informational: Seeking information (how, what, why, guide, etc.)
-- news: Current events, news stories, or named entities (people, organizations, countries in news context)
-- product: Specific product names or categories from retail taxonomy
-- commercial: Research intent (best, reviews, compare, alternatives)
-- transactional: Purchase intent (buy, price, deals, order)
-- other: Doesn't fit other categories
+  const systemPrompt = `You are a precise NER system. Output ONLY valid JSON, no markdown, no explanation.
 
-For each query, also extract named entities (PERSON, ORGANIZATION, LOCATION, EVENT) if present.
+For each search query, extract named entities (PERSON, ORGANIZATION, LOCATION, EVENT) that indicate news or current events interest.
 
-Product terms to match: ${productTerms.slice(0, 100).join(', ')}${productTerms.length > 100 ? '...' : ''}
+Focus on:
+- PERSON: Politicians, celebrities, public figures (e.g., "Trump", "Biden", "Elon Musk")
+- ORGANIZATION: Companies, governments, institutions in news context (e.g., "NATO", "Tesla", "FBI")
+- LOCATION: Countries, cities, regions in geopolitical/news context (e.g., "Ukraine", "Gaza", "Taiwan")
+- EVENT: Named events, conflicts, elections (e.g., "World Cup", "Ukraine war", "2024 election")
 
-Respond with a JSON array. Example:
+Return JSON array format:
 [
-  {
-    "query": "trump news today",
-    "category": "news",
-    "entities": [{"type": "PERSON", "name": "Trump"}]
-  },
-  {
-    "query": "best laptop 2024",
-    "category": "commercial",
-    "entities": []
-  }
-]`;
+  {"query": "trump news today", "entities": [{"type": "PERSON", "name": "Trump"}], "isNewsEntity": true},
+  {"query": "best laptop 2024", "entities": [], "isNewsEntity": false}
+]
+
+A query is "isNewsEntity: true" ONLY if it contains recognizable named entities that suggest news/current events interest.`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -136,7 +61,7 @@ Respond with a JSON array. Example:
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Classify these queries:\n${queries.map((q, i) => `${i + 1}. ${q}`).join('\n')}` }
+          { role: 'user', content: queries.map((q, i) => `${i + 1}. ${q}`).join('\n') }
         ],
         temperature: 0.1,
         response_format: { type: 'json_object' }
@@ -145,7 +70,7 @@ Respond with a JSON array. Example:
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
+      console.error('OpenAI API error:', response.status, error);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
@@ -157,31 +82,31 @@ Respond with a JSON array. Example:
     }
 
     const parsed = JSON.parse(content);
-    const results = parsed.results || parsed.classifications || parsed;
+    const results = parsed.results || parsed.queries || parsed;
     
-    if (!Array.isArray(results)) {
-      // Handle case where response is an object with query keys
-      return queries.map(query => {
-        const match = results[query] || classifyWithPatterns(query, brandedTerms, productTerms);
-        return {
-          query,
-          category: typeof match === 'string' ? match : match?.category || 'other',
-          entities: match?.entities || []
-        };
-      });
+    if (Array.isArray(results)) {
+      return results.map((r: any, i: number) => ({
+        query: r.query || queries[i],
+        entities: r.entities || [],
+        isNewsEntity: r.isNewsEntity === true
+      }));
     }
     
-    return results.map((r: any, i: number) => ({
-      query: r.query || queries[i],
-      category: r.category || 'other',
-      entities: r.entities || []
-    }));
+    // Handle object response format
+    return queries.map(query => {
+      const match = results[query];
+      return {
+        query,
+        entities: match?.entities || [],
+        isNewsEntity: match?.isNewsEntity === true
+      };
+    });
   } catch (error) {
-    console.error('OpenAI classification error:', error);
-    // Fallback to pattern matching
+    console.error('OpenAI NER error:', error);
     return queries.map(query => ({
       query,
-      category: classifyWithPatterns(query, brandedTerms, productTerms)
+      entities: [],
+      isNewsEntity: false
     }));
   }
 }
@@ -192,7 +117,7 @@ serve(async (req) => {
   }
 
   try {
-    const { queries, brandedTerms, productTerms }: ClassifyRequest = await req.json();
+    const { queries }: NERRequest = await req.json();
     
     if (!queries || !Array.isArray(queries)) {
       return new Response(
@@ -203,11 +128,11 @@ serve(async (req) => {
 
     // Process in batches of 50 to avoid token limits
     const BATCH_SIZE = 50;
-    const results: ClassificationResult[] = [];
+    const results: NERResult[] = [];
     
     for (let i = 0; i < queries.length; i += BATCH_SIZE) {
       const batch = queries.slice(i, i + BATCH_SIZE);
-      const batchResults = await classifyWithOpenAI(batch, brandedTerms || [], productTerms || []);
+      const batchResults = await extractEntitiesWithOpenAI(batch);
       results.push(...batchResults);
     }
 
