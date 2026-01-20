@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles } from 'lucide-react';
+import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
 import { BrandedTermsInput } from '@/components/BrandedTermsInput';
 import { StatCard } from '@/components/StatCard';
@@ -12,6 +12,7 @@ import { useQueryClassification } from '@/hooks/useQueryClassification';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import type { QueryData, CategoryStats, QueryCategory } from '@/types/query';
 import { CATEGORY_LABELS } from '@/types/query';
 import { toast } from 'sonner';
@@ -180,6 +181,41 @@ export default function Index() {
     return counts;
   }, [reclassifiedData]);
 
+  // CSV Download function
+  const handleDownloadCSV = useCallback(() => {
+    const headers = ['Query', 'Category', 'Clicks (Current)', 'Clicks (Previous)', 'Clicks Change', 'Clicks Change %', 'Impressions (Current)', 'Impressions (Previous)', 'Impressions Change', 'Impressions Change %', 'CTR (Current)', 'CTR (Previous)', 'Position (Current)', 'Position (Previous)'];
+    
+    const rows = reclassifiedData.map(row => [
+      `"${row.query.replace(/"/g, '""')}"`,
+      row.category,
+      row.clicksCurrent,
+      row.clicksPrevious,
+      row.clicksChange,
+      row.clicksChangePercent.toFixed(2),
+      row.impressionsCurrent,
+      row.impressionsPrevious,
+      row.impressionsChange,
+      row.impressionsChangePercent.toFixed(2),
+      row.ctrCurrent.toFixed(2),
+      row.ctrPrevious.toFixed(2),
+      row.positionCurrent.toFixed(2),
+      row.positionPrevious.toFixed(2)
+    ].join(','));
+    
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `classified-queries-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success('CSV downloaded successfully');
+  }, [reclassifiedData]);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -305,6 +341,10 @@ export default function Index() {
                   onChange={setBrandedTerms} 
                 />
               </div>
+              <Button onClick={handleDownloadCSV} variant="outline" className="gap-2">
+                <Download className="w-4 h-4" />
+                Download CSV
+              </Button>
             </div>
 
             {/* Stats Grid */}
