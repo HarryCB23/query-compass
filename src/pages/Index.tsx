@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Search, BarChart3, TrendingUp, MousePointer, Eye } from 'lucide-react';
+import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
 import { BrandedTermsInput } from '@/components/BrandedTermsInput';
 import { StatCard } from '@/components/StatCard';
@@ -7,20 +7,28 @@ import { CategoryDistributionChart } from '@/components/CategoryDistributionChar
 import { CategoryChangeChart } from '@/components/CategoryChangeChart';
 import { QueryTable } from '@/components/QueryTable';
 import { CategoryFilter } from '@/components/CategoryFilter';
-import { classifyQuery, parseCSV, parseNumber, parsePercentage } from '@/lib/queryClassifier';
+import { parseCSV, parseNumber, parsePercentage, classifyQuery } from '@/lib/queryClassifier';
+import { useQueryClassification } from '@/hooks/useQueryClassification';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import type { QueryData, CategoryStats, QueryCategory } from '@/types/query';
 import { CATEGORY_LABELS } from '@/types/query';
+import { toast } from 'sonner';
 
 export default function Index() {
   const [brandedTerms, setBrandedTerms] = useState<string[]>(['telegraph', 'the telegraph']);
   const [queryData, setQueryData] = useState<QueryData[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<QueryCategory | 'all'>('all');
+  const [useAIClassification, setUseAIClassification] = useState(true);
+  
+  const { classifyQueries, isClassifying, progress, error } = useQueryClassification();
 
-  const handleFileLoaded = useCallback((content: string, name: string) => {
+  const handleFileLoaded = useCallback(async (content: string, name: string) => {
     const { rows } = parseCSV(content);
     
-    const parsed: QueryData[] = rows
+    const parsedRows = rows
       .filter(row => row[0] && row[0].trim())
       .map(row => {
         const query = row[0];
@@ -53,7 +61,7 @@ export default function Index() {
           ctrPrevious,
           positionCurrent,
           positionPrevious,
-          category: classifyQuery(query, { brandedTerms }),
+          category: 'other' as QueryCategory, // Will be classified
           clicksChange,
           clicksChangePercent,
           impressionsChange,
@@ -61,16 +69,41 @@ export default function Index() {
         };
       });
     
-    setQueryData(parsed);
     setFileName(name);
-  }, [brandedTerms]);
-
-  // Reclassify when branded terms change
-  const reclassifiedData = useMemo(() => {
-    return queryData.map(q => ({
-      ...q,
-      category: classifyQuery(q.query, { brandedTerms }),
+    
+    // Classify queries
+    const queries = parsedRows.map(r => r.query);
+    
+    if (useAIClassification) {
+      toast.info('Classifying queries with AI...', { duration: 2000 });
+    }
+    
+    const classifications = await classifyQueries(queries, brandedTerms, useAIClassification);
+    
+    const classifiedData = parsedRows.map(row => ({
+      ...row,
+      category: classifications.get(row.query)?.category || 'other'
     }));
+    
+    setQueryData(classifiedData);
+    
+    if (useAIClassification) {
+      toast.success(`Classified ${classifiedData.length} queries with AI`);
+    }
+  }, [brandedTerms, useAIClassification, classifyQueries]);
+
+  // Use the already classified data
+  const reclassifiedData = useMemo(() => {
+    // Re-check branded terms only (fast local check)
+    return queryData.map(q => {
+      const isBranded = brandedTerms.some(term => 
+        q.query.toLowerCase().includes(term.toLowerCase())
+      );
+      return {
+        ...q,
+        category: isBranded ? 'branded' as QueryCategory : q.category,
+      };
+    });
   }, [queryData, brandedTerms]);
 
   // Calculate category stats
@@ -169,6 +202,21 @@ export default function Index() {
       </header>
 
       <main className="container py-8">
+        {isClassifying && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-card border rounded-xl p-8 max-w-md w-full mx-4 space-y-4 shadow-lg">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <h3 className="font-semibold text-foreground">Classifying queries with AI...</h3>
+              </div>
+              <Progress value={progress} className="h-2" />
+              <p className="text-sm text-muted-foreground">
+                Using OpenAI for NER and product taxonomy matching
+              </p>
+            </div>
+          </div>
+        )}
+        
         {reclassifiedData.length === 0 ? (
           /* Upload State */
           <div className="max-w-2xl mx-auto space-y-8">
@@ -182,6 +230,26 @@ export default function Index() {
             </div>
             
             <FileUpload onFileLoaded={handleFileLoaded} />
+            
+            {/* AI Classification Toggle */}
+            <div className="p-6 bg-card border rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <div>
+                    <Label htmlFor="ai-toggle" className="font-medium">AI Classification</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Use OpenAI for NER and product taxonomy matching
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="ai-toggle"
+                  checked={useAIClassification}
+                  onCheckedChange={setUseAIClassification}
+                />
+              </div>
+            </div>
             
             <div className="p-6 bg-card border rounded-xl">
               <BrandedTermsInput 
