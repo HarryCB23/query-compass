@@ -130,36 +130,52 @@ export function useQueryClassification(): UseQueryClassificationReturn {
       setProgress(30);
       
       // Step 2: Use OpenAI NER only for 'other' queries to detect news entities
+      // Process in parallel batches for better performance
       if (useAI && needsNER.length > 0) {
-        const BATCH_SIZE = 50;
-        const batches = Math.ceil(needsNER.length / BATCH_SIZE);
+        const BATCH_SIZE = 100; // Increased batch size
+        const PARALLEL_BATCHES = 5; // Process 5 batches concurrently
+        const batches: string[][] = [];
         
-        for (let i = 0; i < batches; i++) {
-          const batch = needsNER.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
+        for (let i = 0; i < needsNER.length; i += BATCH_SIZE) {
+          batches.push(needsNER.slice(i, i + BATCH_SIZE));
+        }
+        
+        let completed = 0;
+        
+        // Process batches in parallel groups
+        for (let i = 0; i < batches.length; i += PARALLEL_BATCHES) {
+          const parallelGroup = batches.slice(i, i + PARALLEL_BATCHES);
           
-          try {
-            const { data, error: fnError } = await supabase.functions.invoke('classify-queries', {
-              body: { queries: batch }
-            });
-            
-            if (fnError) {
-              console.error('NER error:', fnError);
-            } else if (data?.results) {
-              data.results.forEach((r: { query: string; entities: Entity[]; isNewsEntity: boolean }) => {
-                if (r.isNewsEntity && r.entities.length > 0) {
-                  results.set(r.query, {
-                    query: r.query,
-                    category: 'news',
-                    entities: r.entities
-                  });
-                }
+          const batchPromises = parallelGroup.map(async (batch) => {
+            try {
+              const { data, error: fnError } = await supabase.functions.invoke('classify-queries', {
+                body: { queries: batch }
               });
+              
+              if (fnError) {
+                console.error('NER error:', fnError);
+                return;
+              }
+              
+              if (data?.results) {
+                data.results.forEach((r: { query: string; entities: Entity[]; isNewsEntity: boolean }) => {
+                  if (r.isNewsEntity && r.entities.length > 0) {
+                    results.set(r.query, {
+                      query: r.query,
+                      category: 'news',
+                      entities: r.entities
+                    });
+                  }
+                });
+              }
+            } catch (err) {
+              console.error('NER batch error:', err);
             }
-          } catch (err) {
-            console.error('NER batch error:', err);
-          }
+          });
           
-          setProgress(30 + Math.round(((i + 1) / batches) * 60));
+          await Promise.all(batchPromises);
+          completed += parallelGroup.length;
+          setProgress(30 + Math.round((completed / batches.length) * 60));
         }
       }
       
