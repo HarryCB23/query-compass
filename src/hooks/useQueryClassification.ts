@@ -49,24 +49,59 @@ const TRANSACTIONAL_PATTERNS = [
 const NEWS_PATTERNS = [
   // Keywords
   'news', 'latest', 'breaking', 'update', 'updates', 'today', 'live', 'headlines',
-  // Political figures
-  'trump', 'biden', 'putin', 'zelensky', 'maduro', 'xi jinping', 'macron', 'sunak',
-  'starmer', 'keir starmer', 'jenrick', 'robert jenrick', 'reeves',
+  'budget', 'election', 'vote', 'poll', 'government', 'parliament',
+  
+  // Political figures - UK
+  'keir starmer', 'starmer', 'rachel reeves', 'reeves', 'robert jenrick', 'jenrick',
+  'rishi sunak', 'sunak', 'nigel farage', 'farage', 'angela rayner', 'rayner',
+  'david lammy', 'lammy', 'shabana mahmood', 'david cameron', 'justin trudeau',
+  
+  // Political figures - International  
+  'trump', 'donald trump', 'biden', 'putin', 'vladimir putin', 'zelensky', 
+  'maduro', 'xi jinping', 'macron',
+  
   // Countries/places in news context
   'greenland', 'ukraine', 'russia', 'china', 'venezuela', 'israel', 'gaza', 'syria',
-  'yemen', 'taiwan', 'north korea', 'islamic republic', 'iran',
-  // Organizations
-  'hmrc', 'nhs', 'ftse', 'ftse 100', 'nato',
-  // Public figures - sports, entertainment
-  'luke littler', 'adam peaty', 'laila cunningham', 'amorim', 'maresca',
-  // News topics
+  'yemen', 'taiwan', 'north korea', 'islamic republic', 'iran', 'nigeria', 'jamaica',
+  'albania', 'pokrovsk', 'belgorod', 'heathrow', 'huntingdon', 'llandudno',
+  
+  // Organizations & Institutions
+  'hmrc', 'nhs', 'ftse', 'ftse 100', 'nato', 'reform uk', 'home office',
+  'bbc', 'ryanair', 'asda', 'octopus energy', 'air india',
+  
+  // Football clubs & sports teams
+  'arsenal', 'chelsea', 'liverpool', 'liverpool fc', 'manchester united', 'man utd',
+  'tottenham', 'aston villa', 'nottingham forest', 'newcastle united', 'leeds united',
+  'england rugby', 'england cricket',
+  
+  // Sports personalities
+  'luke littler', 'adam peaty', 'laila cunningham', 'anthony joshua',
+  'ruben amorim', 'amorim', 'maresca',
+  
+  // Public figures - Entertainment & Media
+  'david walliams', 'kevin spacey', 'lily allen', 'meghan markle', 'brooklyn beckham',
+  'strictly come dancing', 'strictly', 'traitors', 'the traitors', 'celebrity traitors',
+  'i\'m a celeb', 'i\'m a celebrity', 'sports personality',
+  
+  // Royal family
+  'prince andrew', 'andrew mountbatten', 'prince harry', 'prince william',
+  'meghan', 'duchess of sussex', 'princess beatrice', 'princess of wales',
+  'sarah ferguson', 'royal family', 'royal news', 'royal lodge',
+  
+  // News topics & Events
   'war', 'invasion', 'conflict', 'crisis', 'attack', 'military', 'army',
-  'president', 'minister', 'election', 'vote', 'poll', 'government',
-  'immigration', 'asylum', 'asylum seeker', 'asylum seekers', 'deportation',
-  'pension', 'state pension', 'retirement', 'tax', 'interest rate', 'eviction',
-  'storm', 'cancer', 'microplastics', 'epstein', 'epstein files',
-  'royal family', 'royal news', 'traitors', 'the traitors',
-  'darts', 'childbirth', 'weather', 'veterans'
+  'president', 'minister', 'hurricane', 'storm',
+  'immigration', 'asylum', 'asylum seeker', 'asylum seekers', 'deportation', 'migrant',
+  'pension', 'state pension', 'retirement', 'tax', 'taxpayers', 'interest rate', 'inheritance',
+  'eviction', 'mansion tax', 'death tax',
+  'cancer', 'prostate cancer', 'microplastics',
+  'epstein', 'epstein files', 'virginia giuffre',
+  'darts', 'ashes', 'f1', 'boxing', 'rugby',
+  'childbirth', 'weather', 'veterans', 'nurse', 'dehumidifier',
+  
+  // Specific newsworthy names from data
+  'naveed akram', 'fiona hill', 'renee nicole good', 'don daniels',
+  'alan perkins', 'dorian puka', 'ryan mendelson'
 ];
 
 function classifyWithPatterns(
