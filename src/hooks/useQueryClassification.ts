@@ -45,6 +45,30 @@ const TRANSACTIONAL_PATTERNS = [
   'get', 'shop', 'store', 'free', 'trial', 'coupon', 'promo'
 ];
 
+// News entity patterns - places, people, organizations, events in news context
+const NEWS_PATTERNS = [
+  // Keywords
+  'news', 'latest', 'breaking', 'update', 'updates', 'today', 'live', 'headlines',
+  // Political figures
+  'trump', 'biden', 'putin', 'zelensky', 'maduro', 'xi jinping', 'macron', 'sunak',
+  'starmer', 'keir starmer', 'jenrick', 'robert jenrick', 'reeves',
+  // Countries/places in news context
+  'greenland', 'ukraine', 'russia', 'china', 'venezuela', 'israel', 'gaza', 'syria',
+  'yemen', 'taiwan', 'north korea', 'islamic republic', 'iran',
+  // Organizations
+  'hmrc', 'nhs', 'ftse', 'ftse 100', 'nato',
+  // Public figures - sports, entertainment
+  'luke littler', 'adam peaty', 'laila cunningham', 'amorim', 'maresca',
+  // News topics
+  'war', 'invasion', 'conflict', 'crisis', 'attack', 'military', 'army',
+  'president', 'minister', 'election', 'vote', 'poll', 'government',
+  'immigration', 'asylum', 'asylum seeker', 'asylum seekers', 'deportation',
+  'pension', 'state pension', 'retirement', 'tax', 'interest rate', 'eviction',
+  'storm', 'cancer', 'microplastics', 'epstein', 'epstein files',
+  'royal family', 'royal news', 'traitors', 'the traitors',
+  'darts', 'childbirth', 'weather', 'veterans'
+];
+
 function classifyWithPatterns(
   query: string,
   brandedTerms: string[],
@@ -59,35 +83,42 @@ function classifyWithPatterns(
     }
   }
   
-  // 2. Product (check taxonomy)
+  // 2. News patterns (check early - news queries are high priority)
+  for (const pattern of NEWS_PATTERNS) {
+    if (normalized.includes(pattern)) {
+      return 'news';
+    }
+  }
+  
+  // 3. Product (check taxonomy)
   for (const term of productTerms) {
     if (normalized.includes(term.toLowerCase())) {
       return 'product';
     }
   }
   
-  // 3. Transactional
+  // 4. Transactional
   for (const pattern of TRANSACTIONAL_PATTERNS) {
     if (normalized.includes(pattern)) {
       return 'transactional';
     }
   }
   
-  // 4. Commercial
+  // 5. Commercial
   for (const pattern of COMMERCIAL_PATTERNS) {
     if (normalized.includes(pattern)) {
       return 'commercial';
     }
   }
   
-  // 5. Informational
+  // 6. Informational
   for (const pattern of INFORMATIONAL_PATTERNS) {
     if (normalized.includes(pattern)) {
       return 'informational';
     }
   }
   
-  // Default - will be checked for news entities
+  // Default - will be checked for news entities via AI
   return 'other';
 }
 
