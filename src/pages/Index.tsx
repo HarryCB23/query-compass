@@ -1,15 +1,16 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download, Target, Percent } from 'lucide-react';
+import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download, Target, Percent, Users } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
 import { BrandedTermsInput } from '@/components/BrandedTermsInput';
 import { StatCard } from '@/components/StatCard';
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart';
 import { CategoryChangeChart } from '@/components/CategoryChangeChart';
-import { CategoryPositionChart } from '@/components/CategoryPositionChart';
-import { CategoryCTRChart } from '@/components/CategoryCTRChart';
+import { CategoryMetricCards } from '@/components/CategoryMetricCards';
 import { CategoryMetricsPanel } from '@/components/CategoryMetricsPanel';
 import { QueryTable } from '@/components/QueryTable';
 import { CategoryFilter } from '@/components/CategoryFilter';
+import { EntityExplorer } from '@/components/EntityExplorer';
+import { TopShiftingQueries } from '@/components/TopShiftingQueries';
 import { parseCSV, parseNumber, parsePercentage, classifyQuery } from '@/lib/queryClassifier';
 import { useQueryClassification } from '@/hooks/useQueryClassification';
 import { Switch } from '@/components/ui/switch';
@@ -25,6 +26,7 @@ export default function Index() {
   const [queryData, setQueryData] = useState<QueryData[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<QueryCategory | 'all'>('all');
+  const [entityFilter, setEntityFilter] = useState<string | null>(null);
   const [useAIClassification, setUseAIClassification] = useState(true);
   
   const { classifyQueries, isClassifying, progress, error } = useQueryClassification();
@@ -465,7 +467,7 @@ export default function Index() {
               </div>
             </div>
 
-            {/* Charts Row 2: Position & CTR */}
+            {/* Row 2: Position & CTR Metric Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="p-6 bg-card border rounded-xl">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -473,7 +475,7 @@ export default function Index() {
                   Average Position by Category
                   <span className="text-xs text-muted-foreground ml-auto">(lower is better)</span>
                 </h3>
-                <CategoryPositionChart stats={categoryStats} />
+                <CategoryMetricCards stats={categoryStats} metric="position" />
               </div>
               
               <div className="p-6 bg-card border rounded-xl">
@@ -481,30 +483,91 @@ export default function Index() {
                   <Percent className="w-5 h-5 text-primary" />
                   CTR by Category
                 </h3>
-                <CategoryCTRChart stats={categoryStats} />
+                <CategoryMetricCards stats={categoryStats} metric="ctr" />
               </div>
+            </div>
+
+            {/* Entity Explorer - News Entities */}
+            <div className="p-6 bg-card border rounded-xl">
+              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                News Entity Explorer
+                <span className="text-xs text-muted-foreground ml-auto">Click an entity to see performance</span>
+              </h3>
+              <EntityExplorer 
+                queries={reclassifiedData}
+                onEntitySelect={(entity, queries) => {
+                  setEntityFilter(entity);
+                  setCategoryFilter('news');
+                  toast.success(`Filtered to "${entity}" - ${queries.length} queries`);
+                }}
+              />
             </div>
 
             {/* Category Filter */}
             <div className="p-6 bg-card border rounded-xl">
-              <h3 className="font-semibold text-foreground mb-4">Filter by Category</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-foreground">Filter by Category</h3>
+                {entityFilter && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setEntityFilter(null)}
+                    className="text-xs"
+                  >
+                    Clear entity filter: "{entityFilter}"
+                  </Button>
+                )}
+              </div>
               <CategoryFilter 
                 selected={categoryFilter} 
-                onChange={setCategoryFilter}
+                onChange={(cat) => {
+                  setCategoryFilter(cat);
+                  if (cat !== 'news') setEntityFilter(null);
+                }}
                 counts={categoryCounts}
               />
             </div>
 
-            {/* Category Metrics Panel - shows when category selected */}
+            {/* Category Metrics Panel + Top Shifting Queries - shows when category selected */}
             {selectedCategoryStats && (
-              <CategoryMetricsPanel stats={selectedCategoryStats} />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <CategoryMetricsPanel stats={selectedCategoryStats} />
+                
+                <div className="p-6 bg-card border rounded-xl">
+                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Top 20 Shifting Queries
+                    <span className="text-xs text-muted-foreground ml-auto">by absolute click change</span>
+                  </h3>
+                  <div className="max-h-80 overflow-y-auto">
+                    <TopShiftingQueries 
+                      queries={reclassifiedData} 
+                      category={categoryFilter as QueryCategory}
+                      limit={20}
+                    />
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Query Table */}
             <div className="p-6 bg-card border rounded-xl">
-              <h3 className="font-semibold text-foreground mb-4">Query Details</h3>
+              <h3 className="font-semibold text-foreground mb-4">
+                Query Details
+                {entityFilter && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    (filtered by "{entityFilter}")
+                  </span>
+                )}
+              </h3>
               <QueryTable 
-                data={reclassifiedData}
+                data={entityFilter 
+                  ? reclassifiedData.filter(q => 
+                      q.query.toLowerCase().includes(entityFilter.toLowerCase())
+                    )
+                  : reclassifiedData
+                }
                 categoryFilter={categoryFilter}
                 onCategoryFilterChange={setCategoryFilter}
               />
