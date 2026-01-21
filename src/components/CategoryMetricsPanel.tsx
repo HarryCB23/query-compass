@@ -1,6 +1,6 @@
 import { TrendingUp, TrendingDown, Minus, MousePointer, Eye, Target, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CategoryStats, QueryCategory } from '@/types/query';
+import type { CategoryStats } from '@/types/query';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types/query';
 
 interface CategoryMetricsPanelProps {
@@ -15,7 +15,7 @@ interface MetricCardProps {
   change: number;
   changeLabel?: string;
   icon: React.ReactNode;
-  invertColors?: boolean; // For position where lower is better
+  invertColors?: boolean;
 }
 
 function MetricCard({ 
@@ -32,34 +32,35 @@ function MetricCard({
   const isNeutral = change === 0;
 
   return (
-    <div className="p-4 bg-muted/30 rounded-lg">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 bg-primary/10 rounded">
+    <div className="p-5 bg-muted/30 rounded-xl border border-border/50 flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-2 bg-primary/10 rounded-lg">
           {icon}
         </div>
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
       </div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-foreground">
+      
+      <div className="flex-1 flex flex-col justify-center">
+        <span className="text-3xl font-bold text-foreground">
           {typeof currentValue === 'number' ? currentValue.toLocaleString() : currentValue}
         </span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground mt-1">
           from {typeof previousValue === 'number' ? previousValue.toLocaleString() : previousValue}
         </span>
       </div>
-      <div className="mt-2 flex items-center gap-1">
-      <span className={cn(
-          'inline-flex items-center gap-1 text-sm font-medium',
+      
+      <div className="mt-4 pt-3 border-t border-border/50">
+        <span className={cn(
+          'inline-flex items-center gap-1.5 text-sm font-semibold',
           isPositive && 'text-[hsl(var(--chart-positive))]',
           isNegative && 'text-destructive',
           isNeutral && 'text-muted-foreground'
         )}>
-          {isPositive && <TrendingUp className="w-3.5 h-3.5" />}
-          {isNegative && <TrendingDown className="w-3.5 h-3.5" />}
-          {isNeutral && <Minus className="w-3.5 h-3.5" />}
-          {change > 0 && '+'}{change.toFixed(1)}%
+          {isPositive && <TrendingUp className="w-4 h-4" />}
+          {isNegative && <TrendingDown className="w-4 h-4" />}
+          {isNeutral && <Minus className="w-4 h-4" />}
+          {change > 0 && '+'}{change.toFixed(1)}% {changeLabel}
         </span>
-        <span className="text-xs text-muted-foreground">{changeLabel}</span>
       </div>
     </div>
   );
@@ -83,20 +84,21 @@ export function CategoryMetricsPanel({ stats, className }: CategoryMetricsPanelP
         </span>
       </div>
       
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2x2 Quadrant Grid */}
+      <div className="grid grid-cols-2 gap-4">
         <MetricCard
           label="Clicks"
           currentValue={stats.totalClicksCurrent}
           previousValue={stats.totalClicksPrevious}
           change={stats.clicksChangePercent}
-          icon={<MousePointer className="w-4 h-4 text-primary" />}
+          icon={<MousePointer className="w-5 h-5 text-primary" />}
         />
         <MetricCard
           label="Impressions"
           currentValue={stats.totalImpressionsCurrent}
           previousValue={stats.totalImpressionsPrevious}
           change={stats.impressionsChangePercent}
-          icon={<Eye className="w-4 h-4 text-primary" />}
+          icon={<Eye className="w-5 h-5 text-primary" />}
         />
         <MetricCard
           label="Avg Position"
@@ -104,14 +106,14 @@ export function CategoryMetricsPanel({ stats, className }: CategoryMetricsPanelP
           previousValue={stats.avgPositionPrevious.toFixed(1)}
           change={stats.positionChange}
           invertColors={true}
-          icon={<Target className="w-4 h-4 text-primary" />}
+          icon={<Target className="w-5 h-5 text-primary" />}
         />
         <MetricCard
           label="Avg CTR"
           currentValue={`${stats.avgCtrCurrent.toFixed(2)}%`}
           previousValue={`${stats.avgCtrPrevious.toFixed(2)}%`}
           change={stats.ctrChange}
-          icon={<Percent className="w-4 h-4 text-primary" />}
+          icon={<Percent className="w-5 h-5 text-primary" />}
         />
       </div>
     </div>
