@@ -5,6 +5,8 @@ import { BrandedTermsInput } from '@/components/BrandedTermsInput';
 import { StatCard } from '@/components/StatCard';
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart';
 import { CategoryChangeChart } from '@/components/CategoryChangeChart';
+import { CategoryPositionChart } from '@/components/CategoryPositionChart';
+import { CategoryCTRChart } from '@/components/CategoryCTRChart';
 import { CategoryMetricsPanel } from '@/components/CategoryMetricsPanel';
 import { QueryTable } from '@/components/QueryTable';
 import { CategoryFilter } from '@/components/CategoryFilter';
@@ -407,8 +409,8 @@ export default function Index() {
               </Button>
             </div>
 
-            {/* Stats Grid - 6 key metrics */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* Stats Grid - 4 key metrics */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
                 title="Total Queries"
                 value={overallStats.queryCount}
@@ -425,19 +427,6 @@ export default function Index() {
                 value={overallStats.totalImpressionsCurrent}
                 change={overallStats.impressionsChange}
                 icon={<Eye className="w-5 h-5 text-primary" />}
-              />
-              <StatCard
-                title="Avg Position"
-                value={overallStats.avgPositionCurrent.toFixed(1)}
-                change={overallStats.positionChange}
-                changeLabel="lower is better"
-                icon={<Target className="w-5 h-5 text-primary" />}
-              />
-              <StatCard
-                title="Avg CTR"
-                value={`${overallStats.avgCtrCurrent.toFixed(2)}%`}
-                change={overallStats.ctrChange}
-                icon={<Percent className="w-5 h-5 text-primary" />}
               />
               <StatCard
                 title="Biggest Shift"
@@ -457,7 +446,7 @@ export default function Index() {
               />
             </div>
 
-            {/* Charts */}
+            {/* Charts Row 1: Clicks */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="p-6 bg-card border rounded-xl">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -473,6 +462,26 @@ export default function Index() {
                   Category Change (% Clicks)
                 </h3>
                 <CategoryChangeChart stats={categoryStats} />
+              </div>
+            </div>
+
+            {/* Charts Row 2: Position & CTR */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="p-6 bg-card border rounded-xl">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-primary" />
+                  Average Position by Category
+                  <span className="text-xs text-muted-foreground ml-auto">(lower is better)</span>
+                </h3>
+                <CategoryPositionChart stats={categoryStats} />
+              </div>
+              
+              <div className="p-6 bg-card border rounded-xl">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Percent className="w-5 h-5 text-primary" />
+                  CTR by Category
+                </h3>
+                <CategoryCTRChart stats={categoryStats} />
               </div>
             </div>
 
