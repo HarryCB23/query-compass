@@ -126,18 +126,25 @@ export function EntityExplorer({ queries, onEntitySelect }: EntityExplorerProps)
 
   // Get top driver query for an entity
   const getTopDriver = (entity: EntityStats): string => {
-    const sorted = [...entity.queries].sort((a, b) => 
-      (b.clicksCurrent - b.clicksPrevious) - (a.clicksCurrent - a.clicksPrevious)
-    );
+    // Sort by current clicks to find the highest volume query
+    const sorted = [...entity.queries].sort((a, b) => b.clicksCurrent - a.clicksCurrent);
     const topQuery = sorted[0];
     if (!topQuery) return '';
     
-    // Get a cleaner version of the query
-    const queryText = topQuery.query.replace(new RegExp(entity.entity, 'gi'), '').trim();
-    if (queryText.length > 2) {
-      return `Driver: ${topQuery.query}`;
-    }
-    return `${topQuery.clicksCurrent.toLocaleString()} clicks`;
+    // Show the top driver query
+    return `Driver: ${topQuery.query}`;
+  };
+
+  // Format click counts with aggregation indicator
+  const formatAggregatedClicks = (entity: EntityStats): string => {
+    const total = entity.totalClicksCurrent;
+    const queryCount = entity.queryCount;
+    
+    const formattedTotal = total >= 1000 
+      ? `${(total / 1000).toFixed(1)}k`
+      : total.toLocaleString();
+    
+    return formattedTotal;
   };
 
   const renderEntityRow = (entity: EntityStats, type: 'rising' | 'stable' | 'declining') => {
@@ -169,8 +176,15 @@ export function EntityExplorer({ queries, onEntitySelect }: EntityExplorerProps)
       >
         {/* Entity name and driver */}
         <div className="flex-1 min-w-0 text-left">
-          <div className="capitalize font-medium text-sm text-foreground truncate">
-            {entity.entity}
+          <div className="flex items-center gap-1.5">
+            <span className="capitalize font-medium text-sm text-foreground truncate">
+              {entity.entity}
+            </span>
+            {entity.queryCount > 1 && (
+              <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full">
+                {entity.queryCount} queries
+              </span>
+            )}
           </div>
           {topDriver && (
             <div className="text-[11px] text-muted-foreground truncate mt-0.5">
@@ -188,11 +202,9 @@ export function EntityExplorer({ queries, onEntitySelect }: EntityExplorerProps)
           {entity.clicksChangePercent.toFixed(0)}%
         </span>
         
-        {/* Volume */}
-        <span className="text-xs text-muted-foreground tabular-nums w-16 text-right">
-          {entity.totalClicksCurrent >= 1000 
-            ? `${(entity.totalClicksCurrent / 1000).toFixed(1)}k`
-            : entity.totalClicksCurrent.toLocaleString()}
+        {/* Volume - aggregated total */}
+        <span className="text-xs text-muted-foreground tabular-nums w-16 text-right" title={`Total: ${entity.totalClicksCurrent.toLocaleString()} clicks from ${entity.queryCount} queries`}>
+          {formatAggregatedClicks(entity)}
         </span>
       </button>
     );
@@ -225,11 +237,18 @@ export function EntityExplorer({ queries, onEntitySelect }: EntityExplorerProps)
           borderClass
         )}
       >
-        <div className="flex items-center justify-between">
-          <span className="capitalize font-medium text-sm text-foreground truncate">
-            {entity.entity}
-          </span>
-          <span className={cn('text-xs font-semibold tabular-nums', changeClass)}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <span className="capitalize font-medium text-sm text-foreground truncate">
+              {entity.entity}
+            </span>
+            {entity.queryCount > 1 && (
+              <span className="text-[9px] text-muted-foreground bg-muted/50 px-1 py-0.5 rounded-full flex-shrink-0">
+                {entity.queryCount}
+              </span>
+            )}
+          </div>
+          <span className={cn('text-xs font-semibold tabular-nums flex-shrink-0', changeClass)}>
             {type === 'rising' && '+'}
             {entity.clicksChangePercent.toFixed(0)}%
           </span>
@@ -237,8 +256,8 @@ export function EntityExplorer({ queries, onEntitySelect }: EntityExplorerProps)
         
         <div className="flex items-center justify-between">
           <Sparkline data={sparklineData} trend={type} />
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {entity.totalClicksCurrent.toLocaleString()}
+          <span className="text-xs text-muted-foreground tabular-nums" title={`Total: ${entity.totalClicksCurrent.toLocaleString()} clicks`}>
+            {formatAggregatedClicks(entity)}
           </span>
         </div>
         
