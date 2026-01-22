@@ -133,56 +133,56 @@
 @layer components {
   /* Glassmorphic stat card */
   .stat-card {
-    @apply bg-card/80 backdrop-blur-sm rounded-xl border border-border/50 p-6 transition-all duration-300;
-    box-shadow: var(--shadow-card);
+    @apply bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/60 p-6 transition-all duration-300;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.02);
   }
 
   .stat-card:hover {
-    box-shadow: var(--shadow-glow);
-    border-color: hsl(var(--primary) / 0.2);
+    box-shadow: 0 0 0 1px hsl(239 84% 67% / 0.12), 0 4px 12px -2px hsl(239 84% 67% / 0.1);
+    border-color: hsl(239 84% 67% / 0.25);
   }
 
   /* Premium glass card */
   .glass-card {
-    @apply bg-card/70 backdrop-blur-md rounded-xl border border-border/40 transition-all duration-300;
-    box-shadow: var(--shadow-sm);
+    @apply bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/50 transition-all duration-300;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
   }
 
   .glass-card:hover {
-    box-shadow: var(--shadow-glow);
-    border-color: hsl(var(--primary) / 0.15);
+    box-shadow: 0 0 0 1px hsl(239 84% 67% / 0.1), 0 4px 12px -2px hsl(239 84% 67% / 0.08);
+    border-color: hsl(239 84% 67% / 0.2);
   }
 
   .category-badge {
-    @apply inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium tracking-tight;
+    @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold tracking-tight;
   }
 
   .category-branded {
-    @apply bg-indigo-50 text-indigo-700 border border-indigo-100;
+    @apply bg-indigo-100 text-indigo-800 border border-indigo-200;
   }
 
   .category-informational {
-    @apply bg-cyan-50 text-cyan-700 border border-cyan-100;
+    @apply bg-sky-100 text-sky-800 border border-sky-200;
   }
 
   .category-news {
-    @apply bg-amber-50 text-amber-700 border border-amber-100;
+    @apply bg-amber-100 text-amber-800 border border-amber-200;
   }
 
   .category-product {
-    @apply bg-emerald-50 text-emerald-700 border border-emerald-100;
+    @apply bg-emerald-100 text-emerald-800 border border-emerald-200;
   }
 
   .category-commercial {
-    @apply bg-violet-50 text-violet-700 border border-violet-100;
+    @apply bg-violet-100 text-violet-800 border border-violet-200;
   }
 
   .category-transactional {
-    @apply bg-rose-50 text-rose-700 border border-rose-100;
+    @apply bg-rose-100 text-rose-800 border border-rose-200;
   }
 
   .category-other {
-    @apply bg-slate-50 text-slate-600 border border-slate-100;
+    @apply bg-slate-100 text-slate-700 border border-slate-200;
   }
 
   .upload-zone {
