@@ -1,5 +1,6 @@
 import { TrendingUp, TrendingDown, Minus, MousePointer, Eye, Target, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SectionHeader } from '@/components/SectionHeader';
 import type { CategoryStats } from '@/types/query';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types/query';
 

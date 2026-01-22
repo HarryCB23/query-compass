@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download, Target, Percent, Users } from 'lucide-react';
+import { Search, BarChart3, TrendingUp, MousePointer, Eye, Loader2, Sparkles, Download, Target, Percent, Users, Filter } from 'lucide-react';
 import { FileUpload } from '@/components/FileUpload';
 import { BrandedTermsInput } from '@/components/BrandedTermsInput';
 import { StatCard } from '@/components/StatCard';
@@ -11,6 +11,7 @@ import { QueryTable } from '@/components/QueryTable';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { EntityExplorer } from '@/components/EntityExplorer';
 import { TopShiftingQueries } from '@/components/TopShiftingQueries';
+import { SectionHeader } from '@/components/SectionHeader';
 import { parseCSV, parseNumber, parsePercentage, classifyQuery } from '@/lib/queryClassifier';
 import { useQueryClassification } from '@/hooks/useQueryClassification';
 import { Switch } from '@/components/ui/switch';
@@ -283,17 +284,17 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container py-6">
+      <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-40">
+        <div className="container py-5">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
+            <div className="p-2.5 bg-primary/10 rounded-xl">
               <Search className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
                 GSC Query Shift Analyzer
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Analyze search query changes and classify by intent
               </p>
             </div>
@@ -392,7 +393,7 @@ export default function Index() {
           /* Analysis State */
           <div className="space-y-8 animate-fade-in">
             {/* Config Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-card border rounded-xl">
+            <div className="flex flex-wrap items-center justify-between gap-4 p-4 glass-card">
               <div className="flex items-center gap-4">
                 <FileUpload 
                   onFileLoaded={handleFileLoaded} 
@@ -450,50 +451,50 @@ export default function Index() {
 
             {/* Charts Row 1: Clicks */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="p-6 bg-card border rounded-xl">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" />
-                  Clicks by Category
-                </h3>
+              <div className="p-6 glass-card">
+                <SectionHeader 
+                  icon={<BarChart3 className="w-4 h-4" />}
+                  title="Clicks by Category"
+                />
                 <CategoryDistributionChart stats={categoryStats} dataKey="clicks" />
               </div>
               
-              <div className="p-6 bg-card border rounded-xl">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  Category Change (% Clicks)
-                </h3>
+              <div className="p-6 glass-card">
+                <SectionHeader 
+                  icon={<TrendingUp className="w-4 h-4" />}
+                  title="Category Change (% Clicks)"
+                />
                 <CategoryChangeChart stats={categoryStats} />
               </div>
             </div>
 
             {/* Row 2: Position & CTR Metric Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="p-6 bg-card border rounded-xl">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  Average Position by Category
-                  <span className="text-xs text-muted-foreground ml-auto">(lower is better)</span>
-                </h3>
+              <div className="p-6 glass-card">
+                <SectionHeader 
+                  icon={<Target className="w-4 h-4" />}
+                  title="Average Position by Category"
+                  subtitle="(lower is better)"
+                />
                 <CategoryMetricCards stats={categoryStats} metric="position" />
               </div>
               
-              <div className="p-6 bg-card border rounded-xl">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Percent className="w-5 h-5 text-primary" />
-                  CTR by Category
-                </h3>
+              <div className="p-6 glass-card">
+                <SectionHeader 
+                  icon={<Percent className="w-4 h-4" />}
+                  title="CTR by Category"
+                />
                 <CategoryMetricCards stats={categoryStats} metric="ctr" />
               </div>
             </div>
 
             {/* Entity Explorer - News Entities */}
-            <div className="p-6 bg-card border rounded-xl">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
-                News Entity Explorer
-                <span className="text-xs text-muted-foreground ml-auto">Click an entity to see performance</span>
-              </h3>
+            <div className="p-6 glass-card">
+              <SectionHeader 
+                icon={<Users className="w-4 h-4" />}
+                title="News Entity Explorer"
+                subtitle="Click an entity to see performance"
+              />
               <EntityExplorer 
                 queries={reclassifiedData}
                 onEntitySelect={(entity, queries) => {
@@ -505,20 +506,22 @@ export default function Index() {
             </div>
 
             {/* Category Filter */}
-            <div className="p-6 bg-card border rounded-xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-foreground">Filter by Category</h3>
-                {entityFilter && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setEntityFilter(null)}
-                    className="text-xs"
-                  >
-                    Clear entity filter: "{entityFilter}"
-                  </Button>
-                )}
-              </div>
+            <div className="p-6 glass-card">
+              <SectionHeader 
+                icon={<Filter className="w-4 h-4" />}
+                title="Filter by Category"
+                subtitle={entityFilter ? `Filtered: "${entityFilter}"` : undefined}
+              />
+              {entityFilter && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setEntityFilter(null)}
+                  className="text-xs mb-4"
+                >
+                  Clear entity filter
+                </Button>
+              )}
               <CategoryFilter 
                 selected={categoryFilter} 
                 onChange={(cat) => {
@@ -534,12 +537,12 @@ export default function Index() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <CategoryMetricsPanel stats={selectedCategoryStats} />
                 
-                <div className="p-6 bg-card border rounded-xl">
-                  <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    Top 20 Shifting Queries
-                    <span className="text-xs text-muted-foreground ml-auto">by absolute click change</span>
-                  </h3>
+                <div className="p-6 glass-card">
+                  <SectionHeader 
+                    icon={<TrendingUp className="w-4 h-4" />}
+                    title="Top 20 Shifting Queries"
+                    subtitle="by absolute click change"
+                  />
                   <div className="max-h-80 overflow-y-auto">
                     <TopShiftingQueries 
                       queries={reclassifiedData} 
@@ -552,15 +555,12 @@ export default function Index() {
             )}
 
             {/* Query Table */}
-            <div className="p-6 bg-card border rounded-xl">
-              <h3 className="font-semibold text-foreground mb-4">
-                Query Details
-                {entityFilter && (
-                  <span className="text-sm font-normal text-muted-foreground ml-2">
-                    (filtered by "{entityFilter}")
-                  </span>
-                )}
-              </h3>
+            <div className="p-6 glass-card">
+              <SectionHeader 
+                icon={<Search className="w-4 h-4" />}
+                title="Query Details"
+                subtitle={entityFilter ? `Filtered by "${entityFilter}"` : undefined}
+              />
               <QueryTable 
                 data={entityFilter 
                   ? reclassifiedData.filter(q => 
@@ -577,8 +577,8 @@ export default function Index() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-card mt-auto">
-        <div className="container py-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t bg-card/50 mt-auto">
+        <div className="container py-4 text-center text-xs text-muted-foreground tracking-wide">
           GSC Query Shift Analyzer • Analyze your search performance changes
         </div>
       </footer>
