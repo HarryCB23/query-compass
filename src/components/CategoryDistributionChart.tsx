@@ -3,7 +3,6 @@ import {
   Bar, 
   XAxis, 
   YAxis, 
-  CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
   Legend,
@@ -36,45 +35,59 @@ export function CategoryDistributionChart({
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           barGap={4}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis 
             dataKey="category" 
-            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--border))' }}
-            axisLine={{ stroke: 'hsl(var(--border))' }}
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tickLine={false}
+            axisLine={false}
           />
           <YAxis 
-            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--border))' }}
-            axisLine={{ stroke: 'hsl(var(--border))' }}
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+            tickLine={false}
+            axisLine={false}
             tickFormatter={(value) => value.toLocaleString()}
           />
           <Tooltip 
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              borderRadius: '12px',
+              boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.08)',
+              padding: '12px 16px',
+            }}
+            labelStyle={{
+              color: 'hsl(var(--foreground))',
+              fontWeight: 600,
+              marginBottom: '4px',
             }}
             formatter={(value: number) => value.toLocaleString()}
+            cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
           />
-          <Legend />
+          <Legend 
+            wrapperStyle={{ 
+              paddingTop: '16px',
+              fontSize: '12px',
+            }}
+          />
           <Bar 
             dataKey="previous" 
-            name="Last Year" 
+            name="Last Period" 
             fill="hsl(var(--muted-foreground))"
-            opacity={0.5}
+            opacity={0.25}
             radius={[4, 4, 0, 0]}
+            barSize={28}
           />
           <Bar 
             dataKey="current" 
             name="Current Period" 
-            radius={[4, 4, 0, 0]}
+            radius={[6, 6, 0, 0]}
+            barSize={32}
           >
             {chartData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={CATEGORY_COLORS[entry.categoryKey as QueryCategory]} 
+                fill={CATEGORY_COLORS[entry.categoryKey as QueryCategory]}
+                fillOpacity={0.9}
               />
             ))}
           </Bar>

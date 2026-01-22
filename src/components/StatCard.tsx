@@ -14,7 +14,7 @@ export function StatCard({
   title, 
   value, 
   change, 
-  changeLabel = 'vs last year',
+  changeLabel = 'vs last period',
   icon,
   className 
 }: StatCardProps) {
@@ -23,16 +23,16 @@ export function StatCard({
   const isNeutral = change === 0;
 
   return (
-    <div className={cn('stat-card', className)}>
+    <div className={cn('stat-card group', className)}>
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-foreground">
+        <div className="space-y-1">
+          <p className="overline">{title}</p>
+          <p className="text-3xl font-bold tracking-tight text-foreground">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
         </div>
         {icon && (
-          <div className="p-2 bg-primary/10 rounded-lg">
+          <div className="p-2.5 bg-primary/10 rounded-lg text-primary transition-colors group-hover:bg-primary/15">
             {icon}
           </div>
         )}
@@ -41,17 +41,17 @@ export function StatCard({
       {change !== undefined && (
         <div className="mt-4 flex items-center gap-2">
           <span className={cn(
-            'inline-flex items-center gap-1 text-sm font-medium',
-            isPositive && 'change-positive',
-            isNegative && 'change-negative',
-            isNeutral && 'change-neutral'
+            'inline-flex items-center gap-1 text-sm font-medium tabular-nums',
+            isPositive && 'text-emerald-600',
+            isNegative && 'text-rose-500',
+            isNeutral && 'text-muted-foreground'
           )}>
-            {isPositive && <TrendingUp className="w-4 h-4" />}
-            {isNegative && <TrendingDown className="w-4 h-4" />}
-            {isNeutral && <Minus className="w-4 h-4" />}
+            {isPositive && <TrendingUp className="w-3.5 h-3.5" />}
+            {isNegative && <TrendingDown className="w-3.5 h-3.5" />}
+            {isNeutral && <Minus className="w-3.5 h-3.5" />}
             {isPositive && '+'}{change.toFixed(1)}%
           </span>
-          <span className="text-sm text-muted-foreground">{changeLabel}</span>
+          <span className="text-xs text-muted-foreground">{changeLabel}</span>
         </div>
       )}
     </div>
