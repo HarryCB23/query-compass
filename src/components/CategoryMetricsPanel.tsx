@@ -50,7 +50,7 @@ function MetricCard({
         </span>
       </div>
       
-      <div className="mt-4 pt-3 border-t border-border/30">
+      <div className="mt-4 pt-3">
         <span className={cn(
           'inline-flex items-center gap-1.5 text-sm font-semibold tabular-nums',
           isPositive && 'text-emerald-600',
