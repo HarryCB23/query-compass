@@ -26,8 +26,11 @@ export function StatCard({
     <div className={cn('stat-card group', className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="overline">{title}</p>
-          <p className="text-3xl font-bold tracking-tight text-foreground">
+          <div className="flex flex-col gap-1">
+            <p className="overline">{title}</p>
+            <div className="w-8 h-0.5 bg-primary/50 rounded-full" />
+          </div>
+          <p className="text-3xl font-bold tracking-tight text-foreground mt-2">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
         </div>

@@ -38,8 +38,14 @@ export function CategoryMetricCards({ stats, metric }: CategoryMetricCardsProps)
         className="glass-card p-4"
         style={{ borderLeftColor: CATEGORY_COLORS[stat.category], borderLeftWidth: '3px' }}
       >
-        <div className="overline mb-2">
-          {CATEGORY_LABELS[stat.category]}
+        <div className="flex flex-col gap-1 mb-2">
+          <span className="overline">
+            {CATEGORY_LABELS[stat.category]}
+          </span>
+          <div 
+            className="w-8 h-0.5 rounded-full" 
+            style={{ backgroundColor: CATEGORY_COLORS[stat.category] }}
+          />
         </div>
         
         <div className="text-2xl font-bold tracking-tight text-foreground">
