@@ -16,9 +16,12 @@ export function SectionHeader({ icon, title, subtitle, className }: SectionHeade
             {icon}
           </div>
         )}
-        <h3 className="font-semibold text-foreground tracking-tight relative pb-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-12 after:h-0.5 after:bg-primary/40 after:rounded-full">
-          {title}
-        </h3>
+        <div className="flex flex-col">
+          <h3 className="font-semibold text-foreground tracking-tight">
+            {title}
+          </h3>
+          <div className="w-10 h-0.5 bg-primary/50 rounded-full mt-1.5" />
+        </div>
       </div>
       {subtitle && (
         <span className="text-xs text-muted-foreground">
