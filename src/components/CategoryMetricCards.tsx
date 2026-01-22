@@ -35,14 +35,14 @@ export function CategoryMetricCards({ stats, metric }: CategoryMetricCardsProps)
     return (
       <div 
         key={stat.category}
-        className="p-4 rounded-xl border bg-card hover:shadow-md transition-all"
-        style={{ borderLeftColor: CATEGORY_COLORS[stat.category], borderLeftWidth: '4px' }}
+        className="glass-card p-4"
+        style={{ borderLeftColor: CATEGORY_COLORS[stat.category], borderLeftWidth: '3px' }}
       >
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+        <div className="overline mb-2">
           {CATEGORY_LABELS[stat.category]}
         </div>
         
-        <div className="text-3xl font-bold text-foreground">
+        <div className="text-2xl font-bold tracking-tight text-foreground">
           {metric === 'position' 
             ? value.toFixed(1) 
             : `${value.toFixed(1)}%`
@@ -50,23 +50,25 @@ export function CategoryMetricCards({ stats, metric }: CategoryMetricCardsProps)
         </div>
         
         <div className={`
-          flex items-center gap-1.5 text-sm mt-2
+          flex items-center gap-1.5 text-sm mt-2 font-medium tabular-nums
           ${isImproved 
-            ? 'text-emerald-500' 
+            ? 'text-emerald-600' 
             : isDeclined 
               ? 'text-rose-500' 
               : 'text-muted-foreground'
           }
         `}>
-          <span className="font-medium">
+          {isImproved && '↑'}
+          {isDeclined && '↓'}
+          <span>
             {Math.abs(change).toFixed(1)}%
           </span>
           {isImproved ? (
-            <TrendingUp className="w-3.5 h-3.5" />
+            <TrendingUp className="w-3 h-3" />
           ) : isDeclined ? (
-            <TrendingDown className="w-3.5 h-3.5" />
+            <TrendingDown className="w-3 h-3" />
           ) : (
-            <Minus className="w-3.5 h-3.5" />
+            <Minus className="w-3 h-3" />
           )}
         </div>
       </div>

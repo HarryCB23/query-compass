@@ -19,14 +19,14 @@ export function TopShiftingQueries({ queries, category, limit = 20 }: TopShiftin
   
   if (topQueries.length === 0) {
     return (
-      <div className="text-center py-4 text-muted-foreground">
+      <div className="text-center py-8 text-muted-foreground text-sm">
         No queries in {CATEGORY_LABELS[category]} category.
       </div>
     );
   }
   
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {topQueries.map((query, index) => {
         const isPositive = query.clicksChange > 0;
         const isNegative = query.clicksChange < 0;
@@ -34,40 +34,44 @@ export function TopShiftingQueries({ queries, category, limit = 20 }: TopShiftin
         return (
           <div 
             key={index}
-            className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-muted/50 transition-colors"
+            className="flex items-center justify-between py-2.5 px-3 rounded-lg hover:bg-muted/30 transition-colors group"
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <span className="text-xs text-muted-foreground w-5">{index + 1}</span>
-              <span className="truncate text-sm">{query.query}</span>
+              <span className="text-[10px] font-medium text-muted-foreground w-5 tabular-nums">
+                {index + 1}
+              </span>
+              <span className="truncate text-sm text-foreground group-hover:text-foreground/80">
+                {query.query}
+              </span>
             </div>
             
-            <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-5 shrink-0">
               <div className="text-right">
-                <div className="text-sm font-medium">
+                <div className="text-sm font-semibold tabular-nums text-foreground">
                   {query.clicksCurrent.toLocaleString()}
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   clicks
                 </div>
               </div>
               
               <div className={`
-                flex items-center gap-1 min-w-20 justify-end text-sm font-medium
-                ${isPositive ? 'text-emerald-500' : isNegative ? 'text-rose-500' : 'text-muted-foreground'}
+                flex items-center gap-1.5 min-w-20 justify-end text-sm font-medium tabular-nums
+                ${isPositive ? 'text-emerald-600' : isNegative ? 'text-rose-500' : 'text-muted-foreground'}
               `}>
                 {isPositive ? (
                   <>
-                    <TrendingUp className="w-4 h-4" />
+                    <TrendingUp className="w-3.5 h-3.5" />
                     +{query.clicksChange.toLocaleString()}
                   </>
                 ) : isNegative ? (
                   <>
-                    <TrendingDown className="w-4 h-4" />
+                    <TrendingDown className="w-3.5 h-3.5" />
                     {query.clicksChange.toLocaleString()}
                   </>
                 ) : (
                   <>
-                    <Minus className="w-4 h-4" />
+                    <Minus className="w-3.5 h-3.5" />
                     0
                   </>
                 )}
