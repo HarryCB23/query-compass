@@ -407,21 +407,21 @@ export function EntityExplorer({ queries, onEntitySelect }: EntityExplorerProps)
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center p-4 glass-card rounded-xl">
                   <div className="text-2xl font-bold tracking-tight">{selectedEntity.queryCount}</div>
-                  <div className="overline mt-1">Queries</div>
+                  <div className="eyebrow-label mt-1">Queries</div>
                 </div>
                 <div className="text-center p-4 glass-card rounded-xl">
                   <div className="text-2xl font-bold tracking-tight flex items-center justify-center gap-1.5">
                     <MousePointer className="w-4 h-4 text-primary" />
                     {selectedEntity.totalClicksCurrent.toLocaleString()}
                   </div>
-                  <div className="overline mt-1">Current Clicks</div>
+                  <div className="eyebrow-label mt-1">Current Clicks</div>
                 </div>
                 <div className="text-center p-4 glass-card rounded-xl">
                   <div className="text-2xl font-bold tracking-tight flex items-center justify-center gap-1.5">
                     <Eye className="w-4 h-4 text-primary" />
                     {selectedEntity.totalImpressionsCurrent.toLocaleString()}
                   </div>
-                  <div className="overline mt-1">Impressions</div>
+                  <div className="eyebrow-label mt-1">Impressions</div>
                 </div>
               </div>
               

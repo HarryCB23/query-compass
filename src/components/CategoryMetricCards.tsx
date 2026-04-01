@@ -38,7 +38,7 @@ export function CategoryMetricCards({ stats, metric }: CategoryMetricCardsProps)
         className="glass-card p-4"
         style={{ borderLeftColor: CATEGORY_COLORS[stat.category], borderLeftWidth: '3px' }}
       >
-        <div className="overline mb-2">
+        <div className="eyebrow-label mb-2">
           {CATEGORY_LABELS[stat.category]}
         </div>
         

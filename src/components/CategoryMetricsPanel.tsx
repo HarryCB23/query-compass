@@ -38,7 +38,7 @@ function MetricCard({
         <div className="p-2 bg-primary/10 rounded-lg text-primary">
           {icon}
         </div>
-        <span className="overline">{label}</span>
+          <span className="eyebrow-label">{label}</span>
       </div>
       
       <div className="flex-1 flex flex-col justify-center">
