@@ -2,3 +2,6 @@ project_id = "vgascqdmcgffopilfktu"
 
 [functions.classify-queries]
 verify_jwt = true
+
+[functions.ingest-csv]
+verify_jwt = true
