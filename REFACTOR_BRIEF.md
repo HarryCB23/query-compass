@@ -943,3 +943,71 @@ All future phases involve processing row-volume data (classifications, SERP resu
 5. **Supabase select default is 1,000 rows.** The PostgREST server-side `max_rows` cap (1,000) overrides any client `.limit()` call. Any list view that can return > 1,000 rows **must** use a paginated `.range()` loop, not `.limit()`.
 
 6. **Deno auth context.** `supabase.auth.getUser()` always returns null in Deno edge functions — there is no session storage. Always pass the JWT explicitly: `auth.getUser(token)` or verify via a direct `fetch(/auth/v1/user)` with the token in the Authorization header.
+
+---
+
+## Appendix A — Live schema (supersedes section 3 where they differ)
+
+The schema applied to `vgascqdmcgffopilfktu` via migration `20260523000002_phase2_schema.sql` differs from the section 3 spec in three places. **This appendix is the authoritative reference for Phases 3–7. Section 3 is retained for context only.**
+
+### Divergence 1 — `queries` primary key
+
+| | Section 3 spec | Live schema |
+|---|---|---|
+| PK | `query_hash text PRIMARY KEY` | `id uuid PRIMARY KEY DEFAULT gen_random_uuid()` |
+| Unique | _(PK was hash)_ | `query_hash text NOT NULL UNIQUE` |
+
+**Decision made:** keep the live schema. UUID PKs are the Supabase default and FK references from `import_queries`, `classifications`, `serp_snapshots`, `keyword_metrics` all use `query_id uuid`. Changing to a hash PK would require a new migration touching five tables. The `query_hash` unique constraint provides the same dedup guarantee. All Phases 3–7 reference `queries.id` (UUID) as the FK target.
+
+### Divergence 2 — `imports` period columns
+
+| | Section 3 spec | Live schema |
+|---|---|---|
+| Current period | `period_current_start date`, `period_current_end date` | `period_start date`, `period_end date` |
+| Previous period | `period_previous_start date`, `period_previous_end date` | _(not present)_ |
+
+**Decision made:** keep the live schema. The two-column form (`period_start`, `period_end`) is sufficient for Phase 2 CSV imports where neither bound is known. Previous-period date bounds can be added as nullable columns in a Phase 7 migration when GSC OAuth imports supply them. Do not reference `period_current_*` or `period_previous_*` in any new code.
+
+### Divergence 3 — `queries` language column
+
+| | Section 3 spec | Live schema |
+|---|---|---|
+| Language | `language text` | _(column not present)_ |
+
+**Decision made:** omit for now. Language detection adds a dependency (e.g. `franc` or a Claude call) with unclear v1 value. Add via a zero-downtime `ALTER TABLE queries ADD COLUMN language text` migration in Phase 3 if the classification prompt needs it. Do not assume this column exists.
+
+### Full live schema summary (key tables)
+
+```sql
+-- queries (global deduplicated bank)
+id           uuid        PK
+query_text   text        NOT NULL
+query_hash   text        NOT NULL UNIQUE   -- sha256(lower(trim(query_text)))
+created_at   timestamptz NOT NULL DEFAULT now()
+
+-- imports (one row per CSV/GSC upload)
+id           uuid        PK
+project_id   uuid        FK → projects.id
+file_name    text
+source       text        CHECK (csv | gsc)
+period_start date                          -- NULL for CSV (date range unknown)
+period_end   date                          -- NULL for CSV
+row_count    int
+created_at   timestamptz NOT NULL DEFAULT now()
+
+-- import_queries (join: import ↔ query, with per-row metrics)
+id                   uuid        PK
+import_id            uuid        FK → imports.id  ON DELETE CASCADE
+query_id             uuid        FK → queries.id
+clicks_current       int
+impressions_current  int
+ctr_current          numeric(6,4)   -- fraction: 0.0250 = 2.5 %
+position_current     numeric(6,2)
+clicks_previous      int
+impressions_previous int
+ctr_previous         numeric(6,4)
+position_previous    numeric(6,2)
+UNIQUE (import_id, query_id)
+```
+
+All other tables (`classifications`, `serp_snapshots`, `risk_weights`, `risk_scores`, `keyword_metrics`, `jobs`) match section 3 exactly.
