@@ -15,40 +15,40 @@
 // Header mapping
 // ---------------------------------------------------------------------------
 
-const HEADER_ALIASES: Record<string, string> = {
-  // query
-  'query':       'query',
-  'top queries': 'query',
-  'queries':     'query',
-  // clicks current
-  'clicks':         'clicks_current',
-  'clicks current': 'clicks_current',
-  // impressions current
-  'impressions':         'impressions_current',
-  'impressions current': 'impressions_current',
-  // ctr current
-  'ctr':         'ctr_current',
-  'ctr current': 'ctr_current',
-  // position current
-  'position':         'position_current',
-  'position current': 'position_current',
-  'average position': 'position_current',
-  // clicks previous
-  'clicks previous':         'clicks_previous',
-  'previous clicks':         'clicks_previous',
-  'clicks (previous period)': 'clicks_previous',
-  // impressions previous
-  'impressions previous':         'impressions_previous',
-  'previous impressions':         'impressions_previous',
-  'impressions (previous period)': 'impressions_previous',
-  // ctr previous
-  'ctr previous':         'ctr_previous',
-  'previous ctr':         'ctr_previous',
-  'ctr (previous period)': 'ctr_previous',
-  // position previous
-  'position previous':         'position_previous',
-  'previous position':         'position_previous',
-  'position (previous period)': 'position_previous',
+/**
+ * Detect the canonical field name for a single GSC header string.
+ * Handles both simple exports ("Clicks") and date-range exports
+ * ("Last 28 days Clicks", "Same period last year Clicks", etc.).
+ * Returns null for unrecognised columns.
+ */
+function detectColumn(header: string): string | null {
+  const h = header.trim().toLowerCase()
+
+  // Query column
+  if (h.includes('top queries') || h === 'query' || h === 'queries') {
+    return 'query'
+  }
+
+  // Determine metric type
+  let metric: 'clicks' | 'impressions' | 'ctr' | 'position' | null = null
+  if (h.includes('clicks')) metric = 'clicks'
+  else if (h.includes('impressions')) metric = 'impressions'
+  else if (h.includes('ctr')) metric = 'ctr'
+  else if (h.includes('position')) metric = 'position'
+  if (!metric) return null
+
+  // Determine period — previous if any of these markers present,
+  // otherwise current
+  const isPrevious =
+    h.includes('previous') ||
+    h.includes('same period') ||
+    h.includes('last year') ||
+    h.includes('year-over-year') ||
+    h.includes('y/y') ||
+    h.includes('yoy') ||
+    h.includes('comparison')
+
+  return `${metric}_${isPrevious ? 'previous' : 'current'}`
 }
 
 /**
@@ -58,8 +58,7 @@ const HEADER_ALIASES: Record<string, string> = {
 export function mapGSCHeaders(headers: string[]): Record<string, number> {
   const map: Record<string, number> = {}
   for (let i = 0; i < headers.length; i++) {
-    const normalised = headers[i].trim().toLowerCase()
-    const canonical = HEADER_ALIASES[normalised]
+    const canonical = detectColumn(headers[i])
     if (canonical) map[canonical] = i
   }
   return map

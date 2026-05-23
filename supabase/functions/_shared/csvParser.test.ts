@@ -15,7 +15,7 @@ import {
 // mapGSCHeaders
 // ---------------------------------------------------------------------------
 
-Deno.test('mapGSCHeaders: maps standard GSC columns', () => {
+Deno.test('mapGSCHeaders: standard 5-column export', () => {
   const result = mapGSCHeaders(['Query', 'Clicks', 'Impressions', 'CTR', 'Position'])
   assertEquals(result['query'],               0)
   assertEquals(result['clicks_current'],      1)
@@ -24,18 +24,56 @@ Deno.test('mapGSCHeaders: maps standard GSC columns', () => {
   assertEquals(result['position_current'],    4)
 })
 
-Deno.test('mapGSCHeaders: case-insensitive matching', () => {
-  const result = mapGSCHeaders(['TOP QUERIES', 'CLICKS', 'IMPRESSIONS', 'CTR', 'AVERAGE POSITION'])
-  assertEquals(result['query'],            0)
-  assertEquals(result['clicks_current'],   1)
-  assertEquals(result['position_current'], 4)
+Deno.test('mapGSCHeaders: date-range export (28 days)', () => {
+  const headers = [
+    'Top queries',
+    'Last 28 days Clicks',
+    'Same period last year Clicks',
+    'Last 28 days Impressions',
+    'Same period last year Impressions',
+    'Last 28 days CTR',
+    'Same period last year CTR',
+    'Last 28 days Position',
+    'Same period last year Position',
+  ]
+  const result = mapGSCHeaders(headers)
+  assertEquals(result['query'],                0)
+  assertEquals(result['clicks_current'],       1)
+  assertEquals(result['clicks_previous'],      2)
+  assertEquals(result['impressions_current'],  3)
+  assertEquals(result['impressions_previous'], 4)
+  assertEquals(result['ctr_current'],          5)
+  assertEquals(result['ctr_previous'],         6)
+  assertEquals(result['position_current'],     7)
+  assertEquals(result['position_previous'],    8)
+})
+
+Deno.test('mapGSCHeaders: Previous Clicks and simple aliases', () => {
+  const result = mapGSCHeaders(['Query', 'Clicks', 'Previous Clicks'])
+  assertEquals(result['query'],           0)
+  assertEquals(result['clicks_current'],  1)
+  assertEquals(result['clicks_previous'], 2)
+})
+
+Deno.test('mapGSCHeaders: Comparison CTR and variable day range', () => {
+  const result = mapGSCHeaders(['queries', 'Last 7 days CTR', 'Comparison CTR'])
+  assertEquals(result['query'],        0)
+  assertEquals(result['ctr_current'],  1)
+  assertEquals(result['ctr_previous'], 2)
+})
+
+Deno.test('mapGSCHeaders: Year-over-year Position', () => {
+  const result = mapGSCHeaders(['Top queries', 'Last 90 days Position', 'Year-over-year Position'])
+  assertEquals(result['query'],             0)
+  assertEquals(result['position_current'],  1)
+  assertEquals(result['position_previous'], 2)
 })
 
 Deno.test('mapGSCHeaders: ignores unknown columns', () => {
   const result = mapGSCHeaders(['Query', 'Unknown Column', 'Clicks'])
   assertEquals(Object.keys(result).length, 2)
-  assertEquals(result['query'],           0)
-  assertEquals(result['clicks_current'],  2)
+  assertEquals(result['query'],          0)
+  assertEquals(result['clicks_current'], 2)
 })
 
 // ---------------------------------------------------------------------------
