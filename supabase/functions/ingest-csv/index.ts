@@ -44,18 +44,22 @@ Deno.serve(async (req) => {
 
   // ── Auth: extract user from JWT ───────────────────────────────────────────
   const authHeader = req.headers.get('authorization')
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'missing or malformed Authorization header' }), {
       status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
-  const anonClient = createClient(SUPABASE_URL, ANON_KEY, {
-    global: { headers: { authorization: authHeader } },
-  })
-  const { data: { user }, error: userError } = await anonClient.auth.getUser()
-  if (userError || !user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+  const jwt = authHeader.replace('Bearer ', '')
+  const anonClient = createClient(SUPABASE_URL, ANON_KEY)
+  const { data: { user }, error: userError } = await anonClient.auth.getUser(jwt)
+  if (userError) {
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'invalid JWT', detail: userError.message }), {
+      status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'user not found' }), {
       status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
@@ -71,8 +75,13 @@ Deno.serve(async (req) => {
   }
 
   const { project_id, csv_text, file_name } = body
-  if (!project_id || !csv_text) {
-    return new Response(JSON.stringify({ error: 'project_id and csv_text are required' }), {
+  if (!project_id) {
+    return new Response(JSON.stringify({ error: 'Bad Request', reason: 'missing project_id' }), {
+      status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+  if (!csv_text) {
+    return new Response(JSON.stringify({ error: 'Bad Request', reason: 'missing csv_text' }), {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
@@ -100,8 +109,13 @@ Deno.serve(async (req) => {
     .eq('org_id', project.org_id)
     .maybeSingle()
 
-  if (memberError || !membership) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+  if (memberError) {
+    return new Response(JSON.stringify({ error: 'Forbidden', reason: 'membership lookup failed', detail: memberError.message }), {
+      status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+  if (!membership) {
+    return new Response(JSON.stringify({ error: 'Forbidden', reason: 'user is not a member of this project\'s organisation' }), {
       status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
