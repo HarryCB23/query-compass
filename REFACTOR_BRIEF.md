@@ -908,3 +908,38 @@ Document all of these in `.env.example`.
 - Don't touch the `lovable-tagger` plugin in vite.config — keeping Lovable round-trip working is useful for UI tweaks.
 - Commit messages: conventional commits (`feat:`, `fix:`, `chore:`, `refactor:`).
 - Always run the classification eval before merging anything that touches prompts.
+
+---
+
+## Phase 2 Retrospective — ingest-csv bugs and lessons
+
+**Summary:** The `ingest-csv` edge function went through 10 deployed versions across one session to reach a fully working state. Every bug was caused by an assumption that held in a browser/Node context but failed in Deno's edge function sandbox or against Supabase's hosted PostgREST. None of the bugs were subtle logic errors — all were infrastructure-layer surprises that a pre-flight checklist would have caught.
+
+### The 8 bugs, in order of discovery
+
+| # | Bug | Root cause | Fix |
+|---|-----|-----------|-----|
+| 1 | All authenticated requests returned 401 | `supabase.auth.getUser()` called without JWT argument; Deno has no session storage so it always returns null in a server context | Pass extracted token directly: `auth.getUser(jwt)`, then replaced with a direct `fetch(/auth/v1/user)` to avoid instantiating a second client |
+| 2 | `WORKER_RESOURCE_LIMIT 546` — memory OOM on every CSV upload | `while (i <= line.length)` off-by-one in `tokeniseLine`: at `i === line.length`, `line[i]` is `undefined`, the else branch pushes `''` without incrementing `i`, outer condition still true — infinite loop fills `fields[]` until 150 MB OOM | Changed to `while (i < line.length)` |
+| 3 | Speculative: O(n²) `.find()` in the hot path | When chasing the OOM, a potential quadratic lookup was pre-emptively replaced with a `Map` for O(1) lookup | Not the actual cause of OOM, but correct regardless |
+| 4 | Speculative: unbounded `Promise.all` concurrency | When chasing the OOM, SHA-256 hashing over N rows in one `Promise.all` was chunked to 100 at a time | Not the actual OOM cause, but correct for large files |
+| 5 | All metric columns null after successful upload | `HEADER_ALIASES` exact-match map silently dropped GSC date-range headers: `"Last 28 days Clicks"`, `"Same period last year Clicks"`, etc. — none of those strings appear in the alias map | Replaced alias map with substring-based `detectColumn()`: match on `includes('clicks')`, classify as previous if header contains `previous / same period / last year / yoy` etc. |
+| 6 | `"Failed to fetch query IDs"` 500 after v7 | PostgREST `.in()` builds a GET URL; 1,867 SHA-256 hashes = ~130 KB URL — Deno's `fetch()` rejects with `TypeError: Invalid URL` | Chunk the `.in()` fetch to 500 hashes per request (FETCH_CHUNK = 500) |
+| 7 | Fetch still 400ing at FETCH_CHUNK = 500 | Cloudflare sits in front of Supabase PostgREST and enforces an 8 KB URL limit; 500 hashes × 67 chars = ~33 KB → 400 Bad Request | Reduce FETCH_CHUNK to 100 (100 × 67 chars ≈ 6.7 KB — safely under Cloudflare's 8 KB limit) |
+| 8 | ImportView shows max 1,000 rows despite `.limit(50_000)` in query | PostgREST has a server-side `max_rows` cap (default 1,000 on Supabase) that overrides the client `.limit()` call entirely | Replace single `.limit()` fetch with paginated `.range()` loop: fetch 1,000 rows per request until page returns < 1,000 rows |
+
+### Complexity checklist for Phases 3–6
+
+All future phases involve processing row-volume data (classifications, SERP results, risk scores). Before writing any function that iterates over rows, verify:
+
+1. **O(1) lookups only.** Build a `Map<key, value>` before the loop; never call `.find()`, `.filter()[0]`, or object property lookup inside a per-row loop. O(n²) on 25k rows will OOM or time out.
+
+2. **Bounded `Promise.all` concurrency.** Never `Promise.all(rows.map(async r => ...))` over a large array. Chunk to at most 100 concurrent promises and `await` each chunk before starting the next.
+
+3. **URL length when using PostgREST `.in()`.** Each SHA-256 hash is 64 chars; URL-encoded commas add ~3 chars each. At 100 items per batch the URL is ~6.7 KB — under Cloudflare's 8 KB proxy limit. **Hard cap: 100 items per `.in()` call.**
+
+4. **Header detection: substring/regex, not exact-match alias tables.** GSC export headers vary by date range and locale ("Last 7/28/90/365 days Clicks", "Clics des 28 derniers jours", etc.). An alias table will silently miss variants. Use `includes()` or regex pattern matching.
+
+5. **Supabase select default is 1,000 rows.** The PostgREST server-side `max_rows` cap (1,000) overrides any client `.limit()` call. Any list view that can return > 1,000 rows **must** use a paginated `.range()` loop, not `.limit()`.
+
+6. **Deno auth context.** `supabase.auth.getUser()` always returns null in Deno edge functions — there is no session storage. Always pass the JWT explicitly: `auth.getUser(token)` or verify via a direct `fetch(/auth/v1/user)` with the token in the Authorization header.
