@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
   // .in() with 1800+ hashes builds a ~130KB URL that Deno's fetch rejects
   // with "TypeError: Invalid URL". Chunking keeps each request well under
   // the URL length limit.
-  const FETCH_CHUNK = 500
+  const FETCH_CHUNK = 100
   const fetchQueryIdsBatched = async () => {
     const results: { id: string; query_hash: string }[] = []
     for (let i = 0; i < hashes.length; i += FETCH_CHUNK) {
