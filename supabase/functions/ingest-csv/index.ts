@@ -192,25 +192,45 @@ Deno.serve(async (req) => {
   }
 
 
-  // ── Fetch query IDs + collect import row result (likely already settled) ──
-  const hashes = queryRows.map(r => r.query_hash)
-  const [
-    { data: queryRecords, error: fetchError },
-    { data: importRow,    error: importError },
-  ] = await Promise.all([
-    svc.from('queries').select('id, query_hash').in('query_hash', hashes),
-    importRowPromise,
-  ])
-
-  if (fetchError || !queryRecords) {
-    return new Response(JSON.stringify({ error: 'Failed to fetch query IDs', detail: fetchError?.message }), {
-      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
-    })
+  // ── Fetch query IDs in chunks of 500 ─────────────────────────────────────
+  // .in() with 1800+ hashes builds a ~130KB URL that Deno's fetch rejects
+  // with "TypeError: Invalid URL". Chunking keeps each request well under
+  // the URL length limit.
+  const FETCH_CHUNK = 500
+  const fetchQueryIdsBatched = async () => {
+    const results: { id: string; query_hash: string }[] = []
+    for (let i = 0; i < hashes.length; i += FETCH_CHUNK) {
+      const { data, error } = await svc
+        .from('queries')
+        .select('id, query_hash')
+        .in('query_hash', hashes.slice(i, i + FETCH_CHUNK))
+      if (error) throw new Error(`batch ${i}: ${error.message}`)
+      if (data) results.push(...data)
+    }
+    return results
   }
-  if (importError || !importRow) {
-    return new Response(JSON.stringify({ error: 'Failed to create import', detail: importError?.message }), {
-      status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
-    })
+
+  const hashes = queryRows.map(r => r.query_hash)
+  let queryRecords: { id: string; query_hash: string }[]
+  let importRow: { id: string } | null
+  try {
+    const [recs, importResult] = await Promise.all([
+      fetchQueryIdsBatched(),
+      importRowPromise,
+    ])
+    queryRecords = recs
+    if (importResult.error || !importResult.data) {
+      return new Response(JSON.stringify({
+        error: 'Failed to create import',
+        detail: importResult.error?.message,
+      }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } })
+    }
+    importRow = importResult.data
+  } catch (err) {
+    return new Response(JSON.stringify({
+      error: 'Failed to fetch query IDs',
+      detail: err instanceof Error ? err.message : String(err),
+    }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } })
   }
 
   const hashToId = new Map(queryRecords.map(q => [q.query_hash, q.id]))
