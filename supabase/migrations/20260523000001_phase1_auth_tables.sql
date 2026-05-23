@@ -9,15 +9,32 @@
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
--- orgs
+-- Create both tables first so the orgs policy (which references memberships)
+-- compiles without a missing-relation error.
 -- ---------------------------------------------------------------------------
+
 create table public.orgs (
   id         uuid        primary key default gen_random_uuid(),
   name       text        not null,
   created_at timestamptz not null default now()
 );
 
-alter table public.orgs enable row level security;
+create table public.memberships (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  org_id  uuid not null references public.orgs  (id) on delete cascade,
+  -- 'owner'  — created automatically on signup; full project access
+  -- 'member' — invited later (Phase 2+)
+  role    text not null default 'owner'
+             check (role in ('owner', 'member')),
+  primary key (user_id, org_id)
+);
+
+-- ---------------------------------------------------------------------------
+-- RLS
+-- ---------------------------------------------------------------------------
+
+alter table public.orgs        enable row level security;
+alter table public.memberships enable row level security;
 
 -- Users may SELECT the orgs they belong to; no INSERT/UPDATE/DELETE policy
 -- (writes are handled exclusively by the SECURITY DEFINER trigger below).
@@ -32,21 +49,6 @@ create policy "members can view their org"
         and  m.user_id = auth.uid()
     )
   );
-
--- ---------------------------------------------------------------------------
--- memberships
--- ---------------------------------------------------------------------------
-create table public.memberships (
-  user_id uuid not null references auth.users (id) on delete cascade,
-  org_id  uuid not null references public.orgs  (id) on delete cascade,
-  -- 'owner'  — created automatically on signup; full project access
-  -- 'member' — invited later (Phase 2+)
-  role    text not null default 'owner'
-             check (role in ('owner', 'member')),
-  primary key (user_id, org_id)
-);
-
-alter table public.memberships enable row level security;
 
 -- Users may SELECT their own membership rows only; no INSERT/UPDATE/DELETE
 -- policy (writes are handled exclusively by the SECURITY DEFINER trigger).
