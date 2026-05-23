@@ -39,23 +39,39 @@ export default function ImportView() {
     if (!projectId || !importId) return
     setLoading(true)
 
+    const PAGE_SIZE = 1000
+
+    const fetchAllRows = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allRows: any[] = []
+      let page = 0
+      while (true) {
+        const from = page * PAGE_SIZE
+        const { data, error } = await supabase
+          .from('import_queries')
+          .select(`
+            clicks_current, impressions_current, ctr_current, position_current,
+            clicks_previous, impressions_previous, ctr_previous, position_previous,
+            queries!inner(query_text)
+          `)
+          .eq('import_id', importId)
+          .range(from, from + PAGE_SIZE - 1)
+        if (error) throw error
+        if (data && data.length > 0) allRows.push(...data)
+        if (!data || data.length < PAGE_SIZE) break
+        page++
+      }
+      return allRows
+    }
+
     Promise.all([
       supabase.from('projects').select('client_name, branded_terms').eq('id', projectId).single(),
-      supabase
-        .from('import_queries')
-        .select(`
-          clicks_current, impressions_current, ctr_current, position_current,
-          clicks_previous, impressions_previous, ctr_previous, position_previous,
-          queries!inner(query_text)
-        `)
-        .eq('import_id', importId)
-        .limit(50_000),
-    ]).then(([{ data: proj }, { data: rows, error: rowErr }]) => {
+      fetchAllRows(),
+    ]).then(([{ data: proj }, rows]) => {
       if (proj) {
         setProjectName(proj.client_name)
         setBrandedTerms(proj.branded_terms)
       }
-      if (rowErr) { toast.error('Failed to load import: ' + rowErr.message); setLoading(false); return }
       if (!rows) { setLoading(false); return }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,6 +114,9 @@ export default function ImportView() {
       })
 
       setQueryData(parsed)
+      setLoading(false)
+    }).catch((err: Error) => {
+      toast.error('Failed to load import: ' + err.message)
       setLoading(false)
     })
   }, [projectId, importId])
