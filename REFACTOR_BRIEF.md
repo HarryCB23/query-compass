@@ -717,12 +717,32 @@ When weights change (new row in `risk_weights` marked `active: true`), recompute
 
 Each phase should land as a working state with passing tests.
 
-### Phase 1 — Foundations & security
-- [ ] Add `.env` to `.gitignore`, create `.env.example`, document required vars in README.
+### Phase 1 — Foundations & security ✅ complete (2026-05-23)
+- [x] Add `.env` to `.gitignore`, create `.env.example`, document required vars in README.
+      **Decision:** `.env` was already in `.gitignore` (added by Lovable post-initial commit).
+      Anon key exposed in commit `4520309` — owner to rotate manually before Phase 2 ships.
 - [ ] Rotate Supabase keys (anon + service). Update Vercel/Lovable env.
-- [ ] Add `verify_jwt = true` to `classify-queries` OR add shared-secret header check (whichever ships faster — JWT requires auth flow).
-- [ ] Add basic Supabase Auth (email magic link) to the app. Gate `/` behind auth.
-- [ ] Create `orgs`, `users`, `memberships` tables. Auto-create org on signup.
+      **Owner action required** — not automated. Rotate in Supabase dashboard, then update
+      Vercel env vars and the Lovable project secrets.
+- [x] Add `verify_jwt = true` to `classify-queries` + dynamic CORS via `ALLOWED_ORIGINS`
+      edge-function secret (comma-separated, wildcard-segment support).
+      Default: `http://localhost:8080,https://*.lovable.app`.
+      Add Vercel production URL when deploying:
+      `npx supabase secrets set ALLOWED_ORIGINS=https://your-app.vercel.app,...`
+- [x] Add basic Supabase Auth (email magic link) to the app. Gate `/` behind auth.
+      **Implementation:** `src/components/auth/AuthPage.tsx` + `AuthGuard.tsx`.
+      No Google OAuth (deferred to Phase 7 per brief). Post-login redirect → `/`.
+- [x] Create `orgs`, `memberships` tables. Auto-create org on signup.
+      **Migration:** `supabase/migrations/20260523000001_phase1_auth_tables.sql`
+      **Decision:** org name defaults to email domain (`split_part(email,'@',2)`), not local part.
+      RLS is SELECT-only; all writes go through the SECURITY DEFINER trigger.
+      ⚠️ Migration not yet applied to remote — requires `npx supabase login` first.
+
+#### Phase 1 deviations / decisions
+- `users` table not created: Supabase manages `auth.users` internally. The brief's
+  schema references it as a foreign key target only — no separate `public.users` table needed.
+- Rate limiting on `classify-queries` deferred to Phase 3 (function will be replaced entirely).
+- CORS origin hardening shipped alongside `verify_jwt` in the same commit.
 
 ### Phase 2 — Schema & persistence
 - [ ] Migrate all tables in section 3. RLS on everything.
