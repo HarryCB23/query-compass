@@ -56,15 +56,26 @@ Deno.serve(async (req) => {
     })
   }
 
-  const jwt = authHeader.replace('Bearer ', '')
-  const anonClient = createClient(SUPABASE_URL, ANON_KEY)
-  const { data: { user }, error: userError } = await anonClient.auth.getUser(jwt)
-  if (userError) {
-    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'invalid JWT', detail: userError.message }), {
+  mem('anon_client_created')  // no anon client — using direct fetch instead
+
+  // Verify JWT via a single fetch to the Auth REST endpoint.
+  // This avoids instantiating a second full supabase-js client (PostgREST +
+  // realtime + auth + storage) just to call getUser().
+  const authResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { Authorization: authHeader, apikey: ANON_KEY },
+  })
+
+  mem('auth_checked')
+
+  if (!authResp.ok) {
+    const detail = await authResp.text()
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'invalid JWT', detail }), {
       status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
-  if (!user) {
+
+  const user = await authResp.json()
+  if (!user?.id) {
     return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'user not found' }), {
       status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
     })
@@ -79,6 +90,8 @@ Deno.serve(async (req) => {
       status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
+
+  mem('body_parsed')
 
   const { project_id, csv_text, file_name } = body
   if (!project_id) {
@@ -95,6 +108,8 @@ Deno.serve(async (req) => {
   // ── Service-role client for privileged DB writes ──────────────────────────
   const svc = createClient(SUPABASE_URL, SERVICE_KEY)
 
+  mem('svc_client_created')
+
   // ── Membership check: user must belong to the org that owns this project ──
   const { data: project, error: projectError } = await svc
     .from('projects')
@@ -107,6 +122,8 @@ Deno.serve(async (req) => {
       status: 404, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
+
+  mem('project_found')
 
   const { data: membership, error: memberError } = await svc
     .from('memberships')
@@ -125,6 +142,8 @@ Deno.serve(async (req) => {
       status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
+
+  mem('member_checked')
 
   // ── Parse CSV ─────────────────────────────────────────────────────────────
   const { rows, errors } = parseGSCCSV(csv_text)
