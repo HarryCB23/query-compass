@@ -126,11 +126,16 @@ export default function Index() {
       const totalImpressionsCurrent = categoryQueries.reduce((sum, q) => sum + q.impressionsCurrent, 0);
       const totalImpressionsPrevious = categoryQueries.reduce((sum, q) => sum + q.impressionsPrevious, 0);
       
-      // Weighted average position (by impressions)
-      const weightedPositionCurrent = categoryQueries.reduce((sum, q) => sum + (q.positionCurrent * q.impressionsCurrent), 0);
-      const weightedPositionPrevious = categoryQueries.reduce((sum, q) => sum + (q.positionPrevious * q.impressionsPrevious), 0);
-      const avgPositionCurrent = totalImpressionsCurrent > 0 ? weightedPositionCurrent / totalImpressionsCurrent : 0;
-      const avgPositionPrevious = totalImpressionsPrevious > 0 ? weightedPositionPrevious / totalImpressionsPrevious : 0;
+      // Weighted average position (by impressions, excluding rows with null position)
+      const posQueriesCur = categoryQueries.filter(q => q.positionCurrent != null);
+      const posWeightCur = posQueriesCur.reduce((sum, q) => sum + q.impressionsCurrent, 0);
+      const weightedPositionCurrent = posQueriesCur.reduce((sum, q) => sum + (q.positionCurrent! * q.impressionsCurrent), 0);
+      const avgPositionCurrent = posWeightCur > 0 ? weightedPositionCurrent / posWeightCur : 0;
+
+      const posQueriesPrev = categoryQueries.filter(q => q.positionPrevious != null);
+      const posWeightPrev = posQueriesPrev.reduce((sum, q) => sum + q.impressionsPrevious, 0);
+      const weightedPositionPrevious = posQueriesPrev.reduce((sum, q) => sum + (q.positionPrevious! * q.impressionsPrevious), 0);
+      const avgPositionPrevious = posWeightPrev > 0 ? weightedPositionPrevious / posWeightPrev : 0;
       
       // CTR calculated from totals
       const avgCtrCurrent = totalImpressionsCurrent > 0 ? (totalClicksCurrent / totalImpressionsCurrent) * 100 : 0;
@@ -180,11 +185,16 @@ export default function Index() {
     const totalImpressionsCurrent = reclassifiedData.reduce((sum, q) => sum + q.impressionsCurrent, 0);
     const totalImpressionsPrevious = reclassifiedData.reduce((sum, q) => sum + q.impressionsPrevious, 0);
     
-    // Weighted average position
-    const weightedPositionCurrent = reclassifiedData.reduce((sum, q) => sum + (q.positionCurrent * q.impressionsCurrent), 0);
-    const weightedPositionPrevious = reclassifiedData.reduce((sum, q) => sum + (q.positionPrevious * q.impressionsPrevious), 0);
-    const avgPositionCurrent = totalImpressionsCurrent > 0 ? weightedPositionCurrent / totalImpressionsCurrent : 0;
-    const avgPositionPrevious = totalImpressionsPrevious > 0 ? weightedPositionPrevious / totalImpressionsPrevious : 0;
+    // Weighted average position (by impressions, excluding rows with null position)
+    const posDataCur = reclassifiedData.filter(q => q.positionCurrent != null);
+    const posWeightCur = posDataCur.reduce((sum, q) => sum + q.impressionsCurrent, 0);
+    const weightedPositionCurrent = posDataCur.reduce((sum, q) => sum + (q.positionCurrent! * q.impressionsCurrent), 0);
+    const avgPositionCurrent = posWeightCur > 0 ? weightedPositionCurrent / posWeightCur : 0;
+
+    const posDataPrev = reclassifiedData.filter(q => q.positionPrevious != null);
+    const posWeightPrev = posDataPrev.reduce((sum, q) => sum + q.impressionsPrevious, 0);
+    const weightedPositionPrevious = posDataPrev.reduce((sum, q) => sum + (q.positionPrevious! * q.impressionsPrevious), 0);
+    const avgPositionPrevious = posWeightPrev > 0 ? weightedPositionPrevious / posWeightPrev : 0;
     
     // CTR from totals
     const avgCtrCurrent = totalImpressionsCurrent > 0 ? (totalClicksCurrent / totalImpressionsCurrent) * 100 : 0;
@@ -261,10 +271,10 @@ export default function Index() {
       row.impressionsPrevious,
       row.impressionsChange,
       row.impressionsChangePercent.toFixed(2),
-      row.ctrCurrent.toFixed(2),
-      row.ctrPrevious.toFixed(2),
-      row.positionCurrent.toFixed(2),
-      row.positionPrevious.toFixed(2)
+      row.ctrCurrent != null ? row.ctrCurrent.toFixed(2) : '',
+      row.ctrPrevious != null ? row.ctrPrevious.toFixed(2) : '',
+      row.positionCurrent != null ? row.positionCurrent.toFixed(2) : '',
+      row.positionPrevious != null ? row.positionPrevious.toFixed(2) : ''
     ].join(','));
     
     const csv = [headers.join(','), ...rows].join('\n');
