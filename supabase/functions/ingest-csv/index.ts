@@ -28,7 +28,13 @@ function corsHeaders(origin: string | null): Record<string, string> {
   }
 }
 
+function mem(label: string) {
+  const { rss, heapTotal, heapUsed, external } = Deno.memoryUsage()
+  console.log(`[mem:${label}] rss=${rss} heapTotal=${heapTotal} heapUsed=${heapUsed} external=${external}`)
+}
+
 Deno.serve(async (req) => {
+  mem('boot')
   const origin = req.headers.get('origin')
   const cors = corsHeaders(origin)
 
@@ -129,7 +135,7 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log(`[ingest-csv] parsed ${rows.length} rows | mem:`, Deno.memoryUsage())
+  mem('parsed')
 
   // ── Hash rows in chunks of 100 to avoid ballooning memory ─────────────────
   const HASH_CHUNK = 100
@@ -148,7 +154,7 @@ Deno.serve(async (req) => {
     }))
   }
 
-  console.log(`[ingest-csv] hashed ${textToHash.size} unique queries | mem:`, Deno.memoryUsage())
+  mem('hashed')
 
   // ── Fire import row insert now — it's independent of query upsert/fetch ───
   // Awaiting it later means it runs in parallel with the query upsert loop,
@@ -180,7 +186,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  console.log(`[ingest-csv] queries upserted | mem:`, Deno.memoryUsage())
+  mem('queries_upserted')
 
   // ── Fetch query IDs + collect import row result (likely already settled) ──
   const hashes = queryRows.map(r => r.query_hash)
@@ -206,7 +212,7 @@ Deno.serve(async (req) => {
   const hashToId = new Map(queryRecords.map(q => [q.query_hash, q.id]))
   const import_id = importRow.id
 
-  console.log(`[ingest-csv] import row created, inserting import_queries | mem:`, Deno.memoryUsage())
+  mem('import_row_created')
 
   // ── Batch-insert import_queries: build + insert per chunk, no full pre-build
   // Previously: built importQueryRows[] (full copy of all data) then sliced.
@@ -236,7 +242,8 @@ Deno.serve(async (req) => {
     }
   }
 
-  console.log(`[ingest-csv] done | mem:`, Deno.memoryUsage())
+  mem('import_queries_inserted')
+  mem('done')
 
   return new Response(
     JSON.stringify({ import_id, row_count: rows.length, errors }),
