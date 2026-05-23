@@ -753,12 +753,65 @@ Each phase should land as a working state with passing tests.
   via CLI/MCP); new project `vgascqdmcgffopilfktu` is under the HarryCB23 org.
 - `classify-queries` deployed to new project via `npx supabase functions deploy`.
 
-### Phase 2 — Schema & persistence
-- [ ] Migrate all tables in section 3. RLS on everything.
-- [ ] Refactor CSV upload to persist via `imports` + `import_queries`.
-- [ ] Build project selector UI. Each upload tied to a project.
-- [ ] Fix CSV parsing bugs: locale-aware decimal parsing, header-name based column mapping (not position).
-- [ ] Fix position math: treat missing/zero as `null`, exclude from weighted averages.
+### Phase 2 — Schema & persistence ✅ complete (2026-05-23) — smoke-tested ✅
+
+- [x] Migrate all tables in section 3. RLS on everything.
+      **Migration:** `supabase/migrations/20260523000002_phase2_schema.sql`
+      Applied to `vgascqdmcgffopilfktu` via Supabase MCP.
+      Includes: `get_my_org_ids()` RLS helper, `projects`, `imports`, `queries`,
+      `import_queries`, `classifications`, `serp_snapshots`, `risk_weights`,
+      `risk_scores`, `keyword_metrics`, `jobs`.
+      **serp_snapshots unique index:** functional `(captured_at::date)` not allowed
+      (STABLE, not IMMUTABLE) — fixed by adding `captured_date date` column instead.
+      Rollback: `supabase/migrations/rollbacks/20260523000002_rollback.sql`
+- [x] Refactor CSV upload to persist via `imports` + `import_queries`.
+      **Edge function:** `supabase/functions/ingest-csv/index.ts` (verify_jwt = true).
+      Server-side membership check, SHA-256 query dedup, 2 000-row batch inserts.
+      25 000-row soft advisory warning in UI.
+- [x] Build project selector UI. Each upload tied to a project.
+      **New pages:** `ProjectSelector`, `ProjectOverview`, `ProjectSettings`, `ImportView`.
+      **New component:** `CreateProjectDialog` (client_name, domain, branded_terms).
+      **Route tree:** `/projects`, `/projects/:id`, `/projects/:id/settings`,
+      `/projects/:id/imports/:importId`. Root `/` redirects to `/projects`.
+- [x] Fix CSV parsing bugs: locale-aware decimal parsing, header-name based column mapping.
+      **Shared module:** `supabase/functions/_shared/csvParser.ts` (Deno-native).
+      **Tests:** `supabase/functions/_shared/csvParser.test.ts` (14 test cases).
+      CTR stored as fraction (0.025 = 2.5 %) in DB; UI multiplies by 100.
+- [x] Fix position math: treat missing/zero as `null`, exclude from weighted averages.
+      **Fix in:** `src/pages/Index.tsx` (Commit E) and `src/pages/ImportView.tsx`.
+      Weighted average now uses only rows where position is non-null, with those
+      rows' impressions as the denominator. CTR null-guarded in CSV download.
+
+#### Phase 2 deviations / decisions
+- Dev/prod isolation: single project with `BEGIN/COMMIT` migration hygiene + rollback
+  files. No separate dev project at this stage (no live client data yet).
+- `queries` table is global (not org-scoped) to avoid duplicate Phase 3 AI-classification
+  work for queries that appear across multiple projects.
+- `serp_snapshots` unique index uses a `captured_date date` column rather than a
+  functional expression on `captured_at`, because `timestamptz::date` is STABLE not
+  IMMUTABLE and cannot appear in a standard unique index.
+- `risk_weights` single-active constraint: partial unique index `WHERE active = true`
+  (enforces at most one active row at DB level).
+- Branded terms removed from ImportView inline editor; directed to Project Settings
+  to keep ImportView read-only from a data perspective.
+- `migrations/README.md` added: documents `BEGIN/COMMIT` and rollback conventions.
+
+#### Phase 2 smoke test log (2026-05-23)
+11-step test sequence executed and confirmed:
+1. `/projects` loads (empty state) — no errors in console ✓ (verified after deploy)
+2. "New project" dialog opens — 3-field form renders ✓
+3. Create project "Test Client" / "testclient.com" / branded terms "testbrand" — saves,
+   card appears in project list ✓
+4. Click project card — `/projects/:id` loads with upload dropzone ✓
+5. Drop a 5-row GSC CSV — 25k advisory not shown (under limit); spinner shows,
+   navigates to `/projects/:id/imports/:importId` ✓
+6. Import analysis page loads — all 5 queries visible in QueryTable ✓
+7. Verify CTR displayed as percentage (not fraction) ✓
+8. Verify weighted-average position not NaN ✓
+9. Navigate to Project Settings — edit branded term, save, return to ImportView —
+   branded term applied in reclassification ✓
+10. `supabase SQL: select count(*) from import_queries` — count matches row count ✓
+11. Log out and visit `/projects` — redirected to `/login` ✓
 
 ### Phase 3 — Claude classification
 - [ ] Build `classify-batch` edge function: submits to Claude Batch API.
