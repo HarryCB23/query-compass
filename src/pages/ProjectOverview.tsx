@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Upload, Settings, ArrowLeft, FileText, Loader2 } from 'lucide-react'
+import { UserMenu } from '@/components/UserMenu'
 import type { Tables } from '@/integrations/supabase/types'
 
 type Project = Tables<'projects'>
@@ -107,12 +108,15 @@ export default function ProjectOverview() {
               <p className="text-xs text-muted-foreground">{project.domain}</p>
             </div>
           </div>
-          <Link to={`/projects/${projectId}/settings`}>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to={`/projects/${projectId}/settings`}>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Settings className="w-4 h-4" />
+                Settings
+              </Button>
+            </Link>
+            <UserMenu />
+          </div>
         </div>
       </header>
 

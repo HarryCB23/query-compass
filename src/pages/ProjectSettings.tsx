@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ArrowLeft, Save } from 'lucide-react'
+import { UserMenu } from '@/components/UserMenu'
 import type { Tables } from '@/integrations/supabase/types'
 
 type Project = Tables<'projects'>
@@ -55,11 +56,14 @@ export default function ProjectSettings() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="container py-4 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/projects/${projectId}`)}>
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <h1 className="text-lg font-bold text-foreground">Project settings</h1>
+        <div className="container py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/projects/${projectId}`)}>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+            <h1 className="text-lg font-bold text-foreground">Project settings</h1>
+          </div>
+          <UserMenu />
         </div>
       </header>
 

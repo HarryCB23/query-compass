@@ -19,6 +19,7 @@ import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, BarChart3, TrendingUp, MousePointer, Eye, Search, Target, Percent, Users, Filter, Download } from 'lucide-react'
+import { UserMenu } from '@/components/UserMenu'
 import type { QueryData, CategoryStats, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import { toast } from 'sonner'
@@ -241,6 +242,7 @@ export default function ImportView() {
                 Edit branded terms in Settings
               </Button>
             </Link>
+            <UserMenu />
           </div>
         </div>
       </header>

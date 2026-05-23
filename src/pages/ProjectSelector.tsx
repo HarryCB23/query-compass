@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { CreateProjectDialog } from '@/components/project/CreateProjectDialog'
 import { Search, Plus, FolderOpen } from 'lucide-react'
+import { UserMenu } from '@/components/UserMenu'
 import type { Tables } from '@/integrations/supabase/types'
 
 type Project = Tables<'projects'>
@@ -39,10 +40,13 @@ export default function ProjectSelector() {
               <p className="text-sm text-muted-foreground">Traffic-risk reviews</p>
             </div>
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            New project
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setDialogOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              New project
+            </Button>
+            <UserMenu />
+          </div>
         </div>
       </header>
 
