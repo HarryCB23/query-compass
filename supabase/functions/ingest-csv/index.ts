@@ -28,13 +28,7 @@ function corsHeaders(origin: string | null): Record<string, string> {
   }
 }
 
-function mem(label: string) {
-  const { rss, heapTotal, heapUsed, external } = Deno.memoryUsage()
-  console.log(`[mem:${label}] rss=${rss} heapTotal=${heapTotal} heapUsed=${heapUsed} external=${external}`)
-}
-
 Deno.serve(async (req) => {
-  mem('boot')
   const origin = req.headers.get('origin')
   const cors = corsHeaders(origin)
 
@@ -56,7 +50,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  mem('anon_client_created')  // no anon client — using direct fetch instead
 
   // Verify JWT via a single fetch to the Auth REST endpoint.
   // This avoids instantiating a second full supabase-js client (PostgREST +
@@ -65,7 +58,6 @@ Deno.serve(async (req) => {
     headers: { Authorization: authHeader, apikey: ANON_KEY },
   })
 
-  mem('auth_checked')
 
   if (!authResp.ok) {
     const detail = await authResp.text()
@@ -91,7 +83,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  mem('body_parsed')
 
   const { project_id, csv_text, file_name } = body
   if (!project_id) {
@@ -108,7 +99,6 @@ Deno.serve(async (req) => {
   // ── Service-role client for privileged DB writes ──────────────────────────
   const svc = createClient(SUPABASE_URL, SERVICE_KEY)
 
-  mem('svc_client_created')
 
   // ── Membership check: user must belong to the org that owns this project ──
   const { data: project, error: projectError } = await svc
@@ -123,7 +113,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  mem('project_found')
 
   const { data: membership, error: memberError } = await svc
     .from('memberships')
@@ -143,7 +132,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  mem('member_checked')
 
   // ── Parse CSV ─────────────────────────────────────────────────────────────
   const { rows, errors } = parseGSCCSV(csv_text)
@@ -154,7 +142,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  mem('parsed')
 
   // ── Hash rows in chunks of 100 to avoid ballooning memory ─────────────────
   const HASH_CHUNK = 100
@@ -173,7 +160,6 @@ Deno.serve(async (req) => {
     }))
   }
 
-  mem('hashed')
 
   // ── Fire import row insert now — it's independent of query upsert/fetch ───
   // Awaiting it later means it runs in parallel with the query upsert loop,
@@ -205,7 +191,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  mem('queries_upserted')
 
   // ── Fetch query IDs + collect import row result (likely already settled) ──
   const hashes = queryRows.map(r => r.query_hash)
@@ -231,7 +216,6 @@ Deno.serve(async (req) => {
   const hashToId = new Map(queryRecords.map(q => [q.query_hash, q.id]))
   const import_id = importRow.id
 
-  mem('import_row_created')
 
   // ── Batch-insert import_queries: build + insert per chunk, no full pre-build
   // Previously: built importQueryRows[] (full copy of all data) then sliced.
@@ -261,8 +245,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  mem('import_queries_inserted')
-  mem('done')
 
   return new Response(
     JSON.stringify({ import_id, row_count: rows.length, errors }),

@@ -138,7 +138,7 @@ export interface ParseCSVResult {
 function tokeniseLine(line: string): string[] {
   const fields: string[] = []
   let i = 0
-  while (i <= line.length) {
+  while (i < line.length) {
     if (line[i] === '"') {
       // Quoted field
       let field = ''

@@ -141,3 +141,11 @@ Deno.test('parseGSCCSV: handles Windows CRLF line endings', () => {
   assertEquals(rows.length, 1)
   assertEquals(rows[0].query_text, 'test query')
 })
+
+Deno.test('tokeniseLine terminates — regression for off-by-one infinite loop', () => {
+  // Previously: `while (i <= line.length)` caused an infinite loop when
+  // i === line.length (line[i] is undefined, else branch pushed '' and never
+  // incremented i). This test will hang/OOM if the bug regresses.
+  const result = parseGSCCSV('Top queries,Clicks\nfoo,1\nbar,2')
+  assertEquals(result.rows.length, 2)
+})
