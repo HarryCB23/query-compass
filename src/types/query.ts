@@ -13,10 +13,10 @@ export interface QueryData {
   clicksPrevious: number;
   impressionsCurrent: number;
   impressionsPrevious: number;
-  ctrCurrent: number;
-  ctrPrevious: number;
-  positionCurrent: number;
-  positionPrevious: number;
+  ctrCurrent: number | null;
+  ctrPrevious: number | null;
+  positionCurrent: number | null;
+  positionPrevious: number | null;
   category: QueryCategory;
   clicksChange: number;
   clicksChangePercent: number;
