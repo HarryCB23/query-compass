@@ -132,9 +132,8 @@ Deno.serve(async (req) => {
   console.log(`[ingest-csv] parsed ${rows.length} rows | mem:`, Deno.memoryUsage())
 
   // ── Hash rows in chunks of 100 to avoid ballooning memory ─────────────────
-  // Promise.all over all rows at once creates N ArrayBuffers + N Uint8Arrays
-  // simultaneously. Chunking keeps the live set small.
   const HASH_CHUNK = 100
+  const encoder = new TextEncoder()  // reuse one instance across all rows
   // textToHash: O(1) lookup later — avoids O(n²) queryRows.find() pattern
   const textToHash = new Map<string, string>()
 
@@ -143,13 +142,29 @@ Deno.serve(async (req) => {
     await Promise.all(chunk.map(async r => {
       if (textToHash.has(r.query_text)) return  // deduplicate within file
       const normalised = r.query_text.toLowerCase().trim()
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalised))
+      const buf = await crypto.subtle.digest('SHA-256', encoder.encode(normalised))
       const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
       textToHash.set(r.query_text, hex)
     }))
   }
 
   console.log(`[ingest-csv] hashed ${textToHash.size} unique queries | mem:`, Deno.memoryUsage())
+
+  // ── Fire import row insert now — it's independent of query upsert/fetch ───
+  // Awaiting it later means it runs in parallel with the query upsert loop,
+  // saving one sequential round trip from the wall-clock budget.
+  const importRowPromise = svc
+    .from('imports')
+    .insert({
+      project_id,
+      file_name: file_name ?? null,
+      source: 'csv',
+      period_start: null,
+      period_end: null,
+      row_count: rows.length,
+    })
+    .select('id')
+    .single()
 
   // ── Upsert queries in BATCH_SIZE chunks ───────────────────────────────────
   const queryRows = Array.from(textToHash.entries()).map(([query_text, query_hash]) => ({ query_text, query_hash }))
@@ -167,41 +182,28 @@ Deno.serve(async (req) => {
 
   console.log(`[ingest-csv] queries upserted | mem:`, Deno.memoryUsage())
 
-  // ── Fetch query IDs for the hashes we just upserted ───────────────────────
+  // ── Fetch query IDs + collect import row result (likely already settled) ──
   const hashes = queryRows.map(r => r.query_hash)
-  const { data: queryRecords, error: fetchError } = await svc
-    .from('queries')
-    .select('id, query_hash')
-    .in('query_hash', hashes)
+  const [
+    { data: queryRecords, error: fetchError },
+    { data: importRow,    error: importError },
+  ] = await Promise.all([
+    svc.from('queries').select('id, query_hash').in('query_hash', hashes),
+    importRowPromise,
+  ])
 
   if (fetchError || !queryRecords) {
     return new Response(JSON.stringify({ error: 'Failed to fetch query IDs', detail: fetchError?.message }), {
       status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
-
-  const hashToId = new Map(queryRecords.map(q => [q.query_hash, q.id]))
-
-  // ── Insert import row ─────────────────────────────────────────────────────
-  const { data: importRow, error: importError } = await svc
-    .from('imports')
-    .insert({
-      project_id,
-      file_name: file_name ?? null,
-      source: 'csv',
-      period_start: null,
-      period_end: null,
-      row_count: rows.length,
-    })
-    .select('id')
-    .single()
-
   if (importError || !importRow) {
     return new Response(JSON.stringify({ error: 'Failed to create import', detail: importError?.message }), {
       status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
+  const hashToId = new Map(queryRecords.map(q => [q.query_hash, q.id]))
   const import_id = importRow.id
 
   console.log(`[ingest-csv] import row created, inserting import_queries | mem:`, Deno.memoryUsage())
