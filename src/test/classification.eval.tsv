@@ -1,0 +1,95 @@
+# Classification eval set for Query Compass
+# Format: query<TAB>expected_category<TAB>notes
+# expected_category must be one of: branded, news, informational, commercial, transactional, product, other
+#
+# Branded examples assume branded_terms = ['telegraph', 'the telegraph'] (test fixture)
+# Add your 100+ labelled examples below. Known false-positive/negative cases from the brief
+# are seeded here — do NOT remove them, they are the regression anchors.
+#
+# ── REGRESSION ANCHORS (false-positive/negative cases from REFACTOR_BRIEF.md §4) ──────────
+how to rank on google news	informational	was: news (false positive — about SEO, not a news query)
+crawl budget for large sites	informational	was: news (false positive — "budget" matched news pattern)
+google discover analysis	informational	was: news (false positive — about Google Discover tool)
+commodity vs non commodity content	informational	was: commercial (false positive — "vs" matched commercial pattern)
+harry clarkson bennett	other	was: other but should extract PERSON entity (name, no news context)
+harry clarkson	other	was: other (partial name, no news context)
+budget 2024	news	distinguish from "crawl budget" — this is a news/political query
+keir starmer pension	news	PERSON + TOPIC in news context
+#
+# ── INFORMATIONAL ───────────────────────────────────────────────────────────────────────────
+what is a featured snippet	informational
+how does google indexing work	informational
+what is domain authority	informational
+how to improve core web vitals	informational
+what is e-e-a-t in seo	informational
+how to write a meta description	informational
+what is technical seo	informational
+difference between nofollow and dofollow	informational
+how to do keyword research	informational
+what is a canonical tag	informational
+guide to internal linking seo	informational
+seo for beginners explained	informational
+what is a robots txt file	informational
+how does pagerank work	informational
+understanding google search console	informational
+#
+# ── NEWS ────────────────────────────────────────────────────────────────────────────────────
+trump tariffs latest	news
+ukraine war update	news
+rishi sunak resignation	news
+israel gaza ceasefire	news
+king charles health	news
+interest rates bank of england	news
+uk inflation latest	news
+nigel farage reform uk	news
+labour budget 2024	news
+nhs waiting times crisis	news
+prince harry memoir	news
+taylor swift eras tour news	news
+man utd sack ten hag	news
+election results 2024	news
+elon musk twitter acquisition	news
+#
+# ── COMMERCIAL ──────────────────────────────────────────────────────────────────────────────
+best seo tools 2024	commercial
+top cms platforms compared	commercial
+semrush vs ahrefs	commercial
+best keyword research tool	commercial
+wordpress vs squarespace	commercial
+ahrefs alternatives	commercial
+top 10 website builders	commercial
+which cms is best for seo	commercial
+screaming frog review	commercial
+best cms for large publishers	commercial
+#
+# ── TRANSACTIONAL ───────────────────────────────────────────────────────────────────────────
+buy ahrefs subscription	transactional
+semrush free trial	transactional
+download screaming frog	transactional
+ahrefs pricing	transactional
+get google search console access	transactional
+subscribe to moz pro	transactional
+wordpress premium plan cost	transactional
+#
+# ── PRODUCT ─────────────────────────────────────────────────────────────────────────────────
+google search console	product
+google analytics 4	product
+semrush	product
+ahrefs	product
+screaming frog seo spider	product
+chatgpt	product
+#
+# ── BRANDED (test fixture uses branded_terms = ['telegraph', 'the telegraph']) ──────────────
+telegraph travel	branded
+the telegraph sport	branded
+telegraph subscription	branded
+#
+# ── OTHER ───────────────────────────────────────────────────────────────────────────────────
+naveed akram	other	named individual, no news context in query alone
+alan perkins	other	named individual
+seo	other	single generic term
+content marketing	other	broad topic, no clear intent
+q1 performance	other	internal business term, no clear intent
+publisher traffic risk	other
+#
+# ── ADD YOUR LABELLED EXAMPLES BELOW THIS LINE ──────────────────────────────────────────────
