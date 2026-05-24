@@ -90,18 +90,12 @@ async function runClaudeClassifier(rows: EvalRow[]): Promise<Map<string, Categor
     process.exit(1)
   }
 
-  console.log(`\n  ⚠  Claude mode: sending ${rows.length} queries to the deployed edge function.`)
-  console.log(`     Estimated cost: ~$${((rows.length / 25) * 0.002).toFixed(4)} (Haiku @ $0.002/25-query batch)`)
-  console.log(`     Set EVAL_AUTH_TOKEN in .env to a valid session JWT.\n`)
-
-  // This mode requires a project_id. Use EVAL_PROJECT_ID env var.
-  const PROJECT_ID = process.env.EVAL_PROJECT_ID
-  if (!PROJECT_ID) {
-    console.error('ERROR: EVAL_PROJECT_ID must be set to a valid project UUID.')
-    process.exit(1)
-  }
-
   const queries = rows.map(r => r.query)
+
+  console.log(`\n  WARNING  Claude mode: sending ${rows.length} queries to the deployed edge function.`)
+  console.log(`     Estimated cost: ~$${((rows.length / 25) * 0.002).toFixed(4)} (Haiku @ $0.002/25-query batch)`)
+  console.log(`     Eval mode — no DB writes.\n`)
+
   const resp = await fetch(`${SUPABASE_URL}/functions/v1/classify-queries`, {
     method: 'POST',
     headers: {
@@ -109,7 +103,7 @@ async function runClaudeClassifier(rows: EvalRow[]): Promise<Map<string, Categor
       'Authorization': `Bearer ${AUTH_TOKEN}`,
       'apikey': SUPABASE_ANON_KEY,
     },
-    body: JSON.stringify({ import_id: 'eval', project_id: PROJECT_ID, eval_queries: queries }),
+    body: JSON.stringify({ mode: 'eval', queries, branded_terms: EVAL_BRANDED_TERMS }),
   })
 
   if (!resp.ok) {
@@ -119,6 +113,15 @@ async function runClaudeClassifier(rows: EvalRow[]): Promise<Map<string, Categor
   }
 
   const data = await resp.json()
+
+  if (data.metrics) {
+    const m = data.metrics
+    const cacheHit = m.cache_read_input_tokens > 0
+    console.log(`  Cache: ${cacheHit ? 'HIT' : 'MISS'} (creation=${m.cache_creation_input_tokens}, read=${m.cache_read_input_tokens})`)
+    console.log(`  Tokens: ${m.input_tokens} input, ${m.output_tokens} output`)
+    console.log(`  Estimated cost: ~$${((m.input_tokens * 0.00000025) + (m.output_tokens * 0.00000125)).toFixed(4)}\n`)
+  }
+
   const results = new Map<string, Category>()
   for (const r of (data.results ?? [])) {
     results.set(r.query, r.category as Category)
