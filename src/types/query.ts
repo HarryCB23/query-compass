@@ -42,13 +42,6 @@ export interface CategoryStats {
   ctrChange: number;
 }
 
-export interface ClassificationConfig {
-  brandedTerms: string[];
-  informationalPatterns: string[];
-  commercialPatterns: string[];
-  transactionalPatterns: string[];
-  productTerms: string[];
-}
 
 export const CATEGORY_COLORS: Record<QueryCategory, string> = {
   branded: '#8b5cf6',

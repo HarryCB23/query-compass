@@ -222,14 +222,18 @@ create table public.serp_snapshots (
   id            uuid        primary key default gen_random_uuid(),
   query_id      uuid        not null references public.queries (id) on delete cascade,
   captured_at   timestamptz not null default now(),
+  -- Separate date column so the unique index below doesn't need a functional
+  -- expression (timestamptz::date is STABLE, not IMMUTABLE, so it can't appear
+  -- in a standard unique index).  Callers set this to the calendar date in UTC.
+  captured_date date        not null default current_date,
   features      jsonb       not null default '{}'
 );
 
 alter table public.serp_snapshots enable row level security;
 
--- Functional unique index: one snapshot per query per calendar day
+-- One snapshot per query per calendar day
 create unique index serp_snapshots_query_day_idx
-  on public.serp_snapshots (query_id, (captured_at::date));
+  on public.serp_snapshots (query_id, captured_date);
 
 create policy "authenticated users can read serp_snapshots"
   on public.serp_snapshots

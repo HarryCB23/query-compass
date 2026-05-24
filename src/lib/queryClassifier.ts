@@ -1,140 +1,24 @@
-import type { QueryCategory, ClassificationConfig } from '@/types/query';
+/**
+ * queryClassifier — branded-only detection.
+ *
+ * Claude handles all category classification (news, informational, commercial,
+ * transactional, product, other) via the classify-queries edge function.
+ * This module's only job is the branded check: exact substring match against
+ * the project's branded_terms list, which is free, instant, and needs no LLM.
+ *
+ * Returns 'branded' if any term matches, 'other' otherwise.
+ * ImportView merges this with DB classifications from the classifications table.
+ */
 
-const DEFAULT_CONFIG: ClassificationConfig = {
-  brandedTerms: ['telegraph', 'the telegraph'],
-  informationalPatterns: [
-    'what is', 'what are', 'how to', 'how do', 'why', 'when', 'where',
-    'guide', 'tutorial', 'explained', 'meaning', 'definition', 'examples',
-    'difference between', 'vs', 'compare', 'which is better',
-    'tips', 'ideas', 'ways to', 'steps to', 'learn', 'understand'
-  ],
-  commercialPatterns: [
-    'best', 'top', 'review', 'reviews', 'comparison', 'alternatives',
-    'vs', 'versus', 'compare', 'pros and cons', 'worth it', 'ranking',
-    'rated', 'recommended', 'should i', 'which'
-  ],
-  transactionalPatterns: [
-    'buy', 'purchase', 'order', 'price', 'cost', 'cheap', 'deal', 'deals',
-    'discount', 'sale', 'subscribe', 'subscription', 'download', 'install',
-    'get', 'shop', 'store', 'free', 'trial', 'coupon', 'promo'
-  ],
-  productTerms: [] // Can be populated with specific product names
-};
-
-// News entities - typically proper nouns, people, places, organizations
-// These are common news-related terms that indicate entity/news queries
-const NEWS_ENTITY_PATTERNS = [
-  // Political figures
-  'trump', 'biden', 'putin', 'zelensky', 'maduro', 'xi jinping', 'macron', 'sunak',
-  'starmer', 'keir starmer', 'jenrick', 'robert jenrick',
-  // Countries in news context
-  'iran', 'ukraine', 'russia', 'china', 'venezuela', 'israel', 'gaza', 'syria',
-  'yemen', 'taiwan', 'greenland', 'north korea', 'islamic republic',
-  // News-related keywords
-  'news', 'latest', 'update', 'updates', 'breaking', 'today', 'live', 'local',
-  // War/conflict terms
-  'war', 'invasion', 'conflict', 'crisis', 'attack', 'military', 'army',
-  // Generic news indicators
-  'president', 'minister', 'election', 'vote', 'poll', 'government',
-  // Organizations/Institutions
-  'nhs', 'ftse', 'ftse 100',
-  // Newsworthy topics (politics, finance, health, environment)
-  'immigration', 'asylum', 'asylum seeker', 'pension', 'retirement', 'tax',
-  'interest rate', 'eviction', 'storm', 'cancer', 'microplastics',
-  // News entities
-  'epstein', 'jeffrey epstein', 'epstein files'
-];
+import type { QueryCategory } from '@/types/query'
 
 export function classifyQuery(
-  query: string, 
-  config: Partial<ClassificationConfig> = {}
+  query: string,
+  config: { brandedTerms: string[] },
 ): QueryCategory {
-  const mergedConfig = { ...DEFAULT_CONFIG, ...config };
-  const normalizedQuery = query.toLowerCase().trim();
-  
-  // Check branded first (highest priority)
-  for (const term of mergedConfig.brandedTerms) {
-    if (normalizedQuery.includes(term.toLowerCase())) {
-      return 'branded';
-    }
+  const q = query.toLowerCase().trim()
+  for (const term of config.brandedTerms) {
+    if (q.includes(term.toLowerCase())) return 'branded'
   }
-  
-  // Check for product terms
-  for (const term of mergedConfig.productTerms) {
-    if (normalizedQuery.includes(term.toLowerCase())) {
-      return 'product';
-    }
-  }
-  
-  // Check transactional patterns
-  for (const pattern of mergedConfig.transactionalPatterns) {
-    if (normalizedQuery.includes(pattern.toLowerCase())) {
-      return 'transactional';
-    }
-  }
-  
-  // Check commercial patterns
-  for (const pattern of mergedConfig.commercialPatterns) {
-    if (normalizedQuery.includes(pattern.toLowerCase())) {
-      return 'commercial';
-    }
-  }
-  
-  // Check informational patterns
-  for (const pattern of mergedConfig.informationalPatterns) {
-    if (normalizedQuery.includes(pattern.toLowerCase())) {
-      return 'informational';
-    }
-  }
-  
-  // Check news entity patterns
-  for (const pattern of NEWS_ENTITY_PATTERNS) {
-    if (normalizedQuery.includes(pattern.toLowerCase())) {
-      return 'news';
-    }
-  }
-  
-  // Default to other
-  return 'other';
-}
-
-export function parseCSV(csvText: string): { headers: string[], rows: string[][] } {
-  const lines = csvText.trim().split('\n');
-  const headers = parseCSVLine(lines[0]);
-  const rows = lines.slice(1).map(line => parseCSVLine(line));
-  return { headers, rows };
-}
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  result.push(current.trim());
-  return result;
-}
-
-export function parsePercentage(value: string): number {
-  if (!value) return 0;
-  const cleaned = value.replace('%', '').trim();
-  return parseFloat(cleaned) || 0;
-}
-
-export function parseNumber(value: string): number {
-  if (!value) return 0;
-  const cleaned = value.replace(/,/g, '').trim();
-  return parseFloat(cleaned) || 0;
+  return 'other'
 }
