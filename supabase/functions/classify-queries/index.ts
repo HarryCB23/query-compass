@@ -1,215 +1,332 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+/**
+ * classify-queries edge function — Claude Haiku query classification.
+ *
+ * Two modes:
+ *
+ *   Normal: POST { import_id, project_id }
+ *     - Auth required, membership checked
+ *     - Fetches import_queries, checks classification cache
+ *     - Branded queries → pattern classifier (model_version='pattern', prompt_version='v0')
+ *     - Remaining → Claude Haiku in batches of 25
+ *     - Upserts into classifications table
+ *     - Returns { classified, cached_hits, cache_writes, branded_pattern, errors, metrics }
+ *
+ *   Eval: POST { mode: 'eval', queries: string[], branded_terms?: string[] }
+ *     - Auth required (no DB writes or reads)
+ *     - Calls Claude directly and returns results for eval harness
+ *     - Returns { results: [{ query, category, entities, reasoning }], metrics }
+ */
 
-// ---------------------------------------------------------------------------
-// CORS — origins are controlled by the ALLOWED_ORIGINS edge-function secret.
-// Format: comma-separated list of allowed origins. Wildcards in the form
-// "https://*.lovable.app" are supported (one wildcard segment only).
-// Default covers local dev and Lovable preview URLs; add your Vercel
-// production URL via: npx supabase secrets set ALLOWED_ORIGINS=...
-// ---------------------------------------------------------------------------
-const RAW_ALLOWED_ORIGINS = Deno.env.get("ALLOWED_ORIGINS") ??
-  "http://localhost:8080,https://*.lovable.app";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { classifyBatch, MODEL_VERSION, PROMPT_VERSION } from '../_shared/claudeClassifier.ts'
 
-const ALLOWED_ORIGINS: Array<string | RegExp> = RAW_ALLOWED_ORIGINS
-  .split(",")
-  .map((o) => o.trim())
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const ANON_KEY     = Deno.env.get('SUPABASE_ANON_KEY')!
+const SERVICE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+// ── CORS ────────────────────────────────────────────────────────────────────
+
+const ALLOWED_ORIGINS: Array<string | RegExp> = (
+  Deno.env.get('ALLOWED_ORIGINS') ?? 'http://localhost:8080,https://*.lovable.app'
+)
+  .split(',')
+  .map(o => o.trim())
   .filter(Boolean)
-  .map((o) => {
-    if (o.includes("*")) {
-      // Convert "https://*.lovable.app" → /^https:\/\/[^.]+\.lovable\.app$/
-      const escaped = o
-        .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
-        .replace("\\*", "[^.]+");
-      return new RegExp(`^${escaped}$`);
-    }
-    return o;
-  });
+  .map(o => o.includes('*')
+    ? new RegExp('^' + o.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[^.]+') + '$')
+    : o)
 
-function getAllowedOriginHeader(requestOrigin: string | null): string | null {
-  if (!requestOrigin) return null;
-  for (const allowed of ALLOWED_ORIGINS) {
-    if (typeof allowed === "string") {
-      if (allowed === requestOrigin) return requestOrigin;
-    } else {
-      if (allowed.test(requestOrigin)) return requestOrigin;
-    }
-  }
-  return null;
-}
-
-function corsHeaders(requestOrigin: string | null): Record<string, string> {
-  const origin = getAllowedOriginHeader(requestOrigin);
-  if (!origin) return {};
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowed = origin && ALLOWED_ORIGINS.some(p =>
+    typeof p === 'string' ? p === origin : (p as RegExp).test(origin)
+  )
   return {
-    "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type",
-    "Vary": "Origin",
-  };
+    'Access-Control-Allow-Origin': allowed ? origin! : '',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  }
 }
 
-// ---------------------------------------------------------------------------
+// ── Helpers ─────────────────────────────────────────────────────────────────
 
-interface NERRequest {
-  queries: string[];
+function isBranded(query: string, terms: string[]): boolean {
+  const q = query.toLowerCase().trim()
+  return terms.some(t => q.includes(t.toLowerCase()))
 }
 
-interface Entity {
-  type: "PERSON" | "ORGANIZATION" | "LOCATION" | "EVENT";
-  name: string;
-}
+const PAGE_SIZE = 500
+const CHUNK = 100  // max UUIDs per .in() to stay under URL limits
 
-interface NERResult {
-  query: string;
-  entities: Entity[];
-  isNewsEntity: boolean;
-}
+// ── Handler ─────────────────────────────────────────────────────────────────
 
-async function extractEntitiesWithOpenAI(
-  queries: string[],
-): Promise<NERResult[]> {
-  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+Deno.serve(async (req) => {
+  const origin = req.headers.get('origin')
+  const cors = corsHeaders(origin)
 
-  if (!OPENAI_API_KEY) {
-    console.error("OPENAI_API_KEY not configured");
-    return queries.map((query) => ({ query, entities: [], isNewsEntity: false }));
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors })
   }
 
-  const systemPrompt =
-    `You are a precise NER system. Output ONLY valid JSON, no markdown, no explanation.
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
 
-For each search query, extract named entities (PERSON, ORGANIZATION, LOCATION, EVENT) that indicate news or current events interest.
+  // ── Auth ──────────────────────────────────────────────────────────────────
 
-Focus on:
-- PERSON: Politicians, celebrities, public figures (e.g., "Trump", "Biden", "Elon Musk")
-- ORGANIZATION: Companies, governments, institutions in news context (e.g., "NATO", "Tesla", "FBI")
-- LOCATION: Countries, cities, regions in geopolitical/news context (e.g., "Ukraine", "Gaza", "Taiwan")
-- EVENT: Named events, conflicts, elections (e.g., "World Cup", "Ukraine war", "2024 election")
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'missing Authorization header' }), {
+      status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
 
-Return JSON array format:
-[
-  {"query": "trump news today", "entities": [{"type": "PERSON", "name": "Trump"}], "isNewsEntity": true},
-  {"query": "best laptop 2024", "entities": [], "isNewsEntity": false}
-]
+  const authResp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: { Authorization: authHeader, apikey: ANON_KEY },
+  })
+  if (!authResp.ok) {
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'invalid JWT' }), {
+      status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+  const user = await authResp.json()
+  if (!user?.id) {
+    return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'user not found' }), {
+      status: 401, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
 
-A query is "isNewsEntity: true" ONLY if it contains recognizable named entities that suggest news/current events interest.`;
+  // ── Parse body ────────────────────────────────────────────────────────────
 
+  let body: Record<string, unknown>
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: queries.map((q, i) => `${i + 1}. ${q}`).join("\n"),
-          },
-        ],
-        temperature: 0.1,
-        response_format: { type: "json_object" },
-      }),
-    });
+    body = await req.json()
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
+      status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error("OpenAI API error:", response.status, error);
-      throw new Error(`OpenAI API error: ${response.status}`);
+  // ── Eval mode ─────────────────────────────────────────────────────────────
+
+  if (body.mode === 'eval') {
+    const evalQueries = body.queries
+    const evalBrandedTerms = (body.branded_terms as string[] | undefined) ?? []
+
+    if (!Array.isArray(evalQueries) || evalQueries.length === 0) {
+      return new Response(JSON.stringify({ error: 'Bad Request', reason: 'queries must be a non-empty array' }), {
+        status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+      })
     }
 
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
+    try {
+      const { results, metrics } = await classifyBatch(evalQueries as string[], evalBrandedTerms)
+      return new Response(JSON.stringify({ results, metrics }), {
+        status: 200, headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    } catch (err) {
+      return new Response(JSON.stringify({
+        error: 'Classification failed',
+        detail: err instanceof Error ? err.message : String(err),
+      }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } })
+    }
+  }
 
-    if (!content) {
-      throw new Error("No content in OpenAI response");
+  // ── Normal mode ───────────────────────────────────────────────────────────
+
+  const import_id = body.import_id as string | undefined
+  const project_id = body.project_id as string | undefined
+
+  if (!import_id || !project_id) {
+    return new Response(JSON.stringify({ error: 'Bad Request', reason: 'missing import_id or project_id' }), {
+      status: 400, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const svc = createClient(SUPABASE_URL, SERVICE_KEY)
+
+  // Membership check: fetch project and verify user belongs to its org
+  const { data: project, error: projectError } = await svc
+    .from('projects')
+    .select('id, org_id, branded_terms')
+    .eq('id', project_id)
+    .single()
+
+  if (projectError || !project) {
+    return new Response(JSON.stringify({ error: 'Project not found' }), {
+      status: 404, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const { data: membership, error: memberError } = await svc
+    .from('memberships')
+    .select('user_id')
+    .eq('user_id', user.id)
+    .eq('org_id', project.org_id)
+    .maybeSingle()
+
+  if (memberError) {
+    return new Response(JSON.stringify({ error: 'Forbidden', detail: memberError.message }), {
+      status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+  if (!membership) {
+    return new Response(JSON.stringify({ error: 'Forbidden', reason: 'not a member of this project\'s organisation' }), {
+      status: 403, headers: { ...cors, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const brandedTerms: string[] = project.branded_terms ?? []
+
+  // ── Paginated fetch of import_queries + query text ───────────────────────
+
+  const allRows: Array<{ query_id: string; query_text: string }> = []
+  let offset = 0
+
+  for (;;) {
+    const { data, error } = await svc
+      .from('import_queries')
+      .select('query_id, queries(query_text)')
+      .eq('import_id', import_id)
+      .range(offset, offset + PAGE_SIZE - 1)
+
+    if (error) {
+      return new Response(JSON.stringify({ error: 'Failed to fetch import_queries', detail: error.message }), {
+        status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+      })
+    }
+    if (!data || data.length === 0) break
+
+    for (const row of data) {
+      const qt = (row.queries as { query_text: string } | null)?.query_text
+      if (qt) allRows.push({ query_id: row.query_id as string, query_text: qt })
     }
 
-    const parsed = JSON.parse(content);
-    const results = parsed.results || parsed.queries || parsed;
+    if (data.length < PAGE_SIZE) break
+    offset += PAGE_SIZE
+  }
 
-    if (Array.isArray(results)) {
-      return results.map((r: any, i: number) => ({
-        query: r.query || queries[i],
-        entities: r.entities || [],
-        isNewsEntity: r.isNewsEntity === true,
-      }));
-    }
+  if (allRows.length === 0) {
+    return new Response(JSON.stringify({
+      classified: 0, cached_hits: 0, cache_writes: 0, branded_pattern: 0, errors: [],
+    }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } })
+  }
 
-    // Handle object response format
-    return queries.map((query) => {
-      const match = results[query];
-      return {
-        query,
-        entities: match?.entities || [],
-        isNewsEntity: match?.isNewsEntity === true,
-      };
-    });
-  } catch (error) {
-    console.error("OpenAI NER error:", error);
-    return queries.map((query) => ({
-      query,
+  // Deduplicate by query_id (an import can reference the same query_id multiple times)
+  const seen = new Set<string>()
+  const uniqueRows: Array<{ query_id: string; query_text: string }> = []
+  for (const r of allRows) {
+    if (!seen.has(r.query_id)) { seen.add(r.query_id); uniqueRows.push(r) }
+  }
+
+  // ── Cache lookup: already classified with current model+prompt version ────
+
+  const cachedIds = new Set<string>()
+  const queryIds = uniqueRows.map(r => r.query_id)
+
+  for (let i = 0; i < queryIds.length; i += CHUNK) {
+    const { data } = await svc
+      .from('classifications')
+      .select('query_id')
+      .in('query_id', queryIds.slice(i, i + CHUNK))
+      .eq('model_version', MODEL_VERSION)
+      .eq('prompt_version', PROMPT_VERSION)
+
+    if (data) data.forEach((r: { query_id: string }) => cachedIds.add(r.query_id))
+  }
+
+  const uncachedRows = uniqueRows.filter(r => !cachedIds.has(r.query_id))
+
+  // ── Branded pre-filter ────────────────────────────────────────────────────
+
+  const brandedRows = uncachedRows.filter(r => isBranded(r.query_text, brandedTerms))
+  const toClassify  = uncachedRows.filter(r => !isBranded(r.query_text, brandedTerms))
+
+  let brandedPattern = 0
+
+  if (brandedRows.length > 0) {
+    const brandedInserts = brandedRows.map(r => ({
+      query_id: r.query_id,
+      category: 'branded',
+      model_version: 'pattern',
+      prompt_version: 'v0',
       entities: [],
-      isNewsEntity: false,
-    }));
-  }
-}
+      reasoning: null,
+    }))
 
-serve(async (req) => {
-  const requestOrigin = req.headers.get("origin");
+    for (let i = 0; i < brandedInserts.length; i += CHUNK) {
+      const { error } = await svc
+        .from('classifications')
+        .upsert(brandedInserts.slice(i, i + CHUNK), { onConflict: 'query_id,model_version,prompt_version' })
 
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders(requestOrigin) });
-  }
-
-  try {
-    const { queries }: NERRequest = await req.json();
-
-    if (!queries || !Array.isArray(queries)) {
-      return new Response(
-        JSON.stringify({ error: "queries must be an array" }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders(requestOrigin),
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      if (error) {
+        console.error('branded upsert error:', error.message)
+      } else {
+        brandedPattern += brandedInserts.slice(i, i + CHUNK).length
+      }
     }
-
-    // Process in batches of 50 to avoid token limits
-    const BATCH_SIZE = 50;
-    const results: NERResult[] = [];
-
-    for (let i = 0; i < queries.length; i += BATCH_SIZE) {
-      const batch = queries.slice(i, i + BATCH_SIZE);
-      const batchResults = await extractEntitiesWithOpenAI(batch);
-      results.push(...batchResults);
-    }
-
-    return new Response(JSON.stringify({ results }), {
-      headers: {
-        ...corsHeaders(requestOrigin),
-        "Content-Type": "application/json",
-      },
-    });
-  } catch (error) {
-    console.error("Error in classify-queries:", error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders(requestOrigin),
-          "Content-Type": "application/json",
-        },
-      },
-    );
   }
-});
+
+  // ── Claude classification ─────────────────────────────────────────────────
+
+  let classified = 0
+  const errors: string[] = []
+  const allMetrics = {
+    cache_creation_input_tokens: 0,
+    cache_read_input_tokens: 0,
+    input_tokens: 0,
+    output_tokens: 0,
+  }
+
+  if (toClassify.length > 0) {
+    try {
+      const { results, metrics } = await classifyBatch(
+        toClassify.map(r => r.query_text),
+        brandedTerms,
+      )
+
+      allMetrics.cache_creation_input_tokens += metrics.cache_creation_input_tokens
+      allMetrics.cache_read_input_tokens     += metrics.cache_read_input_tokens
+      allMetrics.input_tokens               += metrics.input_tokens
+      allMetrics.output_tokens              += metrics.output_tokens
+
+      const textToId = new Map(toClassify.map(r => [r.query_text, r.query_id]))
+
+      const inserts = results
+        .filter(r => textToId.has(r.query))
+        .map(r => ({
+          query_id: textToId.get(r.query)!,
+          category: r.category,
+          model_version: MODEL_VERSION,
+          prompt_version: PROMPT_VERSION,
+          entities: r.entities,
+          reasoning: r.reasoning || null,
+        }))
+
+      for (let i = 0; i < inserts.length; i += CHUNK) {
+        const { error } = await svc
+          .from('classifications')
+          .upsert(inserts.slice(i, i + CHUNK), { onConflict: 'query_id,model_version,prompt_version' })
+
+        if (error) {
+          errors.push(`upsert batch ${i}: ${error.message}`)
+        } else {
+          classified += inserts.slice(i, i + CHUNK).length
+        }
+      }
+    } catch (err) {
+      errors.push(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  return new Response(JSON.stringify({
+    classified,
+    cached_hits: cachedIds.size,
+    cache_writes: classified + brandedPattern,
+    branded_pattern: brandedPattern,
+    errors,
+    metrics: allMetrics,
+  }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } })
+})
