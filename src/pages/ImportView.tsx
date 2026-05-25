@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
+import { CLASSIFIER_PROMPT_VERSION } from '@/lib/classifierVersion'
 import { classifyQuery } from '@/lib/queryClassifier'
 import { StatCard } from '@/components/StatCard'
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart'
@@ -45,6 +46,7 @@ export default function ImportView() {
   const [classifications, setClassifications] = useState<Map<string, ClassificationInfo>>(new Map())
   const [loading, setLoading]                 = useState(true)
   const [classifyState, setClassifyState]     = useState<'idle' | 'classifying' | 'done'>('idle')
+  const [classifyProgress, setClassifyProgress] = useState('')
   const [categoryFilter, setCategoryFilter]   = useState<QueryCategory | 'all'>('all')
   const [entityFilter, setEntityFilter]       = useState<string | null>(null)
 
@@ -72,6 +74,7 @@ export default function ImportView() {
         .from('classifications')
         .select('query_id, category, model_version, reasoning')
         .in('query_id', ids.slice(i, i + CHUNK))
+        .or(`prompt_version.eq.${CLASSIFIER_PROMPT_VERSION},model_version.eq.pattern`)
 
       if (!data) continue
       for (const row of data) {
@@ -98,26 +101,50 @@ export default function ImportView() {
     setClassifications(textMap)
   }, [])
 
-  // ── "Classify with Claude" handler ────────────────────────────────────────
+  // ── "Classify with Claude" handler — client-driven chunking ───────────────
 
   const handleClassify = useCallback(async () => {
     if (!projectId || !importId) return
     setClassifyState('classifying')
+    setClassifyProgress('')
+
+    const CHUNK_SIZE = 150
+    const total = queryData.length
+    let processed = 0
+
     try {
-      const { data, error } = await supabase.functions.invoke('classify-queries', {
-        body: { import_id: importId, project_id: projectId },
-      })
-      if (error) throw error
+      while (processed < total) {
+        setClassifyProgress(`Classifying ${processed.toLocaleString()} of ${total.toLocaleString()} queries…`)
+
+        let result = await supabase.functions.invoke('classify-queries', {
+          body: { import_id: importId, project_id: projectId, offset: processed, limit: CHUNK_SIZE },
+        })
+
+        if (result.error) {
+          const errMsg = result.error instanceof Error ? result.error.message : String(result.error)
+          if (errMsg.includes('401') || errMsg.toLowerCase().includes('unauthorized')) {
+            await supabase.auth.refreshSession()
+            result = await supabase.functions.invoke('classify-queries', {
+              body: { import_id: importId, project_id: projectId, offset: processed, limit: CHUNK_SIZE },
+            })
+          }
+          if (result.error) throw result.error
+        }
+
+        processed += Math.min(CHUNK_SIZE, total - processed)
+      }
+
+      setClassifyProgress('')
       const { ids, idToText } = queryIdDataRef.current
       await loadClassifications(ids, idToText)
       setClassifyState('done')
-      const total = (data?.classified ?? 0) + (data?.branded_pattern ?? 0)
-      toast.success(`${total} quer${total === 1 ? 'y' : 'ies'} classified`)
+      toast.success(`${total.toLocaleString()} quer${total === 1 ? 'y' : 'ies'} classified`)
     } catch (err) {
+      setClassifyProgress('')
       toast.error('Classification failed: ' + (err instanceof Error ? err.message : String(err)))
       setClassifyState('idle')
     }
-  }, [projectId, importId, loadClassifications])
+  }, [projectId, importId, queryData.length, loadClassifications])
 
   // ── Load project + import_queries, then classifications ───────────────────
 
@@ -353,7 +380,7 @@ export default function ImportView() {
               {classifyState === 'classifying' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Classifying {queryData.length.toLocaleString()} queries…
+                  {classifyProgress || 'Classifying…'}
                 </>
               ) : classifyState === 'done' ? (
                 <>

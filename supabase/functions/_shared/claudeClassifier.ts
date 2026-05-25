@@ -7,23 +7,25 @@
  *
  * Architecture:
  *   - 25 queries per Claude call (BATCH_SIZE)
- *   - 429 exponential backoff, up to MAX_RETRIES attempts
- *   - Incomplete-response retry: up to MAX_COMPLETION attempts per batch
+ *   - 429/5xx exponential backoff, up to MAX_RETRIES attempts per call
+ *   - Index-based matching: Claude returns query_index (int), not echoed text
+ *   - Missing indices default to 'other' without retry (non-transient)
  *   - Prompt caching: large system block gets cache_control ephemeral;
  *     branded-terms block (dynamic, small) is NOT cached
  *   - tool_choice: any → forces structured tool_use output
  */
 
 export const MODEL_VERSION = 'claude-haiku-4-5-20251001'
-export const PROMPT_VERSION = 'v1'
+// IMPORTANT: this value must stay in sync with CLASSIFIER_PROMPT_VERSION in
+// src/lib/classifierVersion.ts — update both together.
+export const PROMPT_VERSION = 'v3'
 
-const MAX_RETRIES = 4      // 429 retry attempts per API call
-const MAX_COMPLETION = 3   // incomplete-response retries per batch
+const MAX_RETRIES = 4   // 429/5xx retry attempts per API call
 const BATCH_SIZE = 25
 
 // ── Cached system prompt ────────────────────────────────────────────────────
 
-const SYSTEM_CACHED = `You are a search-query classifier for Google Search Console data.
+const SYSTEM_CACHED = `You are a search-query classifier for Google Search Console data from news publishers.
 
 Classify each query into exactly one category using the classify_query tool.
 
@@ -31,7 +33,10 @@ Classify each query into exactly one category using the classify_query tool.
 
 **informational** — The searcher wants to learn, understand, or find guidance. Signals: question words (what, how, why, when, where), "guide", "explained", "tutorial", "difference between", "understanding", analysis of a tool or platform, technical SEO concepts. This is the default for educational or research intent.
 
-**news** — The searcher wants recent news, current events, or updates. BOTH conditions must hold: (a) a named entity is present (politician, public figure, country, institution, organisation) AND (b) a news/event signal is present (e.g. "latest", "update", "crisis", "resignation", "ceasefire", a year like "2024", topical event words like "war", "election", a political budget event). A generic term that happens to share a word with news (e.g. "crawl budget", "google news" as an SEO topic) is NOT news.
+**news** — The searcher wants news content. Applies to:
+  (a) Queries with a named entity + a news/event signal ("keir starmer resignation", "ukraine war update 2024")
+  (b) Bare named entities (PERSON, PLACE, ORGANIZATION) with no other intent modifier — see Rule 5
+  (c) Generic news-intent keywords ("latest news", "breaking news") with no specific entity — see Rule 7
 
 **product** — A bare product or tool name with minimal modifiers; the searcher is navigating to a specific product. Examples: "semrush", "google analytics 4", "chatgpt", "screaming frog seo spider".
 
@@ -39,15 +44,34 @@ Classify each query into exactly one category using the classify_query tool.
 
 **transactional** — Direct action intent: buy, subscribe, download, sign up, get pricing. Signals: "buy", "download", "subscribe", "pricing", "free trial", "cost", "get access".
 
-**other** — Catch-all: bare proper names without a news context, single generic terms, internal business jargon, ambiguous queries that do not fit any above category.
+**other** — Catch-all: single generic terms with no clear intent, bare WORK titles (book/film/song without context), internal business jargon, ambiguous queries that do not fit any above category.
 
 ## Rules
 
-1. For **news**, both a named entity AND a news/event signal are required. A lone proper name or partial name without a news-context modifier → **other**.
+1. For news queries with an event modifier, a named entity and a news/event signal are both present (e.g. "budget 2024", "ukraine ceasefire latest", "keir starmer pension").
 2. Queries about SEO tools, SEO strategies, or Google products used as topics → **informational**, even if "news" or "discover" appears in the tool/platform name (e.g. "how to rank on google news", "google discover analysis").
 3. "vs" between abstract content concepts → **informational**. "vs" between named products/tools → **commercial**.
-4. Call classify_query once for every query in the batch. Do not skip any.
-5. Never output "branded" — that category is handled upstream before this call.`
+4. Call classify_query once for every query in the batch. Use the query's 1-based position in the list as query_index (first query = 1, second = 2, etc.). Do not skip any.
+5. Bare named entities (PERSON, PLACE, ORGANIZATION) with no other intent modifier → **news** with that entity extracted. Context: this tool serves news publishers, and someone searching a bare entity name on a news publisher's site is looking for news content about that entity. This applies regardless of whether the entity is a famous public figure.
+   Examples: "trump" → news, "iran" → news, "manchester united" → news, "erfan soltani" → news.
+   Exceptions to Rule 5:
+   - Bare PRODUCT name (software tool, app, platform) → **product** instead
+   - Bare WORK title (book, film, song with no other context) → **other** with WORK entity
+   - Entity + commercial modifier ("X vs Y", "best X") → **commercial**
+   - Entity + informational modifier ("how does X work", "what is X") → **informational**
+6. Never output "branded" — that category is handled upstream before this call.
+7. Generic news-intent keywords with no specific entity → **news**. Examples: "latest news", "news today", "breaking news", "world news", "headlines", "today's headlines". The search intent is explicitly news-seeking even without a named entity.
+
+## Examples
+
+Query (index 5): trump
+classify_query({ "query_index": 5, "category": "news", "entities": [{"name": "Donald Trump", "type": "PERSON"}], "reasoning": "Bare named entity on a news publisher — searcher is looking for news content about Trump. Rule 5 applies." })
+
+Query (index 12): latest news
+classify_query({ "query_index": 12, "category": "news", "entities": [], "reasoning": "Generic news-intent keyword with no specific entity. Search intent is explicitly news-seeking. Rule 7 applies." })
+
+Query (index 7): keir starmer pension
+classify_query({ "query_index": 7, "category": "news", "entities": [{"name": "Keir Starmer", "type": "PERSON"}], "reasoning": "Named entity (politician) + news topic (pension policy). Rule 1 applies." })`
 
 // ── Tool schema ─────────────────────────────────────────────────────────────
 
@@ -57,9 +81,9 @@ const CLASSIFY_TOOL = {
   input_schema: {
     type: 'object',
     properties: {
-      query: {
-        type: 'string',
-        description: 'The exact query string being classified.',
+      query_index: {
+        type: 'integer',
+        description: 'The 1-based position of the query in the numbered list (1 = first query, 2 = second, etc.).',
       },
       category: {
         type: 'string',
@@ -86,7 +110,7 @@ const CLASSIFY_TOOL = {
         description: 'One sentence explaining why this category was chosen.',
       },
     },
-    required: ['query', 'category', 'entities', 'reasoning'],
+    required: ['query_index', 'category', 'entities', 'reasoning'],
   },
 }
 
@@ -107,7 +131,7 @@ export interface BatchMetrics {
 }
 
 interface ToolUse {
-  query: string
+  query_index: number
   category: string
   entities: Array<{ name: string; type: string }>
   reasoning: string
@@ -134,7 +158,8 @@ async function callClaude(
     ? `Branded terms (already filtered upstream, for context): ${brandedTerms.join(', ')}`
     : 'Branded terms: none configured.'
 
-  const userContent = queries.map((q, i) => `${i + 1}. ${q}`).join('\n')
+  const userContent = `Classify the following ${queries.length} ${queries.length === 1 ? 'query' : 'queries'}:\n` +
+    queries.map((q, i) => `${i + 1}. ${q}`).join('\n')
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -158,9 +183,9 @@ async function callClaude(
       }),
     })
 
-    if (resp.status === 429) {
-      if (attempt === MAX_RETRIES) throw new Error('Claude 429: max retries exceeded')
-      const retryAfter = Number(resp.headers.get('retry-after') ?? 0)
+    if (resp.status === 429 || resp.status >= 500) {
+      if (attempt === MAX_RETRIES) throw new Error(`Claude ${resp.status}: max retries exceeded`)
+      const retryAfter = resp.status === 429 ? Number(resp.headers.get('retry-after') ?? 0) : 0
       const delay = Math.max(retryAfter * 1000, Math.pow(2, attempt + 1) * 1000)
       await new Promise(r => setTimeout(r, delay))
       continue
@@ -192,7 +217,7 @@ async function callClaude(
   throw new Error('Claude: unreachable after retry loop')
 }
 
-// ── Exported: classify queries in batches with incomplete-response retry ────
+// ── Exported: classify queries in batches ────────────────────────────────────
 
 export async function classifyBatch(
   queries: string[],
@@ -211,36 +236,37 @@ export async function classifyBatch(
   }
 
   for (let batchStart = 0; batchStart < queries.length; batchStart += BATCH_SIZE) {
-    let remaining = queries.slice(batchStart, batchStart + BATCH_SIZE)
+    const batch = queries.slice(batchStart, batchStart + BATCH_SIZE)
+    const { toolUses, usage } = await callClaude(batch, brandedTerms, apiKey)
 
-    for (let attempt = 0; attempt < MAX_COMPLETION && remaining.length > 0; attempt++) {
-      const { toolUses, usage } = await callClaude(remaining, brandedTerms, apiKey)
+    metrics.cache_creation_input_tokens += usage.cache_creation_input_tokens
+    metrics.cache_read_input_tokens     += usage.cache_read_input_tokens
+    metrics.input_tokens               += usage.input_tokens
+    metrics.output_tokens              += usage.output_tokens
 
-      metrics.cache_creation_input_tokens += usage.cache_creation_input_tokens
-      metrics.cache_read_input_tokens += usage.cache_read_input_tokens
-      metrics.input_tokens += usage.input_tokens
-      metrics.output_tokens += usage.output_tokens
-
-      const classified = new Set<string>()
-      for (const tu of toolUses) {
-        if (tu.query && !classified.has(tu.query)) {
-          classified.add(tu.query)
-          results.push({
-            query: tu.query,
-            category: tu.category,
-            entities: tu.entities ?? [],
-            reasoning: tu.reasoning ?? '',
-          })
-        }
+    // Match by 1-based index — robust to any characters in query text
+    const classifiedIndices = new Set<number>()
+    for (const tu of toolUses) {
+      const idx = tu.query_index - 1  // convert 1-based → 0-based
+      if (idx >= 0 && idx < batch.length && !classifiedIndices.has(idx)) {
+        classifiedIndices.add(idx)
+        results.push({
+          query: batch[idx],
+          category: tu.category,
+          entities: tu.entities ?? [],
+          reasoning: tu.reasoning ?? '',
+        })
+      } else {
+        console.warn(`classifyBatch: invalid or duplicate query_index ${tu.query_index} (batch size ${batch.length})`)
       }
-
-      remaining = remaining.filter(q => !classified.has(q))
     }
 
-    // Queries still unclassified after MAX_COMPLETION attempts → default 'other'
-    for (const q of remaining) {
-      console.warn(`classifyBatch: no result for "${q}" after ${MAX_COMPLETION} attempts — defaulting to other`)
-      results.push({ query: q, category: 'other', entities: [], reasoning: 'classification incomplete after max retries' })
+    // Any index without a tool_use → default 'other'; do NOT retry (non-transient)
+    for (let i = 0; i < batch.length; i++) {
+      if (!classifiedIndices.has(i)) {
+        console.warn(`classifyBatch: no result for index ${i + 1} ("${batch[i]}") — defaulting to other`)
+        results.push({ query: batch[i], category: 'other', entities: [], reasoning: 'no classification returned' })
+      }
     }
   }
 

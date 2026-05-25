@@ -138,6 +138,8 @@ Deno.serve(async (req) => {
 
   const import_id = body.import_id as string | undefined
   const project_id = body.project_id as string | undefined
+  const chunkOffset = typeof body.offset === 'number' ? (body.offset as number) : null
+  const chunkLimit  = typeof body.limit  === 'number' ? (body.limit  as number) : null
 
   if (!import_id || !project_id) {
     return new Response(JSON.stringify({ error: 'Bad Request', reason: 'missing import_id or project_id' }), {
@@ -180,37 +182,61 @@ Deno.serve(async (req) => {
 
   const brandedTerms: string[] = project.branded_terms ?? []
 
-  // ── Paginated fetch of import_queries + query text ───────────────────────
+  // ── Fetch import_queries + query text ────────────────────────────────────
 
   const allRows: Array<{ query_id: string; query_text: string }> = []
-  let offset = 0
 
-  for (;;) {
+  if (chunkOffset !== null && chunkLimit !== null) {
+    // Chunked mode: client drives the loop; fetch only the requested slice
     const { data, error } = await svc
       .from('import_queries')
       .select('query_id, queries(query_text)')
       .eq('import_id', import_id)
-      .range(offset, offset + PAGE_SIZE - 1)
+      .order('id', { ascending: true })
+      .range(chunkOffset, chunkOffset + chunkLimit - 1)
 
     if (error) {
       return new Response(JSON.stringify({ error: 'Failed to fetch import_queries', detail: error.message }), {
         status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
-    if (!data || data.length === 0) break
-
-    for (const row of data) {
-      const qt = (row.queries as { query_text: string } | null)?.query_text
-      if (qt) allRows.push({ query_id: row.query_id as string, query_text: qt })
+    if (data) {
+      for (const row of data) {
+        const qt = (row.queries as { query_text: string } | null)?.query_text
+        if (qt) allRows.push({ query_id: row.query_id as string, query_text: qt })
+      }
     }
+  } else {
+    // Full mode: paginate through all rows
+    let pageOffset = 0
+    for (;;) {
+      const { data, error } = await svc
+        .from('import_queries')
+        .select('query_id, queries(query_text)')
+        .eq('import_id', import_id)
+        .range(pageOffset, pageOffset + PAGE_SIZE - 1)
 
-    if (data.length < PAGE_SIZE) break
-    offset += PAGE_SIZE
+      if (error) {
+        return new Response(JSON.stringify({ error: 'Failed to fetch import_queries', detail: error.message }), {
+          status: 500, headers: { ...cors, 'Content-Type': 'application/json' },
+        })
+      }
+      if (!data || data.length === 0) break
+
+      for (const row of data) {
+        const qt = (row.queries as { query_text: string } | null)?.query_text
+        if (qt) allRows.push({ query_id: row.query_id as string, query_text: qt })
+      }
+
+      if (data.length < PAGE_SIZE) break
+      pageOffset += PAGE_SIZE
+    }
   }
 
   if (allRows.length === 0) {
     return new Response(JSON.stringify({
       classified: 0, cached_hits: 0, cache_writes: 0, branded_pattern: 0, errors: [],
+      ...(chunkOffset !== null ? { processed_offset: chunkOffset, processed_count: 0 } : {}),
     }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } })
   }
 
@@ -328,5 +354,6 @@ Deno.serve(async (req) => {
     branded_pattern: brandedPattern,
     errors,
     metrics: allMetrics,
+    ...(chunkOffset !== null ? { processed_offset: chunkOffset, processed_count: allRows.length } : {}),
   }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } })
 })

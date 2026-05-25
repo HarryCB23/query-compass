@@ -1,3 +1,7 @@
+# Supabase local tooling state (not source, not migrations)
+supabase/.temp/
+.env
+
 # Logs
 logs
 *.log

@@ -11,8 +11,8 @@ how to rank on google news	informational	was: news (false positive — about SEO
 crawl budget for large sites	informational	was: news (false positive — "budget" matched news pattern)
 google discover analysis	informational	was: news (false positive — about Google Discover tool)
 commodity vs non commodity content	informational	was: commercial (false positive — "vs" matched commercial pattern)
-harry clarkson bennett	other	was: other but should extract PERSON entity (name, no news context)
-harry clarkson	other	was: other (partial name, no news context)
+harry clarkson bennett	news	v3 relabel: bare PERSON entity on a news publisher → news (Rule 5); was 'other' under v1/v2
+harry clarkson	news	v3 relabel: bare PERSON entity on a news publisher → news (Rule 5); was 'other' under v1/v2
 budget 2024	news	distinguish from "crawl budget" — this is a news/political query
 keir starmer pension	news	PERSON + TOPIC in news context
 #
@@ -49,6 +49,10 @@ taylor swift eras tour news	news
 man utd sack ten hag	news
 election results 2024	news
 elon musk twitter acquisition	news
+russia "evading draft" claims	news	ENTITY(Russia) + news signal; regression: embedded double quotes must not break index matching
+trump "no plans" tariffs	news	ENTITY(Trump) + news context; embedded quotes
+biden "cognitive test" results	news	ENTITY(Biden) + news signal; embedded quotes
+ukraine "peace talks" collapse	news	ENTITY(Ukraine) + event signal; embedded quotes
 #
 # ── COMMERCIAL ──────────────────────────────────────────────────────────────────────────────
 best seo tools 2024	commercial
@@ -85,11 +89,20 @@ the telegraph sport	branded
 telegraph subscription	branded
 #
 # ── OTHER ───────────────────────────────────────────────────────────────────────────────────
-naveed akram	other	named individual, no news context in query alone
-alan perkins	other	named individual
+naveed akram	news	v3 relabel: bare PERSON entity → news (Rule 5); same class as harry clarkson bennett
+alan perkins	news	v3 relabel: bare PERSON entity → news (Rule 5)
 seo	other	single generic term
 content marketing	other	broad topic, no clear intent
 q1 performance	other	internal business term, no clear intent
 publisher traffic risk	other
+#
+# ── v3 REGRESSION ANCHORS: publisher-context bare entities + news-intent keywords ──────────
+iran	news	bare PLACE entity — publisher context, Rule 5
+trump	news	bare PERSON entity — publisher context, Rule 5
+putin	news	bare PERSON entity — publisher context, Rule 5
+china taiwan	news	two PLACE entities, no other modifier — publisher context, Rule 5
+latest news	news	generic news-intent keyword, no entity, Rule 7
+breaking news	news	generic news-intent keyword, no entity, Rule 7
+world news	news	generic news-intent keyword, no entity, Rule 7
 #
 # ── ADD YOUR LABELLED EXAMPLES BELOW THIS LINE ──────────────────────────────────────────────
