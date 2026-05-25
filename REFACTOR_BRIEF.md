@@ -439,6 +439,21 @@ function extractCompetitiveLandscape(raw: DataForSeoResponse) {
 
 The full raw response stays in `raw_response JSONB` so we can re-parse for new fields later without re-querying DataforSEO. **Don't skip this** — DataforSEO responses are too rich to predict every useful field in v1.
 
+### Feature storage policy
+
+DataforSEO Advanced responses include many more features than the Layer 1 table promotes to summary columns. PAA, knowledge panel, image pack, video carousel, related searches, and ads all arrive in the raw response and are fully preserved in `raw_response JSONB`. The summary column set is intentionally narrow.
+
+**Decision rule:** a feature is promoted from raw JSON to a summary column when at least one of these conditions holds:
+
+- **(a) The dashboard needs to aggregate it across all queries** — e.g. "what share of queries have an AI Overview?" requires `has_ai_overview` to be an indexed boolean column. Answering that from JSONB would require a GIN index and a `@>` query over every row.
+- **(b) The risk scoring formula uses it as a direct input.** Every term in the §6 weight definitions must have a corresponding summary column. The scoring function never reads `raw_response`.
+
+If neither condition holds, the feature stays in `raw_response` only. Do not add summary columns speculatively — the backfill path (parse `raw_response` batch job → `ALTER TABLE ... ADD COLUMN` migration) is straightforward and keeps the schema lean.
+
+**Currently promoted columns** (all meet condition (a), (b), or both): `has_ai_overview`, `has_top_stories`, `has_featured_snippet`, `has_paa`, `has_knowledge_graph`, `has_video`, `publisher_in_ai_overview`, `publisher_in_top_stories`, `publisher_in_featured_snippet`, `publisher_in_paa`, `publisher_in_video`, `publisher_in_knowledge_graph`, `publisher_organic_position`, `aio_citation_count`.
+
+**Features in raw JSON only** (as of Phase 4 v1): image pack, shopping carousel, local pack, ads (count and position), related searches, sitelinks, People Also Search For, knowledge panel sub-fields, AIO full citation list, Top Stories full domain list. These are all readable from `raw_response` when needed.
+
 ### Keyword metrics (separate endpoints, for third-party validation)
 
 Beyond the SERP itself, we also pull volume and difficulty data for each query:
@@ -1011,3 +1026,153 @@ UNIQUE (import_id, query_id)
 ```
 
 All other tables (`classifications`, `serp_snapshots`, `risk_weights`, `risk_scores`, `keyword_metrics`, `jobs`) match section 3 exactly.
+
+---
+
+## Phase 3 Retrospective — Claude classification iterations and lessons
+
+**Summary:** Phase 3 took the classification from a keyword/pattern system to a fully LLM-driven pipeline. The path required four prompt versions, a root-cause fix for a production timeout, and a discovered UI bug at the very end. Every issue was caused by an implicit assumption about how Claude would respond, or about how data would flow between the edge function and the frontend.
+
+### The four prompt iterations
+
+#### v0 — Pattern/keyword classifier (pre-Phase 3, in use at end of Phase 2)
+
+Simple JavaScript regex + keyword lists. Branded terms filtered first via exact/partial match; remaining queries assigned a category by checking for presence of words like "how", "best", "buy", "vs". No entity understanding, no context.
+
+**Structural weakness:** every rule was a positive match — if nothing matched, the query fell through to `other`. This meant any query the author hadn't anticipated was silently wrong.
+
+---
+
+#### v1 — Initial Claude implementation
+
+Introduced Claude Haiku via the Messages API with `tool_choice: any` and a `classify_query` tool. System prompt established the six categories with basic definitions. Tool schema required Claude to echo back the original query text as `query: string`, which was then matched against the input array by string equality.
+
+**What v1 revealed (false positives from production data):**
+
+- `"how to rank on google news"` → classified as `news` (the word "news" triggered it)
+- `"crawl budget for large sites"` → classified as `news` ("budget" matched budget-cycle news pattern)
+- `"google discover analysis"` → classified as `news` ("Discover" is a Google product, not a news concept)
+- `"commodity vs non commodity content"` → classified as `commercial` ("vs" triggered product-comparison rule)
+
+These were discovered when the first real Telegraph CSV was run and the `other` bucket was inspected manually. v1's category definitions lacked explicit exclusions for SEO-tool queries and abstract-concept comparisons.
+
+---
+
+#### v2 — False-positive fixes
+
+Rewrote category definitions to add explicit disambiguation rules:
+
+- SEO tools, Google products, SEO strategies → **informational** even if "news" or "discover" appears in the name (Rule 2)
+- "vs" between abstract content concepts → **informational**; "vs" between named products → **commercial** (Rule 3)
+- News queries require both a named entity AND a news/event signal (Rule 1)
+
+Also added the `PROMPT_VERSION` constant and `prompt_version` column on `classifications` so re-runs could coexist with old data.
+
+**What v2 revealed (production run on 1,867-query CSV):**
+
+- **504 IDLE_TIMEOUT** on the edge function. Root cause (found post-mortem): queries containing embedded double quotes (e.g. `russia "evading draft" claims`) caused Claude's echoed `query` string to come back with escaped or typographic quotes that didn't match the plain-ASCII input. The string-equality match failed → the retry loop fired three times per failed query → cumulative wall-clock time exceeded the 30-second edge function limit.
+- **`other` bucket still large (640 queries).** Bare named entities like `trump`, `iran`, `harry clarkson bennett` were falling into `other` because v2 required a news signal alongside the entity. Publisher context was being ignored: on a news site, a bare entity name is a news query.
+
+---
+
+#### v3 — Index-based matching + publisher-context rules
+
+Two structural changes and two new prompt rules:
+
+**Structural: index-based tool schema.** Replaced `query: string` with `query_index: integer` (1-based position in the numbered list). Claude now returns a position number, not echoed text. Matching is `tu.query_index - 1` array index — immune to any characters in the query string. The retry loop for incomplete responses was also removed; missing indices now default to `other` with a `console.warn` (non-transient, retrying never helps).
+
+**Structural: CHUNK_SIZE 250 → 150.** Defensive reduction to keep each edge-function invocation well inside the 30-second wall-clock limit even if Claude is slow on a batch.
+
+**Rule 5 — bare named entities → news.** `PERSON`, `PLACE`, `ORGANIZATION` entities with no other intent modifier → `news` with that entity extracted. Rationale: this tool serves news publishers; someone searching a bare entity name on a news publisher's site is looking for news content. Exceptions: bare PRODUCT name → `product`; bare WORK title → `other`; entity + commercial modifier → `commercial`; entity + informational modifier → `informational`.
+
+**Rule 7 — generic news-intent keywords → news.** `"latest news"`, `"breaking news"`, `"world news"`, `"headlines"` → `news` even with no named entity. Search intent is explicitly news-seeking.
+
+**v3 eval results (81 labelled cases):**
+- Raw accuracy: 93.8% (76/81)
+- After correcting two stale eval labels (both v3 rule 5 reclassifications): 96.3% (78/81)
+- 3 genuine model errors remaining: `interest rates bank of england` (model: news, label: informational), `seo` and `content marketing` (model: informational, label: other)
+
+**Final DB state after v3 production run:** 1,816 queries at `claude-haiku-4-5-20251001 / v3`; 51 at `pattern / v0` (branded). Distribution: 1,508 news (80.8%), 167 other (8.9%), 111 informational (5.9%), 51 branded (2.7%), 26 product (1.4%), 4 commercial (0.2%).
+
+---
+
+### The UI merge bug — cross-version row leakage
+
+After the v3 production run, the ImportView classification breakdown was showing inconsistent counts. Investigation found that the `classifications` table contained **both v2 and v3 rows** for each query — the first run had created v2 rows, the second run upserted v3 rows alongside them (the upsert key was `(query_id, model_version, prompt_version)`, so different `prompt_version` values create separate rows rather than replacing).
+
+`loadClassifications` was selecting `classifications.*` with no `prompt_version` filter. With multiple rows per `query_id`, the join was returning whichever row PostgREST happened to return first — non-deterministic across refreshes.
+
+**Two-part fix:**
+
+1. **DB cleanup:** `DELETE FROM classifications WHERE prompt_version = 'v2'`. Confirmed via `SELECT model_version, prompt_version, COUNT(*) FROM classifications GROUP BY 1, 2` — only `v3 / 1816` and `v0 / 51` remained.
+
+2. **UI filter:** `loadClassifications` now adds `.or('prompt_version.eq.${CLASSIFIER_PROMPT_VERSION},model_version.eq.pattern')` so it reads exactly the current prompt version plus the pattern-matched branded rows. The constant `CLASSIFIER_PROMPT_VERSION` lives in `src/lib/classifierVersion.ts` and must stay in sync with `PROMPT_VERSION` in `claudeClassifier.ts` — both are annotated with a comment to this effect.
+
+**Lesson:** any pipeline that can produce multiple rows for the same logical entity (query + model + version) must filter reads to the intended version explicitly. A missing `WHERE prompt_version = ?` is a silent correctness bug — counts and distributions look plausible but are wrong.
+
+### Phase 3 complexity checklist addendum
+
+Beyond the Phase 2 checklist (URL lengths, pagination, auth context), Phase 3 adds:
+
+1. **Never match LLM output to input by string equality.** Use a positional index (1-based integer) or a stable UUID assigned before the call. Any transformation Claude applies to echoed text — escaping, typographic quotes, truncation — will silently break string matching.
+
+2. **Remove retry loops for non-transient failures.** If Claude doesn't return a result for a given query, re-calling the same prompt won't help — it's a model behaviour, not a transient error. Default gracefully and log the miss. Reserve retries for HTTP 429/5xx only.
+
+3. **Filter DB reads to the current prompt version.** When a pipeline can produce multiple rows per entity across versions, every read must include a `prompt_version = ?` filter. The upsert key must also be scoped by version to allow coexistence during a migration window.
+
+4. **Keep prompt version constants co-located and annotated.** A version string that must match across two files (edge function + frontend) will drift unless both files carry a comment pointing to each other. Add the sync comment when you create the pairing, not after the first drift.
+
+---
+
+## Appendix B — Forward-looking design notes
+
+These notes capture design decisions made during Phase 2 and Phase 3 that should inform Phase 4–6 implementation. They are not specifications — the details will be worked out phase by phase — but they reflect constraints discovered in production that would be expensive to design around later.
+
+### Three-tab UX direction (Phases 4–6)
+
+The current ImportView is a single flat table of queries with classification badges. As SERP enrichment and risk scoring land in Phases 4 and 5, the page will need to surface three distinct datasets without overwhelming the consultant:
+
+| Tab | Contents | Primary Phase |
+|-----|----------|---------------|
+| **Queries** | Query table with classification, GSC metrics, risk score, SERP feature badges. Sort/filter by category, risk tier, SERP feature presence. | Phase 5 |
+| **SERP Analysis** | Per-query SERP breakdown: which features appeared, publisher presence per surface, competitive domain landscape. Entry point for drilling into a specific query's SERP. | Phase 4 |
+| **Risk Summary** | Project-level headline metrics (Clicks at risk, Zero-click exposure %, AIO citation rate, Top Stories capture rate). Category and entity risk breakdowns. Weight tuning (admin). | Phase 5 |
+
+**Implication for Phase 4:** the SERP enrichment UI doesn't need to live inside the query table. Design it as a separate tab from the start; retrofitting a tab system onto a flat page is significantly more disruptive than building it with tabs initially.
+
+### Per-row SERP summary fields vs raw JSON split
+
+The `serp_snapshots` table stores `raw_response JSONB` (full DataforSEO response) alongside a set of pre-extracted boolean/integer summary columns (`has_ai_overview`, `has_featured_snippet`, `publisher_in_ai_overview`, etc.).
+
+**The split is intentional and must be preserved:**
+
+- Summary columns are used for all UI display, filtering, sorting, and risk-score computation. They are indexed. They are cheap to read.
+- `raw_response` is never read by the application in normal operation. It exists so that when we need a new field from the DataforSEO response (e.g. a new SERP feature type, a deeper reference field), we can re-parse without re-querying DataforSEO. DataforSEO responses are rich and not fully predictable.
+
+**Do not read `raw_response` in any query that runs per-row or per-page-load.** Only read it in a one-off migration or backfill job. If a new SERP field is needed, add it as a summary column via migration and backfill from `raw_response` in a batch job.
+
+**Indexing guidance:** index `has_ai_overview`, `has_featured_snippet`, `has_top_stories` as individual boolean columns (partial indexes `WHERE has_ai_overview = true` are efficient for low-cardinality columns). Do not index `raw_response` — GIN indexes on large JSONB columns are expensive to maintain.
+
+**Additional summary columns planned for Phase 4** (meet the graduation criteria above):
+
+- `pixels_above_first_organic` `integer` — total vertical pixel height of search box, ads, and all SERP features rendered above the first organic result. This is a risk-scoring input: it gives the precise magnitude of feature displacement, superseding the binary `has_ai_overview` flag as the primary risk measure when both are available. Sourced from DataforSEO Advanced per-element `rectangle` data. Computed at webhook-receipt time; do not re-derive per query from `raw_response`.
+
+- `publisher_pixel_height` `integer, nullable` — vertical pixel position (top edge) of the publisher's first organic result on the page, or `null` if the publisher is not on page 1. This is a visibility metric only — descriptive context for the consultant, not a risk-score input. Also sourced from per-element `rectangle` data, computed at webhook time.
+
+### AI-Risk vs AI-Visibility separation (Phase 5)
+
+The risk scoring model (section 6) is a single 0–100 traffic-risk score. As the product matures, there is a natural split into two separate axes that consultants will want to report independently:
+
+**AI Traffic Risk** — "How much of this publisher's existing traffic is at risk from AI-generated answers?"
+- Driven by: AIO presence, featured snippet ownership, knowledge graph, CTR decline at stable position
+- Audience: editorial leadership, commercial teams — "how much business are we losing?"
+- Export target: the main Query Compass deliverable
+
+**AI Visibility** — "Is this publisher appearing as a source in AI-generated answers?"
+- Driven by: publisher citation in AIO, publisher presence in PAA expanded answers, `ai_surface_flag`
+- Audience: licensing discussions, brand teams — "are we being used without credit?"
+- Export target: a separate AI content-licensing tool (noted in §11 out-of-scope); `ai_surface_flag` per query is the handoff interface
+
+**Phase 5 implementation guidance:** build the single 0–100 risk score first (as specified in section 6). Store `components JSONB` on `risk_scores` so the score is fully decomposable. When the split is formalised, the visibility components (`aio_visibility_loss`, `publisher_in_aio`, `publisher_in_top_stories`) can be factored out of the existing components without recomputation. Do not conflate the two axes in the UI labelling — call the score "Traffic Risk" from day one, not "AI Risk" or "AI Score", so the split is clean when it arrives.
+
+**Pixel height as a risk-input refinement, not a new axis.** `pixels_above_first_organic` is a continuous refinement of the feature-presence risk inputs — it makes "AIO is present" more precise by replacing the binary flag with "AIO consumes N pixels above organic". This sits entirely within the AI Traffic Risk axis: it measures displacement magnitude, not citation/visibility. The §6 weight `aio_click_loss` should be updated in Phase 5 to accept `pixels_above_first_organic` as a continuous input when available, falling back to the binary multiplier when it is null. `publisher_pixel_height`, by contrast, is pure visibility: it tells the consultant how far down the page their result appears, but carries no penalty in the risk formula.
