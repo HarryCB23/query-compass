@@ -90,10 +90,23 @@ async function runClaudeClassifier(rows: EvalRow[]): Promise<Map<string, Categor
     process.exit(1)
   }
 
-  const queries = rows.map(r => r.query)
+  // Apply the same branded pre-filter the production edge function uses.
+  // Branded queries never reach Claude in production, so we should not
+  // send them to the edge function in eval mode either.
+  const brandedRows = rows.filter(r =>
+    EVAL_BRANDED_TERMS.some(t => r.query.toLowerCase().includes(t.toLowerCase()))
+  )
+  const nonBrandedRows = rows.filter(r =>
+    !EVAL_BRANDED_TERMS.some(t => r.query.toLowerCase().includes(t.toLowerCase()))
+  )
 
-  console.log(`\n  WARNING  Claude mode: sending ${rows.length} queries to the deployed edge function.`)
-  console.log(`     Estimated cost: ~$${((rows.length / 25) * 0.002).toFixed(4)} (Haiku @ $0.002/25-query batch)`)
+  const queries = nonBrandedRows.map(r => r.query)
+
+  console.log(`\n  WARNING  Claude mode: sending ${nonBrandedRows.length} queries to the deployed edge function.`)
+  if (brandedRows.length > 0) {
+    console.log(`     Branded pre-filter: ${brandedRows.length} query/queries classified locally as 'branded' (pattern).`)
+  }
+  console.log(`     Estimated cost: ~$${((nonBrandedRows.length / 25) * 0.002).toFixed(4)} (Haiku @ $0.002/25-query batch)`)
   console.log(`     Eval mode — no DB writes.\n`)
 
   const resp = await fetch(`${SUPABASE_URL}/functions/v1/classify-queries`, {
@@ -123,6 +136,10 @@ async function runClaudeClassifier(rows: EvalRow[]): Promise<Map<string, Categor
   }
 
   const results = new Map<string, Category>()
+  // Inject branded results from the local pattern check
+  for (const r of brandedRows) {
+    results.set(r.query, 'branded')
+  }
   for (const r of (data.results ?? [])) {
     results.set(r.query, r.category as Category)
   }
