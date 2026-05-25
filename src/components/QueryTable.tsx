@@ -2,9 +2,29 @@ import { useState, useMemo } from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CategoryBadge } from './CategoryBadge';
 import type { QueryData, QueryCategory } from '@/types/query';
 import { cn } from '@/lib/utils';
+
+// Small pill showing classification source — informative but visually quiet.
+function SourceBadge({ source }: { source: QueryData['classificationSource'] }) {
+  if (!source) {
+    return <span className="text-[10px] font-mono text-muted-foreground/40 select-none" title="Not yet classified">~</span>
+  }
+  if (source === 'pattern') {
+    return (
+      <span className="inline-flex items-center text-[10px] font-mono text-muted-foreground/60 border border-border/60 rounded px-1 leading-4 select-none">
+        pat
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center text-[10px] font-mono text-violet-400 border border-violet-500/30 rounded px-1 leading-4 select-none">
+      AI
+    </span>
+  )
+}
 
 interface QueryTableProps {
   data: QueryData[];
@@ -178,7 +198,23 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
             {filteredAndSortedData.slice(0, visibleCount).map((row, index) => (
               <tr key={index} className="animate-fade-in" style={{ animationDelay: `${Math.min(index, 20) * 10}ms` }}>
                 <td className="font-medium max-w-xs truncate">{row.query}</td>
-                <td><CategoryBadge category={row.category} /></td>
+                <td>
+                  <div className="flex items-center gap-1.5">
+                    {row.classificationReasoning ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help"><CategoryBadge category={row.category} /></span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">
+                          {row.classificationReasoning}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <CategoryBadge category={row.category} />
+                    )}
+                    <SourceBadge source={row.classificationSource} />
+                  </div>
+                </td>
                 <td className="text-right font-mono">{row.clicksCurrent.toLocaleString()}</td>
                 <td className="text-right font-mono">{formatChange(row.clicksChangePercent, true)}</td>
                 <td className="text-right font-mono">{row.impressionsCurrent.toLocaleString()}</td>
