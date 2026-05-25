@@ -22,6 +22,8 @@ export interface QueryData {
   clicksChangePercent: number;
   impressionsChange: number;
   impressionsChangePercent: number;
+  classificationSource: 'ai-haiku' | 'pattern' | null;
+  classificationReasoning: string | null;
 }
 
 export interface CategoryStats {

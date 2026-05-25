@@ -1,9 +1,11 @@
 /**
- * ImportView — loads a single import from the DB and runs local pattern
- * classification. No AI toggle, no inline branded-terms editor (use
- * Project Settings to change branded terms).
+ * ImportView — loads a single import from the DB, fetches AI classifications
+ * from the classifications table, and merges them with client-side branded
+ * term detection as a fallback for unclassified queries.
+ *
+ * Classification precedence: DB (ai-haiku) > DB (pattern) > client-side branded check
  */
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { classifyQuery } from '@/lib/queryClassifier'
@@ -18,27 +20,111 @@ import { EntityExplorer } from '@/components/EntityExplorer'
 import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BarChart3, TrendingUp, MousePointer, Eye, Search, Target, Percent, Users, Filter, Download } from 'lucide-react'
+import {
+  ArrowLeft, BarChart3, TrendingUp, MousePointer, Eye, Search,
+  Target, Percent, Users, Filter, Download, Sparkles, Loader2,
+} from 'lucide-react'
 import { UserMenu } from '@/components/UserMenu'
 import type { QueryData, CategoryStats, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import { toast } from 'sonner'
 
+interface ClassificationInfo {
+  category: QueryCategory
+  source: 'ai-haiku' | 'pattern'
+  reasoning: string | null
+}
+
 export default function ImportView() {
   const { projectId, importId } = useParams<{ projectId: string; importId: string }>()
   const navigate = useNavigate()
 
-  const [projectName, setProjectName]     = useState<string>('')
-  const [brandedTerms, setBrandedTerms]   = useState<string[]>([])
-  const [queryData, setQueryData]         = useState<QueryData[]>([])
-  const [loading, setLoading]             = useState(true)
-  const [categoryFilter, setCategoryFilter] = useState<QueryCategory | 'all'>('all')
-  const [entityFilter, setEntityFilter]   = useState<string | null>(null)
+  const [projectName, setProjectName]         = useState<string>('')
+  const [brandedTerms, setBrandedTerms]       = useState<string[]>([])
+  const [queryData, setQueryData]             = useState<QueryData[]>([])
+  const [classifications, setClassifications] = useState<Map<string, ClassificationInfo>>(new Map())
+  const [loading, setLoading]                 = useState(true)
+  const [classifyState, setClassifyState]     = useState<'idle' | 'classifying' | 'done'>('idle')
+  const [categoryFilter, setCategoryFilter]   = useState<QueryCategory | 'all'>('all')
+  const [entityFilter, setEntityFilter]       = useState<string | null>(null)
 
-  // Load project (for branded terms) + import_queries joined to queries
+  // Stable ref — holds query_id data so handleClassify can re-fetch classifications
+  // without needing ids/idToText in its dependency array.
+  const queryIdDataRef = useRef<{ ids: string[]; idToText: Map<string, string> }>({
+    ids: [],
+    idToText: new Map(),
+  })
+
+  // ── Fetch classifications from DB ──────────────────────────────────────────
+  // Chunked .in() at 100 UUIDs. Prefers ai-haiku over pattern when both exist.
+  // Returns a Map keyed by query_text for direct merge into QueryData.
+
+  const loadClassifications = useCallback(async (
+    ids: string[],
+    idToText: Map<string, string>,
+  ) => {
+    if (ids.length === 0) return
+    const CHUNK = 100
+    const rawMap = new Map<string, ClassificationInfo>()
+
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const { data } = await supabase
+        .from('classifications')
+        .select('query_id, category, model_version, reasoning')
+        .in('query_id', ids.slice(i, i + CHUNK))
+
+      if (!data) continue
+      for (const row of data) {
+        const source: 'ai-haiku' | 'pattern' =
+          (row.model_version as string).startsWith('claude-') ? 'ai-haiku' : 'pattern'
+        const existing = rawMap.get(row.query_id)
+        // ai-haiku beats pattern; first write wins within same tier
+        if (!existing || (source === 'ai-haiku' && existing.source !== 'ai-haiku')) {
+          rawMap.set(row.query_id, {
+            category: row.category as QueryCategory,
+            source,
+            reasoning: (row.reasoning as string | null) ?? null,
+          })
+        }
+      }
+    }
+
+    // Re-key from query_id → query_text for useMemo merge
+    const textMap = new Map<string, ClassificationInfo>()
+    for (const [qid, info] of rawMap) {
+      const text = idToText.get(qid)
+      if (text) textMap.set(text, info)
+    }
+    setClassifications(textMap)
+  }, [])
+
+  // ── "Classify with Claude" handler ────────────────────────────────────────
+
+  const handleClassify = useCallback(async () => {
+    if (!projectId || !importId) return
+    setClassifyState('classifying')
+    try {
+      const { data, error } = await supabase.functions.invoke('classify-queries', {
+        body: { import_id: importId, project_id: projectId },
+      })
+      if (error) throw error
+      const { ids, idToText } = queryIdDataRef.current
+      await loadClassifications(ids, idToText)
+      setClassifyState('done')
+      const total = (data?.classified ?? 0) + (data?.branded_pattern ?? 0)
+      toast.success(`${total} quer${total === 1 ? 'y' : 'ies'} classified`)
+    } catch (err) {
+      toast.error('Classification failed: ' + (err instanceof Error ? err.message : String(err)))
+      setClassifyState('idle')
+    }
+  }, [projectId, importId, loadClassifications])
+
+  // ── Load project + import_queries, then classifications ───────────────────
+
   useEffect(() => {
     if (!projectId || !importId) return
     setLoading(true)
+    setClassifyState('idle')
 
     const PAGE_SIZE = 1000
 
@@ -51,6 +137,7 @@ export default function ImportView() {
         const { data, error } = await supabase
           .from('import_queries')
           .select(`
+            query_id,
             clicks_current, impressions_current, ctr_current, position_current,
             clicks_previous, impressions_previous, ctr_previous, position_previous,
             queries!inner(query_text)
@@ -68,77 +155,99 @@ export default function ImportView() {
     Promise.all([
       supabase.from('projects').select('client_name, branded_terms').eq('id', projectId).single(),
       fetchAllRows(),
-    ]).then(([{ data: proj }, rows]) => {
+    ]).then(async ([{ data: proj }, rows]) => {
       if (proj) {
         setProjectName(proj.client_name)
         setBrandedTerms(proj.branded_terms)
       }
       if (!rows) { setLoading(false); return }
 
+      // Build query_id ↔ query_text maps for classification lookup + re-fetch
+      const idToText = new Map<string, string>()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const parsed: QueryData[] = rows.map((r: any) => {
-        const query = r.queries.query_text as string
-        const clicksCurrent       = r.clicks_current       ?? 0
-        const clicksPrevious      = r.clicks_previous      ?? 0
-        const impressionsCurrent  = r.impressions_current  ?? 0
-        const impressionsPrevious = r.impressions_previous ?? 0
-        // CTR stored as fraction in DB — multiply by 100 for display
-        const ctrCurrent          = r.ctr_current   != null ? r.ctr_current * 100   : null
-        const ctrPrevious         = r.ctr_previous  != null ? r.ctr_previous * 100  : null
-        const positionCurrent     = r.position_current  ?? null
-        const positionPrevious    = r.position_previous ?? null
-        const clicksChange        = clicksCurrent - clicksPrevious
-        const clicksChangePercent = clicksPrevious > 0
+      for (const r of rows as any[]) {
+        idToText.set(r.query_id as string, (r.queries as { query_text: string }).query_text)
+      }
+      const ids = Array.from(idToText.keys())
+      queryIdDataRef.current = { ids, idToText }
+
+      // Parse raw rows into QueryData (category defaults to 'other'; merge happens in useMemo)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parsed: QueryData[] = (rows as any[]).map(r => {
+        const query                    = (r.queries as { query_text: string }).query_text
+        const clicksCurrent            = r.clicks_current       ?? 0
+        const clicksPrevious           = r.clicks_previous      ?? 0
+        const impressionsCurrent       = r.impressions_current  ?? 0
+        const impressionsPrevious      = r.impressions_previous ?? 0
+        const ctrCurrent               = r.ctr_current   != null ? r.ctr_current  * 100 : null
+        const ctrPrevious              = r.ctr_previous  != null ? r.ctr_previous * 100 : null
+        const positionCurrent          = r.position_current  ?? null
+        const positionPrevious         = r.position_previous ?? null
+        const clicksChange             = clicksCurrent - clicksPrevious
+        const clicksChangePercent      = clicksPrevious > 0
           ? ((clicksCurrent - clicksPrevious) / clicksPrevious) * 100
           : clicksCurrent > 0 ? 100 : 0
         const impressionsChange        = impressionsCurrent - impressionsPrevious
         const impressionsChangePercent = impressionsPrevious > 0
           ? ((impressionsCurrent - impressionsPrevious) / impressionsPrevious) * 100
           : impressionsCurrent > 0 ? 100 : 0
-
         return {
           query,
-          clicksCurrent,
-          clicksPrevious,
-          impressionsCurrent,
-          impressionsPrevious,
-          ctrCurrent,
-          ctrPrevious,
-          positionCurrent,
-          positionPrevious,
+          clicksCurrent, clicksPrevious,
+          impressionsCurrent, impressionsPrevious,
+          ctrCurrent, ctrPrevious,
+          positionCurrent, positionPrevious,
           category: 'other' as QueryCategory,
-          clicksChange,
-          clicksChangePercent,
-          impressionsChange,
-          impressionsChangePercent,
+          clicksChange, clicksChangePercent,
+          impressionsChange, impressionsChangePercent,
+          classificationSource: null,
+          classificationReasoning: null,
         }
       })
 
       setQueryData(parsed)
+      await loadClassifications(ids, idToText)
       setLoading(false)
     }).catch((err: Error) => {
       toast.error('Failed to load import: ' + err.message)
       setLoading(false)
     })
-  }, [projectId, importId])
+  }, [projectId, importId, loadClassifications])
 
-  // Re-classify whenever branded terms or raw data changes
+  // ── Merge DB classifications; branded check covers unclassified queries ───
+
   const classifiedData = useMemo((): QueryData[] =>
-    queryData.map(q => ({
-      ...q,
-      category: classifyQuery(q.query, { brandedTerms }),
-    })),
-  [queryData, brandedTerms])
+    queryData.map(q => {
+      const dbClass = classifications.get(q.query)
+      if (dbClass) {
+        return {
+          ...q,
+          category: dbClass.category,
+          classificationSource: dbClass.source,
+          classificationReasoning: dbClass.reasoning,
+        }
+      }
+      // No DB row — client-side branded check as fallback
+      const patternCat = classifyQuery(q.query, { brandedTerms })
+      return {
+        ...q,
+        category: patternCat,
+        classificationSource: patternCat === 'branded' ? 'pattern' as const : null,
+        classificationReasoning: null,
+      }
+    }),
+  [queryData, brandedTerms, classifications])
 
-  // Category stats (weighted-average position, null-safe)
+  // ── Category stats ─────────────────────────────────────────────────────────
+
   const categoryStats = useMemo((): CategoryStats[] => {
     const categories: QueryCategory[] = ['branded', 'informational', 'news', 'product', 'commercial', 'transactional', 'other']
     return categories.map(category => {
       const qs = classifiedData.filter(q => q.category === category)
-      const totalClicksCurrent       = qs.reduce((s, q) => s + q.clicksCurrent,  0)
-      const totalClicksPrevious      = qs.reduce((s, q) => s + q.clicksPrevious, 0)
-      const totalImpressionsCurrent  = qs.reduce((s, q) => s + q.impressionsCurrent,  0)
-      const totalImpressionsPrevious = qs.reduce((s, q) => s + q.impressionsPrevious, 0)
+      const totalClicksCurrent        = qs.reduce((s, q) => s + q.clicksCurrent,  0)
+      const totalClicksPrevious       = qs.reduce((s, q) => s + q.clicksPrevious, 0)
+      const totalImpressionsCurrent   = qs.reduce((s, q) => s + q.impressionsCurrent,  0)
+      const totalImpressionsPrevious  = qs.reduce((s, q) => s + q.impressionsPrevious, 0)
 
       const posCur  = qs.filter(q => q.positionCurrent  != null)
       const posPrev = qs.filter(q => q.positionPrevious != null)
@@ -150,11 +259,11 @@ export default function ImportView() {
       const avgCtrCurrent  = totalImpressionsCurrent  > 0 ? (totalClicksCurrent  / totalImpressionsCurrent)  * 100 : 0
       const avgCtrPrevious = totalImpressionsPrevious > 0 ? (totalClicksPrevious / totalImpressionsPrevious) * 100 : 0
 
-      const clicksChange            = totalClicksCurrent - totalClicksPrevious
-      const clicksChangePercent     = totalClicksPrevious > 0 ? ((totalClicksCurrent - totalClicksPrevious) / totalClicksPrevious) * 100 : totalClicksCurrent > 0 ? 100 : 0
-      const impressionsChangePercent= totalImpressionsPrevious > 0 ? ((totalImpressionsCurrent - totalImpressionsPrevious) / totalImpressionsPrevious) * 100 : totalImpressionsCurrent > 0 ? 100 : 0
-      const positionChange          = avgPositionPrevious > 0 ? ((avgPositionCurrent - avgPositionPrevious) / avgPositionPrevious) * 100 : 0
-      const ctrChange               = avgCtrPrevious > 0 ? ((avgCtrCurrent - avgCtrPrevious) / avgCtrPrevious) * 100 : avgCtrCurrent > 0 ? 100 : 0
+      const clicksChange             = totalClicksCurrent - totalClicksPrevious
+      const clicksChangePercent      = totalClicksPrevious > 0 ? ((totalClicksCurrent - totalClicksPrevious) / totalClicksPrevious) * 100 : totalClicksCurrent > 0 ? 100 : 0
+      const impressionsChangePercent = totalImpressionsPrevious > 0 ? ((totalImpressionsCurrent - totalImpressionsPrevious) / totalImpressionsPrevious) * 100 : totalImpressionsCurrent > 0 ? 100 : 0
+      const positionChange           = avgPositionPrevious > 0 ? ((avgPositionCurrent - avgPositionPrevious) / avgPositionPrevious) * 100 : 0
+      const ctrChange                = avgCtrPrevious > 0 ? ((avgCtrCurrent - avgCtrPrevious) / avgCtrPrevious) * 100 : avgCtrCurrent > 0 ? 100 : 0
 
       return {
         category,
@@ -183,7 +292,7 @@ export default function ImportView() {
 
     const clicksChange      = totalClicksPrevious      > 0 ? ((totalClicksCurrent - totalClicksPrevious)           / totalClicksPrevious)      * 100 : 0
     const impressionsChange = totalImpressionsPrevious > 0 ? ((totalImpressionsCurrent - totalImpressionsPrevious) / totalImpressionsPrevious) * 100 : 0
-    const positionChange    = avgPositionPrevious       > 0 ? ((avgPositionCurrent - avgPositionPrevious)           / avgPositionPrevious)       * 100 : 0
+    const positionChange    = avgPositionPrevious      > 0 ? ((avgPositionCurrent - avgPositionPrevious)           / avgPositionPrevious)      * 100 : 0
 
     return { totalClicksCurrent, totalClicksPrevious, totalImpressionsCurrent, totalImpressionsPrevious, clicksChange, impressionsChange, queryCount: classifiedData.length, avgPositionCurrent, avgPositionPrevious, positionChange }
   }, [classifiedData])
@@ -206,9 +315,9 @@ export default function ImportView() {
       r.clicksCurrent, r.clicksPrevious,
       r.clicksChange, r.clicksChangePercent.toFixed(2),
       r.impressionsCurrent, r.impressionsPrevious,
-      r.ctrCurrent != null ? r.ctrCurrent.toFixed(2) : '',
-      r.ctrPrevious != null ? r.ctrPrevious.toFixed(2) : '',
-      r.positionCurrent != null ? r.positionCurrent.toFixed(2) : '',
+      r.ctrCurrent    != null ? r.ctrCurrent.toFixed(2)    : '',
+      r.ctrPrevious   != null ? r.ctrPrevious.toFixed(2)   : '',
+      r.positionCurrent  != null ? r.positionCurrent.toFixed(2)  : '',
       r.positionPrevious != null ? r.positionPrevious.toFixed(2) : '',
     ].join(','))
     const csv = [headers.join(','), ...rows].join('\n')
@@ -234,6 +343,30 @@ export default function ImportView() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={handleClassify}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={classifyState === 'classifying'}
+            >
+              {classifyState === 'classifying' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Classifying {queryData.length.toLocaleString()} queries…
+                </>
+              ) : classifyState === 'done' ? (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Classified
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Classify with Claude
+                </>
+              )}
+            </Button>
             <Button onClick={handleDownloadCSV} variant="outline" size="sm" className="gap-2">
               <Download className="w-4 h-4" />Download CSV
             </Button>
@@ -250,9 +383,9 @@ export default function ImportView() {
       <main className="container py-8 space-y-8 animate-fade-in">
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Queries"      value={overallStats.queryCount}              icon={<Search   className="w-5 h-5 text-primary" />} />
+          <StatCard title="Total Queries"      value={overallStats.queryCount}              icon={<Search       className="w-5 h-5 text-primary" />} />
           <StatCard title="Total Clicks"       value={overallStats.totalClicksCurrent}      change={overallStats.clicksChange}      icon={<MousePointer className="w-5 h-5 text-primary" />} />
-          <StatCard title="Total Impressions"  value={overallStats.totalImpressionsCurrent} change={overallStats.impressionsChange}  icon={<Eye      className="w-5 h-5 text-primary" />} />
+          <StatCard title="Total Impressions"  value={overallStats.totalImpressionsCurrent} change={overallStats.impressionsChange}  icon={<Eye          className="w-5 h-5 text-primary" />} />
           <StatCard title="Biggest Shift"
             value={CATEGORY_LABELS[[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.category ?? 'other']}
             change={[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.clicksChangePercent ?? 0}
