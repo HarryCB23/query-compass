@@ -4,9 +4,13 @@ import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { ArrowLeft, Save } from 'lucide-react'
 import { UserMenu } from '@/components/UserMenu'
+import { SERP_LOCATIONS } from '@/lib/serpLocations'
 import type { Tables } from '@/integrations/supabase/types'
 
 type Project = Tables<'projects'>
@@ -15,12 +19,15 @@ export default function ProjectSettings() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
 
-  const [project, setProject]           = useState<Project | null>(null)
-  const [clientName, setClientName]     = useState('')
-  const [domain, setDomain]             = useState('')
-  const [brandedTermsRaw, setBrandedTermsRaw] = useState('')
-  const [loading, setLoading]           = useState(true)
-  const [saving, setSaving]             = useState(false)
+  const [project, setProject]                   = useState<Project | null>(null)
+  const [clientName, setClientName]             = useState('')
+  const [domain, setDomain]                     = useState('')
+  const [brandedTermsRaw, setBrandedTermsRaw]   = useState('')
+  const [altDomainsRaw, setAltDomainsRaw]       = useState('')
+  const [defaultLocationCode, setDefaultLocationCode] = useState<number>(2826)
+  const [dailySerpBudget, setDailySerpBudget]   = useState<string>('')
+  const [loading, setLoading]                   = useState(true)
+  const [saving, setSaving]                     = useState(false)
 
   useEffect(() => {
     if (!projectId) return
@@ -30,6 +37,9 @@ export default function ProjectSettings() {
         setClientName(data.client_name)
         setDomain(data.domain)
         setBrandedTermsRaw(data.branded_terms.join(', '))
+        setAltDomainsRaw((data.alt_domains ?? []).join(', '))
+        setDefaultLocationCode(data.default_location_code ?? 2826)
+        setDailySerpBudget(data.daily_serp_budget != null ? String(data.daily_serp_budget) : '')
       }
       setLoading(false)
     })
@@ -40,9 +50,18 @@ export default function ProjectSettings() {
     if (!projectId) return
     setSaving(true)
     const brandedTerms = brandedTermsRaw.split(',').map(t => t.trim()).filter(Boolean)
+    const altDomains   = altDomainsRaw.split(',').map(t => t.trim()).filter(Boolean)
+    const budget = dailySerpBudget.trim() !== '' ? parseFloat(dailySerpBudget) : null
     const { error } = await supabase
       .from('projects')
-      .update({ client_name: clientName.trim(), domain: domain.trim(), branded_terms: brandedTerms })
+      .update({
+        client_name: clientName.trim(),
+        domain: domain.trim(),
+        branded_terms: brandedTerms,
+        alt_domains: altDomains,
+        default_location_code: defaultLocationCode,
+        daily_serp_budget: budget,
+      })
       .eq('id', projectId)
     setSaving(false)
     if (error) { toast.error('Save failed: ' + error.message); return }
@@ -100,10 +119,55 @@ export default function ProjectSettings() {
             </p>
           </div>
 
-          <div className="pt-2 p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">DataforSEO settings</p>
-            <p>Location: {project.location_code} · Device: {project.device}</p>
-            <p className="text-xs">Phase 4 will add editing for these fields.</p>
+          <div className="space-y-1.5">
+            <Label htmlFor="alt-domains">Alt domains (comma-separated)</Label>
+            <Input
+              id="alt-domains"
+              value={altDomainsRaw}
+              onChange={e => setAltDomainsRaw(e.target.value)}
+              placeholder="m.example.com, amp.example.com"
+            />
+            <p className="text-xs text-muted-foreground">
+              Additional domains counted as "publisher" in SERP analysis (e.g. mobile, AMP).
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="default-location">Default SERP location</Label>
+            <Select
+              value={String(defaultLocationCode)}
+              onValueChange={v => setDefaultLocationCode(Number(v))}
+            >
+              <SelectTrigger id="default-location">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SERP_LOCATIONS.map(loc => (
+                  <SelectItem key={loc.code} value={String(loc.code)}>
+                    {loc.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Pre-selected when you open the Enrich SERP modal.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="daily-budget">Daily SERP budget (USD, optional)</Label>
+            <Input
+              id="daily-budget"
+              type="number"
+              min="0"
+              step="0.01"
+              value={dailySerpBudget}
+              onChange={e => setDailySerpBudget(e.target.value)}
+              placeholder="e.g. 5.00"
+            />
+            <p className="text-xs text-muted-foreground">
+              Soft cap shown in the Enrich modal. No hard enforcement yet.
+            </p>
           </div>
 
           <Button type="submit" disabled={saving} className="gap-2 w-full">
