@@ -23,11 +23,13 @@ function loadFixture(name: string): unknown {
 // ── parseSerpPostback ─────────────────────────────────────────────────────────
 
 describe('parseSerpPostback', () => {
-  it('extracts queryId from tag (importId:queryId format)', () => {
+  it('extracts queryId, importId, locationCode from tag and data', () => {
     const body = loadFixture('product_organic')
     const [result] = parseSerpPostback(body)
-    // tag is 'fixture:product_organic' — queryId is the part after ':'
+    // tag is 'fixture:product_organic'
+    expect(result.importId).toBe('fixture')
     expect(result.queryId).toBe('product_organic')
+    expect(result.locationCode).toBe(2826)
     expect(result.error).toBeNull()
     expect(result.items).not.toBeNull()
   })
@@ -47,12 +49,14 @@ describe('parseSerpPostback', () => {
     expect(result.items!.some(i => i.type === 'ai_overview')).toBe(true)
   })
 
-  it('40102 → items=[], error=null (no_result)', () => {
+  it('40102 → items=[], error=null, importId+locationCode extracted (no_result)', () => {
     const body = loadFixture('no_result')
     const [result] = parseSerpPostback(body)
     expect(result.error).toBeNull()
     expect(result.items).toEqual([])
     expect(result.queryId).toBe('no_result')
+    expect(result.importId).toBe('fixture')
+    expect(result.locationCode).toBe(2826)
   })
 
   it('returns [] for non-object input', () => {
@@ -253,5 +257,60 @@ describe('computeSummaryFields — competitive landscape', () => {
 
     expect(fields.pixels_above_first_organic).toBeNull()
     expect(fields.publisher_pixel_height).toBeNull()
+  })
+})
+
+// ── computeSummaryFields — reserved domain filtering ──────────────────────────
+// Regression anchor: DataforSEO sandbox returns example.com as the organic
+// domain. These must never reach top_organic_domains / top_stories_domains.
+
+describe('computeSummaryFields — reserved domain filtering', () => {
+  it('excludes example.com from top_organic_domains', () => {
+    const items = [
+      { type: 'organic', domain: 'example.com', rank_absolute: 1 },
+      { type: 'organic', domain: 'www.bbc.co.uk', rank_absolute: 2 },
+    ]
+    const fields = computeSummaryFields(items as import('../../supabase/functions/_shared/dataforseoClient').DataForSeoItem[], [])
+    expect(fields.top_organic_domains).not.toContain('example.com')
+    expect(fields.top_organic_domains).toContain('www.bbc.co.uk')
+  })
+
+  it('excludes example.com sub-variants (example.net, sub.example.com)', () => {
+    const items = [
+      { type: 'organic', domain: 'example.net', rank_absolute: 1 },
+      { type: 'organic', domain: 'sub.example.com', rank_absolute: 2 },
+      { type: 'organic', domain: 'www.theguardian.com', rank_absolute: 3 },
+    ]
+    const fields = computeSummaryFields(items as import('../../supabase/functions/_shared/dataforseoClient').DataForSeoItem[], [])
+    expect(fields.top_organic_domains).toEqual(['www.theguardian.com'])
+  })
+
+  it('excludes localhost from top_organic_domains', () => {
+    const items = [{ type: 'organic', domain: 'localhost', rank_absolute: 1 }]
+    const fields = computeSummaryFields(items as import('../../supabase/functions/_shared/dataforseoClient').DataForSeoItem[], [])
+    expect(fields.top_organic_domains).toEqual([])
+  })
+
+  it('excludes .test and .invalid TLD domains', () => {
+    const items = [
+      { type: 'organic', domain: 'site.test', rank_absolute: 1 },
+      { type: 'organic', domain: 'site.invalid', rank_absolute: 2 },
+      { type: 'organic', domain: 'www.independent.co.uk', rank_absolute: 3 },
+    ]
+    const fields = computeSummaryFields(items as import('../../supabase/functions/_shared/dataforseoClient').DataForSeoItem[], [])
+    expect(fields.top_organic_domains).toEqual(['www.independent.co.uk'])
+  })
+
+  it('excludes example.com from top_stories_domains', () => {
+    const storyItem = {
+      type: 'top_stories',
+      items: [
+        { type: 'top_stories_element', domain: 'example.com' },
+        { type: 'top_stories_element', domain: 'news.sky.com' },
+      ],
+    }
+    const fields = computeSummaryFields([storyItem] as import('../../supabase/functions/_shared/dataforseoClient').DataForSeoItem[], [])
+    expect(fields.top_stories_domains).not.toContain('example.com')
+    expect(fields.top_stories_domains).toContain('news.sky.com')
   })
 })

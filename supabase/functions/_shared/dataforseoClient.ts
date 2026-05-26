@@ -82,7 +82,9 @@ export interface DataForSeoItem {
 
 export interface ParsedTaskResult {
   taskId: string
-  queryId: string | null   // extracted from tag field
+  queryId: string | null   // second part of tag: '{importId}:{queryId}'
+  importId: string | null  // first part of tag — used for fallback job lookup
+  locationCode: number | null  // from task.data.location_code — used for fallback
   items: DataForSeoItem[] | null
   error: string | null
 }
@@ -112,6 +114,31 @@ export interface SerpSummaryFields {
   // Pixel geometry (DataforSEO Advanced rectangle data)
   pixels_above_first_organic: number | null
   publisher_pixel_height: number | null
+}
+
+// ── Reserved / placeholder domain filter ────────────────────────────────────
+
+/**
+ * Returns true for IETF-reserved and DataforSEO sandbox placeholder domains
+ * that must never appear in top_organic_domains / top_stories_domains.
+ *
+ * Covers:
+ *   RFC 2606: example.com / example.net / example.org (and their subdomains)
+ *   IANA reserved TLDs: .example  .test  .invalid  .localhost
+ *   Hostnames: localhost
+ */
+function isReservedDomain(domain: string): boolean {
+  if (!domain) return true
+  const d = domain.toLowerCase()
+  return (
+    d === 'localhost' ||
+    d.endsWith('.localhost') ||
+    d === 'example.com' || d === 'example.net' || d === 'example.org' ||
+    d.endsWith('.example.com') || d.endsWith('.example.net') || d.endsWith('.example.org') ||
+    d.endsWith('.example') ||
+    d.endsWith('.test') ||
+    d.endsWith('.invalid')
+  )
 }
 
 // ── eTLD+1 domain matching ───────────────────────────────────────────────────
@@ -309,19 +336,25 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
     // tag lives at task.data.tag — NOT task.tag
     const tag: string | null = t?.data?.tag ?? null
     // tag format: '{importId}:{queryId}'
-    const queryId = tag ? (tag.split(':')[1] ?? null) : null
+    const tagParts = tag ? tag.split(':') : []
+    const importId: string | null = tagParts[0] ?? null
+    const queryId: string | null = tagParts[1] ?? null
+    const locationCode: number | null =
+      typeof t?.data?.location_code === 'number' ? (t.data.location_code as number) : null
 
     const statusCode: number = t?.status_code ?? 0
 
     // 40102: no results for this keyword — complete with empty items, not an error
     if (statusCode === 40102) {
-      return { taskId, queryId, items: [], error: null }
+      return { taskId, queryId, importId, locationCode, items: [], error: null }
     }
 
     if (statusCode !== 20000) {
       return {
         taskId,
         queryId,
+        importId,
+        locationCode,
         items: null,
         error: `DataforSEO status_code=${statusCode}: ${t?.status_message ?? 'unknown'}`,
       }
@@ -329,7 +362,7 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
 
     // result may be null, missing, or an empty array when no SERP data exists
     const resultItems: DataForSeoItem[] = t?.result?.[0]?.items ?? []
-    return { taskId, queryId, items: resultItems, error: null }
+    return { taskId, queryId, importId, locationCode, items: resultItems, error: null }
   })
 }
 
@@ -402,14 +435,14 @@ export function computeSummaryFields(
   const top_organic_domains = organicItems
     .slice(0, 5)
     .map(i => i.domain ?? '')
-    .filter(Boolean)
+    .filter(d => d && !isReservedDomain(d))
 
   const top_stories_domains = items
     .filter(i => i.type === 'top_stories')
     .flatMap(i => i.items ?? [])
     .slice(0, 10)
     .map(s => s.domain ?? '')
-    .filter(Boolean)
+    .filter(d => d && !isReservedDomain(d))
 
   // ── Pixel geometry ─────────────────────────────────────────────────────────
   // Pixel geometry comes from DataforSEO's separate Screenshot endpoint
