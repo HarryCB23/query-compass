@@ -69,7 +69,9 @@ export interface DataForSeoItem {
   rank_absolute?: number | null
   domain?: string | null
   rectangle?: { x: number; y: number; width: number; height: number } | null
-  // AIO
+  // AIO — text content is in 'markdown' (confirmed against live fixtures 2026-05-26).
+  // 'text' is kept as a fallback in case older fixture formats use it.
+  markdown?: string | null
   text?: string | null
   references?: Array<{ domain?: string | null; url?: string | null }> | null
   // Top Stories / Video / PAA
@@ -272,17 +274,27 @@ export async function submitSerpTasks(
  * tag is at task.data.tag (NOT task.tag — those are different fields).
  * tag format: '{importId}:{queryId}'
  *
- * status_code 20000 = task completed (may have empty items — no result is
- * still 20000 with items: []  OR a 4xxxx code; see fixture verification notes).
- * Non-20000 per-task codes are treated as errors.
+ * Per-task status_code interpretation (use task.status_code, NOT outer envelope):
  *
- * TODO: verify no_result fixture status_code. If DataforSEO sends 40xxx for
- * "keyword returned no data", treat it as complete-with-no-data rather than
- * error (serp_job → complete, serp_snapshot upserted with all-false columns).
- * Update this function after fixture capture confirms the exact code.
+ *   20000 → success: Google returned results. Extract items, compute summary fields.
+ *            items may still be an empty array for very obscure queries.
+ *
+ *   40102 → "Task Rejected. No results found for this keyword."
+ *            This is NOT an error — Google genuinely has no results for this query.
+ *            Treatment: success-with-no-data. Return items: [], error: null.
+ *            The serp_job is marked 'complete' (not 'error'). A serp_snapshot row
+ *            is still written with all-false booleans and empty arrays, so the job
+ *            is not retried and the query appears as "enriched" in the UI.
+ *            Cost is still incurred ($0.0006) — the task ran, it just found nothing.
+ *            Do NOT retry 40102 — Google's result is authoritative.
+ *
+ *   Other 4xxxx / 5xxxx → task failed (bad parameters, rate limit, system error).
+ *            Return error: "...", items: null. serp_job marked 'error'.
+ *            Some may be retryable (5xxxx) but that is handled at the submission
+ *            layer (submitSerpTasks backoff), not here.
  *
  * Returns one ParsedTaskResult per task in the postback.
- * error is non-null when DataforSEO signals the task failed.
+ * error is non-null only for true failure codes (not 40102).
  */
 export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
   if (!body || typeof body !== 'object') return []
@@ -300,7 +312,13 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
     const queryId = tag ? (tag.split(':')[1] ?? null) : null
 
     const statusCode: number = t?.status_code ?? 0
-    if (statusCode !== 20000 && statusCode !== 20100) {
+
+    // 40102: no results for this keyword — complete with empty items, not an error
+    if (statusCode === 40102) {
+      return { taskId, queryId, items: [], error: null }
+    }
+
+    if (statusCode !== 20000) {
       return {
         taskId,
         queryId,
@@ -324,12 +342,15 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
  * publisherDomains: [project.domain, ...project.alt_domains]
  * All domain matching uses eTLD+1 comparison (see getRegisteredDomain).
  *
- * Pixel heights:
- *   pixels_above_first_organic = rectangle.y of the first organic item.
- *   publisher_pixel_height     = rectangle.y of the publisher's organic item.
- *   Both are null if rectangle data is absent (non-Advanced response or
- *   DataforSEO omits it for that item). Phase 5 risk scoring falls back
- *   to binary has_ai_overview when pixels_above_first_organic is null.
+ * Pixel geometry (pixels_above_first_organic, publisher_pixel_height):
+ *   Always null in Phase 4. DataforSEO's pixel/rectangle data is on a
+ *   separate product (/v3/serp/screenshot/*), not on the organic Advanced
+ *   endpoint regardless of postback_data parameter or plan tier.
+ *   Phase 4.5 will add a second submission path against the screenshot
+ *   endpoint to populate these fields (~$0.0006/query additional, ~doubles
+ *   enrichment cost when enabled).
+ *   Phase 5 risk scoring uses binary has_ai_overview as the AIO input;
+ *   pixel displacement is a refinement, not a requirement.
  */
 export function computeSummaryFields(
   items: DataForSeoItem[],
@@ -338,11 +359,7 @@ export function computeSummaryFields(
   // ── Layer 1: feature presence ──────────────────────────────────────────────
   const types = new Set(items.map(i => i.type))
 
-  // TODO: verify AI Overview type string against live fixture.
-  // DataforSEO docs use both 'ai_overview' and 'answer_box' in different places.
-  // If the fixture shows a different type string, update this constant and the
-  // has_ai_overview column logic throughout. The fixture for 'latest news'
-  // (UK, 2026) is the most likely to contain an AI Overview.
+  // 'ai_overview' confirmed against live fixture (commercial_shopping, UK 2026-05-26).
   const has_ai_overview     = types.has('ai_overview')
   const has_top_stories     = types.has('top_stories')
   const has_featured_snippet = types.has('featured_snippet')
@@ -375,8 +392,11 @@ export function computeSummaryFields(
   // ── Layer 3: competitive landscape ────────────────────────────────────────
   const aio = items.find(i => i.type === 'ai_overview') ?? null
   const aio_citation_count = aio?.references?.length ?? 0
-  const aio_word_count = aio?.text != null
-    ? aio.text.trim().split(/\s+/).filter(Boolean).length
+  // AIO text lives in 'markdown' (confirmed against live fixtures 2026-05-26).
+  // Fall back to 'text' for any older fixture format.
+  const aioText = aio?.markdown ?? aio?.text ?? null
+  const aio_word_count = aioText != null
+    ? aioText.trim().split(/\s+/).filter(Boolean).length
     : null
 
   const top_organic_domains = organicItems
@@ -391,13 +411,14 @@ export function computeSummaryFields(
     .map(s => s.domain ?? '')
     .filter(Boolean)
 
-  // ── Pixel geometry (DataforSEO Advanced rectangle data) ────────────────────
-  // rectangle.y is the CSS-pixel top edge of the element from page top.
-  // Returns null if rectangle is absent — do not estimate or interpolate.
-  const firstOrganic = organicItems[0] ?? null
-  const pixels_above_first_organic = firstOrganic?.rectangle?.y ?? null
-
-  const publisher_pixel_height = publisherOrganic?.rectangle?.y ?? null
+  // ── Pixel geometry ─────────────────────────────────────────────────────────
+  // Pixel geometry comes from DataforSEO's separate Screenshot endpoint
+  // (/v3/serp/screenshot/*), not from organic Advanced. Phase 4.5 will add
+  // a second submission path against the screenshot endpoint and populate
+  // these fields. Until then, null is correct, and Phase 5 risk scoring
+  // falls back to has_ai_overview as the binary AIO input.
+  const pixels_above_first_organic = null
+  const publisher_pixel_height = null
 
   return {
     has_ai_overview,

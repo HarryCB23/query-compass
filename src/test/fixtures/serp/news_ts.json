@@ -1,0 +1,1179 @@
+{
+  "version": "0.1.20260525",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.0863 sec.",
+  "cost": 0.0006,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "05260949-1824-0066-0000-8c2e39324d65",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.0272 sec.",
+      "cost": 0.0006,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "task_get",
+        "advanced",
+        "05260949-1824-0066-0000-8c2e39324d65"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "task_get",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "trump",
+        "location_code": 2826,
+        "language_code": "en",
+        "device": "mobile",
+        "os": "android",
+        "depth": 10,
+        "postback_url": "https://hunter-unhappily-sevenfold.ngrok-free.dev/functions/v1/serp-webhook?token=PLACEHOLDER",
+        "postback_data": "advanced",
+        "tag": "fixture:news_ts"
+      },
+      "result": [
+        {
+          "keyword": "trump",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2826,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=trump&hl=en&gl=GB&ie=UTF-8&uule=w+CAIQIFISCamRx0IRO1oCEXoliDJDoPjE",
+          "datetime": "2026-05-26 06:49:59 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": [
+            "top_stories",
+            "knowledge_graph",
+            "video",
+            "organic",
+            "people_also_search",
+            "people_also_ask",
+            "perspectives"
+          ],
+          "se_results_count": 0,
+          "pages_count": 1,
+          "items_count": 16,
+          "items": [
+            {
+              "type": "top_stories",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[1]",
+              "title": "Top stories",
+              "items": [
+                {
+                  "type": "top_stories_element",
+                  "source": "Sky News",
+                  "domain": "news.sky.com",
+                  "title": "Iran war latest: US launches new strikes near Strait of Hormuz",
+                  "date": "23 minutes ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-26 06:26:59 +00:00",
+                  "url": "https://news.sky.com/story/iran-war-latest-trump-strikes-strait-hormuz-israel-hezbollah-live-13509565",
+                  "image_url": "https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-8c2e39324d65:0",
+                  "badges": [
+                    "live"
+                  ]
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The Independent",
+                  "domain": "www.independent.co.uk",
+                  "title": "Iran-US war latest: America launches strikes on Iranian sites and mine-laying boats",
+                  "date": "4 hours ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-26 02:49:59 +00:00",
+                  "url": "https://www.independent.co.uk/news/world/middle-east/iran-us-war-live-trump-deal-nuclear-weapons-strait-hormuz-b2982940.html",
+                  "image_url": "https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-8c2e39324d65:1",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The Guardian",
+                  "domain": "www.theguardian.com",
+                  "title": "Trump news at a glance: Iran says ‘contradictory statements’ from US hindering deal negotiations",
+                  "date": "1 hour ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-26 05:49:59 +00:00",
+                  "url": "https://www.theguardian.com/us-news/2026/may/26/trump-news-at-a-glance-latest-updates-today",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtb3fB5qfrABul8vI6fLcll3hGLK_vXNFhrvd_qNY6T2NUAfpakPU22K7Z2Q&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The Telegraph",
+                  "domain": "www.telegraph.co.uk",
+                  "title": "Trump: All countries in Middle East must sign diplomatic deal with Israel",
+                  "date": "6 hours ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-26 00:49:59 +00:00",
+                  "url": "https://www.telegraph.co.uk/world-news/2026/05/25/donald-trump-tells-middle-east-countries-sign-arab-accords/",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqItyoTpqzsNrc5DUyCWBvPGrN4gTFBJt9saXT9S8l9TZy7V0wyKduUsyLKQ&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "BBC",
+                  "domain": "www.bbc.co.uk",
+                  "title": "Trump says Iran talks 'constructive' but Tehran 'must understand' it cannot develop a nuclear weapon",
+                  "date": "1 day ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-25 06:49:59 +00:00",
+                  "url": "https://www.bbc.co.uk/news/live/cgkp25x23pjt",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTl5DvewBb6lDuJZJOaTPqeE-MkIUq7u0hKc38ajKrLUbKRadWltTvFQWD_jA&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "Al Jazeera",
+                  "domain": "www.aljazeera.com",
+                  "title": "Iran war updates: Tehran’s negotiators in Qatar; Israel pounds Lebanon",
+                  "date": "7 hours ago",
+                  "amp_version": true,
+                  "timestamp": "2026-05-25 23:49:59 +00:00",
+                  "url": "https://www.aljazeera.com/amp/news/liveblog/2026/5/24/live-trump-says-iran-deal-not-fully-negotiated-yet",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQdJFGX0cr63hzDVirjHu7u1c3CSsrdaalYYduaZsgnaDCMEvDyHVE8GhHqA&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "Financial Times",
+                  "domain": "www.ft.com",
+                  "title": "Iran is beating Trump at the art of the deal",
+                  "date": "19 hours ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-25 11:49:59 +00:00",
+                  "url": "https://www.ft.com/content/24cd5d27-34f9-4286-bfdc-984843c25683?syn-25a6b1a6=1",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSxiS9javsfK9So-Z8DFebdwLe3mOl0LQk2VWYpbyh5SFtvNyf0A4-7ZtfpNQ&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "BBC",
+                  "domain": "www.bbc.com",
+                  "title": "Trump tells US negotiators 'not to rush' into deal with Iran",
+                  "date": "1 day ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-25 06:49:59 +00:00",
+                  "url": "https://www.bbc.com/news/articles/clyp0040x7po",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSanJxGUNxJ8vxYI902F36-xnDd9piUV2YBVbg-0d7rum-5ANrSaURiwAlh8w&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The New Yorker",
+                  "domain": "www.newyorker.com",
+                  "title": "Why Any Plausible Iran Deal Is a Humiliation for Trump",
+                  "date": "15 hours ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-25 15:49:59 +00:00",
+                  "url": "https://www.newyorker.com/news/q-and-a/why-any-plausible-iran-deal-is-a-humiliation-for-trump",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5ovtPbapXz9Bs0y2ukQVqr9FsBIaiiFjKQwQLTsd1ePVHMkVBQwJ0OTIrKw&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The Times of Israel",
+                  "domain": "www.timesofisrael.com",
+                  "title": "Trump says ‘mandatory’ for Muslim nations involved in Iran deal to join Abraham Accords",
+                  "date": "16 hours ago",
+                  "amp_version": true,
+                  "timestamp": "2026-05-25 14:49:59 +00:00",
+                  "url": "https://www.timesofisrael.com/trump-says-mandatory-for-muslim-nations-involved-in-iran-deal-to-join-abraham-accords/amp/",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRruQmIOnB24M48SSaIvv6HOxLSX8nWJLORA8QlC7gDLTqang8jDu-ikgz52w&usqp=CAI&s",
+                  "badges": null
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "top_stories",
+              "rank_group": 2,
+              "rank_absolute": 2,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[1]/div[1]/div[4]/div[3]",
+              "title": "Also in the news",
+              "items": [
+                {
+                  "type": "top_stories_element",
+                  "source": "BBC",
+                  "domain": "www.bbc.com",
+                  "title": "Trump to undergo annual medical exam ahead of 80th birthday",
+                  "date": "1 hour ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-26 05:49:59 +00:00",
+                  "url": "https://www.bbc.com/news/videos/c8jvv3m30pro",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTob48ETbYaivIrMUKeqDK9dsYVI8xbknh3hSnkrzuoDjfEzcOyp7f6vKUIqw&usqp=CAI&s",
+                  "badges": [
+                    "video"
+                  ]
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The New Yorker",
+                  "domain": "www.newyorker.com",
+                  "title": "Can Anything Stop Trump’s Corruption?",
+                  "date": "21 hours ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-25 09:49:59 +00:00",
+                  "url": "https://www.newyorker.com/news/the-financial-page/can-anything-stop-trumps-corruption",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQqKSRMCIM6GQD9sOkSRq48iz58Djptd1uVazlD1qfw_6iyW0FglJz8R1VuFQ&usqp=CAI&s",
+                  "badges": null
+                },
+                {
+                  "type": "top_stories_element",
+                  "source": "The Mirror",
+                  "domain": "www.mirror.co.uk",
+                  "title": "Doctor has Trump health concerns as White House confirms hospital visit",
+                  "date": "47 minutes ago",
+                  "amp_version": false,
+                  "timestamp": "2026-05-26 06:02:59 +00:00",
+                  "url": "https://www.mirror.co.uk/news/us-news/doctor-raises-concerns-trump-health-37204422.amp",
+                  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQR_PWwRSEv-xZxbMdTfQ9DC9wvxWiNtcpkrOxrRbrxV51rkRHP6-ZXE9swBA&usqp=CAI&s",
+                  "badges": null
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "knowledge_graph",
+              "rank_group": 1,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]/div[1]",
+              "title": "Donald Trump",
+              "subtitle": "45th and 47th U.S. President",
+              "description": null,
+              "card_id": null,
+              "url": null,
+              "image_url": null,
+              "logo_url": null,
+              "cid": null,
+              "items": [
+                {
+                  "type": "knowledge_graph_images_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]",
+                  "link": null,
+                  "items": [
+                    {
+                      "type": "knowledge_graph_images_element",
+                      "url": "https://encrypted-tbn1.gstatic.com/licensed-image?q=tbn:ANd9GcTzCHpiq9CihE6-cIn7z4bP0KJR5fh_NPvlUzgUct80L6YPnTaG_pMkXOgLTT3WZq3Fdf9BLbyHXZ7bAG8",
+                      "domain": "encrypted-tbn1.gstatic.com",
+                      "alt": "Image of WASHINGTON, DC - APRIL 18: U.S. President Donald Trump reacts as he speaks in the Oval Office before signing an Executive Order April 18, 2026 in Washington, DC. The executive order directs the Food and Drug Administration to issue new guidance on the use of psychedelic drugs intended for clinical trials for U.S. veterans suffering from Post Traumatic Stress Disorder.  (Photo by Tasos Katopodis/Getty Images)",
+                      "image_url": "https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-8c2e39324d65:2",
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]"
+                    },
+                    {
+                      "type": "knowledge_graph_images_element",
+                      "url": "https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcQPlkr6Lme6MoPxMeS16Ipx4EV8qQaqcbDwLX2FIyNRlXpIzcX2VCsuMuGeVc3aL41KcnA9rj2jRPiw9EQ",
+                      "domain": "encrypted-tbn3.gstatic.com",
+                      "alt": "Image of US President Donald Trump speaks to members of the media outside the Oval Office of the White House in Washington, DC, US, on Monday, April 13, 2026. Trump is highlighting the \"No Tax on Tips\" policy, which allows eligible workers to deduct qualified tips from their federal income taxes as part of the One Big Beautiful Bill Act. Photographer: Salwan Georges/Bloomberg via Getty Images",
+                      "image_url": "https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-8c2e39324d65:3",
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]"
+                    },
+                    {
+                      "type": "knowledge_graph_images_element",
+                      "url": "https://encrypted-tbn0.gstatic.com/licensed-image?q=tbn:ANd9GcR9iKsW_M-2nIofPohddVfSGdeXUDBN35phAR0I0Jv3-PXWZMAvXz0bvgAnhkfAZhlA0aGWQsReSs9a3Jk",
+                      "domain": "encrypted-tbn0.gstatic.com",
+                      "alt": "Image of DORAL, FLORIDA - MARCH 09: U.S. President Donald Trump speaks to reporters during a news conference at Trump National Doral Miami on March 9, 2026 in Doral, Florida. President Trump spoke on his administration's strikes on Iran. (Photo by Roberto Schmidt/Getty Images)",
+                      "image_url": "https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-8c2e39324d65:4",
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]",
+                  "title": "Age",
+                  "data_attrid": "lab/fact/1p/Born",
+                  "text": "79 years 14 June 1946",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Age79 years14 June 1946",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=donald+trump+age&stick=H4sIAAAAAAAAAOPgE-LUz9U3SC4ssTTQEs1OttIvSM0vyEkFUkXF-XlWiempi1gFUvLzEnNSFEqKSnMLFIBCAMqYnZc3AAAA&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQ18AJegQIHBAB",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[2]/div[1]/div[1]/div[1]/span[1]/span[1]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_description_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]",
+                  "text": "Overview Donald John Trump is an American politician, media personality, and businessman who is the 47th president of the United States. A member of the Republican Party, he served as the 45th president from 2017 to 2021. Wikipedia... Wikipedia",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": " Wikipedia",
+                      "url": "https://en.wikipedia.org/wiki/Donald_Trump",
+                      "domain": "en.wikipedia.org",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "... Wikipedia",
+                      "url": "https://en.wikipedia.org/wiki/Donald_Trump",
+                      "domain": "en.wikipedia.org",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]",
+                  "title": "Born",
+                  "data_attrid": "lab/fact/1p/Born",
+                  "text": "14 June 1946 (79 years), Jamaica Hospital Medical Center, New York, United States",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Jamaica Hospital Medical Center, New York, United States",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Jamaica+Hospital+Medical+Center&si=AL3DRZELanY_V96Y0q8q1FLKlfOvH_NlT58VxGyuYFaMYKzFMyir6AnXC4dr34yPrbaTBMHQEGlk9HiRgVBbZZoqF12PNZ_erOWzKhB3OW0pviYyxm7JFfZ3shDsenlgYsPtIidFBdX5zaDd6q5MxCeWFenTmMVeNsHxSrD8noFfGIYIOvF2o8nq1BqEbUk8uE__yP6ap6BS9zictvWHsN7LblFyrbahFxeAs6bspIli0UmV63soDtw%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegQIeBAB",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]",
+                  "title": "Spouse",
+                  "data_attrid": "lab/fact/1p/Spouse",
+                  "text": "Melania Trump (m. 2005), Marla Maples (m. 1993–1999), Ivana Trump (m. 1977–1990)",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Melania Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Melania+Trump&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmnbC4g-tiL7f4KIzaiBvkwPuQweuvjQA1fAes8NsiEcDdWQ0q2vyUm28zISe2WcfvHWebCSzLqTG_OD-n_gDH8cA_QRuupcW2Hbqzz_swhrRyQdUZuzx_EOgVXHZ6ZnG-7em_ydplOgVVw6KCOZbFIaZi1MvNj_PpiKyDoNGF8dX97RusoGx2xDbWOYGS_I9LakK4PmBBPp3ytcyIkmM-7kY5V-R&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegQIfhAB",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Marla Maples",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Marla+Maples&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmiAaFc5pELjnGXIPEmqQHM69y8we3Sw6BSAbFOvOglV1u-o_rBfRtyaOJtTR0zCDIdqXnJX58RWNvgaTNKR66BLG-r0d1rxoIG8PC21ABNmRzY-rblMJNSKFL4mOoHEsM97UQdWTg92X5MxppiaWr4FGTMUvQGRQlUuWnBmL0RL0NUUopImIIoKRHDN85C_P11vjIp2E33OaMu_crNmzgVocFnP2&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegQIfhAC",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Ivana Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Ivana+Trump&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmixPNbzrVXySPc7TFnyMlb8vHTBGNkoK15bvo3h4YWdgQ9CeFa91wkHCYHf2A9NuzkPjae4znSpee8mcH_by7vy7ti7yxOetjipQ0shzgVF8Xp2wkzlKspKGmbLSA9rr4dNnl9I6vS8OXsAorI28D2G5mQDucSYfyDaSM0umreqbohEvEA5j7Zb_FE31pqO7LjI6svCeqgWBhCJB0RbnPkXBvljj&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegQIfhAD",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]/span[1]/div[1]/span[2]/span[3]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]",
+                  "title": "Children",
+                  "data_attrid": "lab/fact/1p/Children",
+                  "text": "Donald Trump Jr., Barron Trump, Ivanka Trump, Tiffany Trump, Eric Trump",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Donald Trump Jr.",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Donald+Trump+Jr.&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmgyDJ9G7zP7lhD6QD41sz9IYOrKH1U53ynZLPvIJjZ4WCWciNzaxev9xATLEd8wLPquzmo51Az8Nh509jJ0FANqTM67tsFYLiA4BbkTUMpN1OAlIk2lCcuodDY2Cx9LZkj-7H9SennkbBWu6ZTl_Lip7UHsZkF8CJWB7Ks1yZWxrxB7blQidC3-jIS-255m2pCaSZ5otkC42ubBxvnt5LXjHr-k32FsHG3XLTsg3OMQg8lOs2A%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIgQEQAQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Barron Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Barron+Trump&si=AL3DRZGNtcdgKOqVhotcr-UG2kkYpwR2WO4qu3O00NmpwBmLnVHtZbyyTsVefPNUDz2kpksmYBRRzWf9zJoFWDClheprLzrAmP99fkKKJ9xB66SKDvk0GuPlHa-UJme_gY-ub8pviWr98uNIA40M2OYS2MRY1gKsfp53JBE_7ysf5kgqUQVMEVefFtMywbukdkALRSdJiVVopAE5jaWPwYP2D4BFQl5jiKbjORv8foclitzri5bRRfAa80xyYxfapMGWCIkVWa9r5mEGgwkopskTIyHm_KPqCA%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIgQEQAg",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Ivanka Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Ivanka+Trump&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmttLw4MEDqdtjEaALjWPcENI7p5kL1OGd3d-PkbaGn8SrLyLfH_Q9DV6gw3GangWeMiAQ62Ls_gE8EE030TgOGPrFCLm_SKNYtfljzkt4u09yZ6C20polbdRSBD2yIZGrLy7O2HC0IrDWPaLmnw1d-rPXs6pHNJjjtPdB9GUo7F6AzUcPh5pD6dTJdx0_FdJP0k--GZ1OuGSpAisj8RbNH6rDzsyVLBGsXmkqP0DLmoKMsR01w%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIgQEQAw",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/span[1]/div[1]/span[2]/span[3]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Tiffany Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Tiffany+Trump&si=AL3DRZGDMkmBg1SB5TH8o8Xeh03tgmwpgZCgiYi5BFB_ELNOTH6r75wFJFU2RZgDoaH2xo1VxbSp5ykTw7dCkzA0BP_ED6zuIo_OhVzZgDBy04SEZBPmzhFE5S_y_bMBDkpz1jSgttx3M4Rbbsh9K6LJmW9ygTu4V-lDD-hzeY5EJIyyhEVyz9lI7hjgaNdnr9G_swrySY3V9bYali-IwulZMHnBiNvA9wNlid4YexiDs-k2k7WOHp6qDTBEViq1c3mwa26DHKoSIn8xfjoIxNJQyWMSwzdM3Q%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIgQEQBA",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/span[1]/div[1]/span[2]/span[4]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Eric Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Eric+Trump&si=AL3DRZGDMkmBg1SB5TH8o8Xeh03tgmwpgZCgiYi5BFB_ELNOTBIt1lKmXO4osR0ihvqOEkrGIDyqwWL1lwtcAWrdQvtAOhgwBK3-spFeemjkdLXufKU1sOQIUOAlyxMF3AIHBgsmZpYV_DXRBVMgS3u3Nd6RQ8blBohYgLNsPvO0LqSg0POZ81h90ogfsZcpyFmZUEaWQcFQ5R1tZh-Lsf8Lxq8cM9QXw3zaPRYyp3jA9v9KvYFgI8_p0S13dXPltkdMWpfYevP6TPserG5bqPPN7tnWQtHb7A%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIgQEQBQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[3]/div[1]/span[1]/div[1]/span[2]/span[5]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[4]/div[1]",
+                  "title": "Education",
+                  "data_attrid": "lab/fact/1p/Education",
+                  "text": "Wharton School (1966–1968), Fordham University (1964–1966), More Education Wharton School 1966–1968 Fordham University 1964–1966 New York Military Academy 1959–1964 The Kew-Forest School donald trump education Education",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Wharton School",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Wharton+School&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmuAmNJbxcOiUsWc6ymmybq6Xt9mFmhyO8_Oj4RpTimWy186n1ky5vl0Ec2lqLw-8257s6Ak5nH9XbYZakxj9qH053wAQFtIwiinnxD7R7fDqQM53vM833QnWNYswZ4coh99icTLeGQnPHeuSxrZWrQK42UmR-lQeXlFgijEyu6DSVimGneN7GlS0Z3peHryqCZFnhHheIJ8dcJzR47RqjGsY2g5vE-F8UJxoolgBF3drjyiJ0A%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIjwEQAQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[4]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Fordham University",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Fordham+University&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmgMNAHmvAW8vcAgHFtWQwNUhtINCkTvTRq1i9GNJWhDBUncma9LfeDy3fYwrfy2r3cq1Qt-4Vu8fSbxN9VCYEnujdLyzCCzHFrhK5ZjxEHIy99pLYUqc5tCXLbNI89U2ghUTEHbtUt1uVTth7khUnAh3DRg8RWPKy6k66Uyw8RwqPmaPJM_S3hcMBNT4plZRsaVzUJwytfSSZgyWeWs2UxPVvC_CTaEgt2Z4p9meI7KPGlaL_A%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIjwEQAg",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[4]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[5]/div[1]",
+                  "title": "Parents",
+                  "data_attrid": "lab/fact/1p/Parents",
+                  "text": "Fred Trump, Mary Anne MacLeod Trump",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Fred Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Fred+Trump&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmhKy6AGzyuldiSv7ZmSdEFtA0PmQEdIAtmYFaj-wZVdCbfRVyMNWmxQBL2c7qAmqCAaylbmPpAySzB085JpiDdJcSQnmj6GvBYkUYWhJ3011Vg6B4trQXoaQDJesnHR5_g-r4lg6OQK7FG3dU1WMf9ngWK1LpMnK8yoYLurDpxlhtHp2c-ud3pxRCEGR6riwdlVjJ7EhwxynrrIZpRod2eLUY_FQ&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIhQEQAQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[5]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Mary Anne MacLeod Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Mary+Anne+MacLeod+Trump&si=AL3DRZGDMkmBg1SB5TH8o8Xeh03tgmwpgZCgiYi5BFB_ELNOTEppvYQ_-ftLNs2kT0Bk5NIgr9oueuRpA0WBBNN_uEkx6INmIq6AFUyv0W7Z0Ez_FD4z-UeurDH3Sv6dD4t3CQx766ZZk7wOvNM1ufZrYVY5ZVAKhVxtu62WTgUYgm9DERUsJWf0FRfO91XPwU-rYEDL_NPK29VsaYc3ZHfPZVjnFYIs0txO7OYUZdeJl9POOQtzQGnGu5xAKow07wcIradyvLEzQNEXfoSr2dPfRAAlkkkuog%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIhQEQAg",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[5]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[6]/div[1]",
+                  "title": "Siblings",
+                  "data_attrid": "lab/fact/1p/Siblings",
+                  "text": "Robert Trump, Elizabeth Trump Grau, Maryanne Trump Barry, Fred Trump, Jr.",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Robert Trump",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Robert+Trump&si=AL3DRZGDMkmBg1SB5TH8o8Xeh03tgmwpgZCgiYi5BFB_ELNOTO6WQghczFaGzRniliqkvoQ6tPGRQYky-dwut4IyvB8uJot2nl9sYxYigjr4zaWUp-ZsN6uraCy6Cg49j7XCJgIu41RGwBcFV3P0Xj3fx8dW3yTunw8mjWisJlhmxYTrl4Y4dpZ6A3Sb0p_RfnrYNdPLA5t8OJzzaT8TmTFxBoAXzSTV9x2H4s_9GnHGp4F4V8d2ytNcaw7G5GqHHdg_hJcKnACUaIUJPXyhvb69XzjBEv3dBA%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIjAEQAQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[6]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Elizabeth Trump Grau",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Elizabeth+Trump+Grau&si=AL3DRZGDMkmBg1SB5TH8o8Xeh03tgmwpgZCgiYi5BFB_ELNOTAwZBj4J8snaS5F7RzL7oaOb7Kp3SBKjXJHl6MtAQQTpBXpOvwK7RZx9_WQn78yb_fhCTw9cjq69d2D_DyazKkAvezjlP75xwrvtlogjsVKtNcovxfJoKExn_1Sv2R5JVoVCJp9dp0uBEUddaRqv01CnGkSisOyhxzjmELFLR2cOrARv00RCM8ofMJ-4e5V64O6awHASNSeLHnlkL68OwbMNRDqv5ETf8VAy9msIJB93VD7Jhw%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIjAEQAg",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[6]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Maryanne Trump Barry",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Maryanne+Trump+Barry&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmszaCiYsXXUP54iUSwzm9Jfp9Rsjyt1HzfNti9EeVKoyDORoig2iK0-VdUjp7QNTPhufPTYLsO_pORkpvkB9xaMuGJvbNF2pOYdbUMlKzS4-EsUt1R5D2Td6JYf2uIofC7PC9Zco-4frC-WzmDNcIBxhJd377ko3_ju8oCnkKY7E-2w3nGg2kwoWDyc2TzB_OE7ZHx-JofF6UzW37pHGphKLdkrLq0bRMxA5BiXTWnNC5Dd5kg%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIjAEQAw",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[6]/div[1]/span[1]/div[1]/span[2]/span[3]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Fred Trump, Jr.",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Fred+Trump,+Jr.&si=AL3DRZGDMkmBg1SB5TH8o8Xeh03tgmwpgZCgiYi5BFB_ELNOTE74KJHjpWFDHQkerCXQ_Cn0yau6QS5kK-N66KYcvUmC_IiXs4OdUjyFzotNtVB0BehVS3W_w9u9UGA2v18t9fckYqfIaDKJhf0Ni4DRVbLnghVza4iib8VlaZujKGTLIsZ59rIVrmLRvz-YCrqzNnoZycca7gSRE-J2EF1mtOIC-c_te-J_1IwSPuIRZWeyr67utPHaYxh94XM5xDbcCclfSa_6qvLwyl02KdNM3cHLjGbPEQ%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIjAEQBA",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[6]/div[1]/span[1]/div[1]/span[2]/span[4]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[7]/div[1]",
+                  "title": "Party",
+                  "data_attrid": "lab/fact/1p/Party",
+                  "text": "Republican Party",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Republican Party",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Republican+Party&si=AL3DRZHmwLjWhgnaPB3UTu10R6S5qNLXiQiKMeezfKyB1FMsRrUdcsLX7-nPSpyKZYIqfOJDBGOdz2E57-99eIANe1Pl8wwO7G3XqVt3qiEO4uERO4KYYXvGXEXRT6jOHlGcixAxcLt6zGSb8XfSKPYd5JeDPjiWx1lTb4E4mlK9t2l0ky4-1M_qoJaYHMURBGCmYARFqYnA&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIigEQAQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[7]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[8]/div[1]",
+                  "title": "Vice presidents",
+                  "data_attrid": "lab/fact/1p/Vice presidents",
+                  "text": "JD Vance (2025–), Mike Pence (2017–2021)",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "JD Vance",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=JD+Vance&si=AL3DRZGNtcdgKOqVhotcr-UG2kkYpwR2WO4qu3O00NmpwBmLnbvllyXc385L3zTaSNxmTubQ_EKHgSwBTh8jILO-Opw9S0tnO6kOxXJFrbrrBaYjz_4IMwc68XAhtoHVLePSKSiXRAvk8A2bgZ7d517rW-L9xIXzubpwEfWOqGgzM_9Kl3n2n7zBQ30TheLEjAks2LkDwyztJqHhGAse8rseN5KtLcke2nY51cn_GpHrszIxbtvBjZY4-CRVJfO4bv4RWmUQZishS7wLDc4HrYrvLPfrStRrWw%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIhwEQAQ",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[8]/div[1]/span[1]/div[1]/span[2]/span[1]/a[1]"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Mike Pence",
+                      "url": "https://www.google.com/search?sca_esv=2fd5b39ab3b9e7c8&hl=en&gl=GB&q=Mike+Pence&si=AL3DRZEaipurC9pse1xO2aCwuJWfKA_Njx1c7Qs8ap9rx81jmkjDAC2YaRUVVYtfpZR4YMFPSBtLUNnF1DQObj1AmAMDaO-XOrKfMnO_YQPKSWO45KW9XB0anRkt-iQHyN7hqgwG_9gmOypBkOq2rs5c5id6dXacTh6xcKt4LC-wHLuUgYnDupSZDRp8BJXq0m2bpUm3ABuEH30A9ZioqC1-DlKA0z8QV9LM9Nb5k87cvm-NcHaelIwe-4ZIwmG97W5MC5a6mlS0fAWxyIFvSb3peTa3pF_47w%3D%3D&sa=X&ved=2ahUKEwjomKi5rtaUAxVxGoYAHfzzAncQucEJegUIhwEQAg",
+                      "domain": "www.google.com",
+                      "description": null,
+                      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[8]/div[1]/span[1]/div[1]/span[2]/span[2]/a[1]"
+                    }
+                  ],
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[9]/div[1]",
+                  "title": "Presidential terms",
+                  "data_attrid": "lab/fact/1p/Presidential terms",
+                  "text": "20 January 2025 –, 20 January 2017 – 20 January 2021",
+                  "links": null,
+                  "rectangle": null
+                },
+                {
+                  "type": "knowledge_graph_row_item",
+                  "rank_group": 0,
+                  "rank_absolute": 0,
+                  "page": 1,
+                  "position": "left",
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[6]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[3]/div[4]/div[1]/div[1]/div[1]/div[1]/div[10]/div[1]",
+                  "title": "Height",
+                  "data_attrid": "lab/fact/1p/Height",
+                  "text": "1.9 m",
+                  "links": null,
+                  "rectangle": null
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "video",
+              "rank_group": 1,
+              "rank_absolute": 4,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[8]",
+              "items": [
+                {
+                  "type": "video_element",
+                  "source": "BBC",
+                  "title": "Donald Trump: President to undergo annual medical exam",
+                  "timestamp": "2026-05-25 21:49:59 +00:00",
+                  "url": "https://www.bbc.com/news/videos/c1j22wp5e6no"
+                },
+                {
+                  "type": "video_element",
+                  "source": "BBC",
+                  "title": "Donald Trump: President to undergo annual medical exam",
+                  "timestamp": "2026-05-25 22:49:59 +00:00",
+                  "url": "https://www.bbc.co.uk/news/videos/c1j22wp5e6no"
+                },
+                {
+                  "type": "video_element",
+                  "source": "BBC News",
+                  "title": "Trump calls critics of his potential Iran deal 'losers' | BBC News",
+                  "timestamp": "2026-05-25 19:49:59 +00:00",
+                  "url": "https://www.youtube.com/watch?v=mAZOXY1LTGo"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 1,
+              "rank_absolute": 5,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[10]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "en.wikipedia.org",
+              "title": "Donald Trump",
+              "url": "https://en.wikipedia.org/wiki/Donald_Trump",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://en.wikipedia.org",
+              "website_name": "Wikipedia",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Donald John Trump (born June 14, 1946) is an American politician, media personality, and businessman who is the 47th president of the United States.",
+              "pre_snippet": "3 hours ago",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2026-05-26 03:49:59 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 2,
+              "rank_absolute": 6,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[12]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "trumpwhitehouse.archives.gov",
+              "title": "Donald J. Trump – The White House",
+              "url": "https://trumpwhitehouse.archives.gov/people/donald-j-trump/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://trumpwhitehouse.archives.gov",
+              "website_name": "National Archives (.gov)",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Donald J. Trump is the 45th President of the United States. He believes the United States has incredible potential and will go on to exceed even its remarkable ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 3,
+              "rank_absolute": 7,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[14]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.theguardian.com",
+              "title": "Donald Trump",
+              "url": "https://www.theguardian.com/us-news/donaldtrump",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.theguardian.com",
+              "website_name": "The Guardian",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "News about Donald Trump, the 45th and 47th US president, including comment and features from the Guardian",
+              "pre_snippet": "17 hours ago",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2026-05-25 13:49:59 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 1,
+              "rank_absolute": 8,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[16]",
+              "title": "People also search for",
+              "items": [
+                "Pope Leo XIVTrending",
+                "Melania Trump",
+                "Vladimir Putin",
+                "Joe Biden",
+                "Barron Trump",
+                "Ivana Trump",
+                "Benjamin Netanyahu",
+                "JD Vance"
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 4,
+              "rank_absolute": 9,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[18]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.facebook.com",
+              "title": "Donald J. Trump",
+              "url": "https://www.facebook.com/DonaldTrump/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "42m+ followers",
+              "website_name": "Facebook · Donald J. Trump",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Donald J. Trump. 42039508 likes · 1156145 talking about this. This is the official Facebook page for Donald J. Trump.",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "people_also_ask",
+              "rank_group": 1,
+              "rank_absolute": 10,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[20]/div[1]",
+              "items": [
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Does the president sleep in the same room as the first lady?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[20]/div[1]/div[2]/div[2]/div[1]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://en.wikipedia.org/wiki/President's_Bedroom",
+                      "domain": "en.wikipedia.org",
+                      "title": "President's Bedroom - Wikipedia",
+                      "description": "The bedroom makes up the White House master suite along with the adjacent sitting room and the smaller dressing room, all located in the southwest corner. Prior to the Ford administration it was common for the president and first lady to have separate bedrooms.",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Why are they calling him Taco?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[20]/div[1]/div[2]/div[2]/div[2]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_ai_overview_expanded_element",
+                      "items": null,
+                      "references": null,
+                      "asynchronous_ai_overview": true
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "What is Donald Trump's religion?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[20]/div[1]/div[2]/div[2]/div[3]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_ai_overview_expanded_element",
+                      "items": null,
+                      "references": null,
+                      "asynchronous_ai_overview": true
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Are King Charles and Trump cousins?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[20]/div[1]/div[2]/div[2]/div[4]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://www.nytimes.com/2026/04/28/us/trump-king-charles-cousins.html",
+                      "domain": "www.nytimes.com",
+                      "title": "Trump and King Charles Could Be Very Distant Cousins",
+                      "description": "Mr. Trump's claim to royal blood lies in a common ancestor, the third Earl of Lennox, who was a great-grandson of King James II of Scotland. That makes Mr. Trump — long an admirer of the British monarchy, and whose mother was Scottish — a 15th cousin of King Charles, according to the Daily Mail. 28 Apr 2026",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 5,
+              "rank_absolute": 11,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[22]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.whitehousehistory.org",
+              "title": "Donald J. Trump",
+              "url": "https://www.whitehousehistory.org/bios/donald-j-trump",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.whitehousehistory.org",
+              "website_name": "White House Historical Association",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Donald John Trump was born in Queens, New York, on June 14, 1946. Trump was educated at the New York Military Academy and the Wharton School of Finance and ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "perspectives",
+              "rank_group": 1,
+              "rank_absolute": 12,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[23]",
+              "title": "Latest posts from Donald Trump. See recent posts",
+              "items": [
+                {
+                  "type": "perspectives_element",
+                  "title": "Through every generation, the heroes of the United States Coast Guard have lived by a creed of honor, and bravery, and sacrifice that has defied every storm, shipwreck, and every single enemy attack—In the hour of need, our Coast Guardsmen have brought hope to the hopeless, and swept the innocent from the jaws of a raging sea.",
+                  "description": null,
+                  "url": "https://www.instagram.com/reel/DYkhwpSt1uG/",
+                  "domain": "www.instagram.com",
+                  "date": "5 days ago",
+                  "source": "realdonaldtrump Instagram",
+                  "timestamp": "2026-05-21 06:49:59 +00:00"
+                },
+                {
+                  "type": "perspectives_element",
+                  "title": "WE’RE BACK FROM CHINA",
+                  "description": null,
+                  "url": "https://www.tiktok.com/@realdonaldtrump/video/7641592261792255262",
+                  "domain": "www.tiktok.com",
+                  "date": "6 days ago",
+                  "source": "President Donald J Trump TikTok",
+                  "timestamp": "2026-05-20 06:49:59 +00:00"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 6,
+              "rank_absolute": 13,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[25]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.whitehouse.gov",
+              "title": "President Donald J. Trump",
+              "url": "https://www.whitehouse.gov/administration/donald-j-trump/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.whitehouse.gov",
+              "website_name": "The White House (.gov)",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "President Donald J. Trump is returning to the White House to build upon his previous successes and use his mandate to reject the extremist policies.",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 7,
+              "rank_absolute": 14,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[26]/div[1]/div[1]",
+              "domain": "www.youtube.com",
+              "title": "Trump says he will either sign \"great and meaningful\" deal with Iran or ...",
+              "url": "https://www.youtube.com/watch?v=Ip-c5jLMAeg",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "44.5k+ views",
+              "website_name": "YouTube · CBS Evening News",
+              "is_image": false,
+              "is_video": true,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "The marathon peace talks between the U.S. and Iran appear to have no clear finish line. Over the weekend, President Trump signaled an agreement ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": null,
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2026-05-25 23:49:59 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 8,
+              "rank_absolute": 15,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[28]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.reuters.com",
+              "title": "Latest Donald Trump News | Top Headlines on ...",
+              "url": "https://www.reuters.com/world/us/donald-trump/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.reuters.com",
+              "website_name": "Reuters",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Donald Trump is the undisputed frontrunner for the Republican presidential nomination in the 2024 election. He is also the defendant in four criminal cases.",
+              "pre_snippet": "10 hours ago",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "donald trump",
+                "melania trump",
+                "donald trump",
+                "trump health",
+                "trump shooting",
+                "donald",
+                "trump reddit",
+                "trump cnn"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2026-05-25 20:49:59 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 2,
+              "rank_absolute": 16,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[4]/div[1]/div[3]/div[1]",
+              "title": "People also search for",
+              "items": [
+                "Trump war",
+                "Trump memorial day",
+                "Donald Trump Truth Social",
+                "Melania Trump",
+                "Donald Trump approval rating",
+                "Trump health"
+              ],
+              "rectangle": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

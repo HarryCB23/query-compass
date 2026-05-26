@@ -1,0 +1,61 @@
+{
+  "version": "0.1.20260525",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.0305 sec.",
+  "cost": 0,
+  "tasks_count": 1,
+  "tasks_error": 1,
+  "tasks": [
+    {
+      "id": "05260949-1824-0066-0000-fec6ca1bf5a9",
+      "status_code": 40102,
+      "status_message": "No Search Results.",
+      "time": "0.0225 sec.",
+      "cost": 0,
+      "result_count": 0,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "task_get",
+        "advanced",
+        "05260949-1824-0066-0000-fec6ca1bf5a9"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "task_get",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "xyznonexistentquery12345abc",
+        "location_code": 2826,
+        "language_code": "en",
+        "device": "mobile",
+        "os": "android",
+        "depth": 10,
+        "postback_url": "https://hunter-unhappily-sevenfold.ngrok-free.dev/functions/v1/serp-webhook?token=PLACEHOLDER",
+        "postback_data": "advanced",
+        "tag": "fixture:no_result"
+      },
+      "result": [
+        {
+          "keyword": "xyznonexistentquery12345abc",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2826,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=xyznonexistentquery12345abc&hl=en&gl=GB&ie=UTF-8&uule=w+CAIQIFISCamRx0IRO1oCEXoliDJDoPjE",
+          "datetime": "2026-05-26 06:49:45 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": null,
+          "se_results_count": 0,
+          "pages_count": 1,
+          "items_count": 0,
+          "items": null
+        }
+      ]
+    }
+  ]
+}

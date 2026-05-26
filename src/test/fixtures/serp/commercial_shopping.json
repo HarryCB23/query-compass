@@ -1,0 +1,920 @@
+{
+  "version": "0.1.20260525",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.0907 sec.",
+  "cost": 0.0006,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "05260949-1824-0066-0000-660491ef0efd",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.0363 sec.",
+      "cost": 0.0006,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "task_get",
+        "advanced",
+        "05260949-1824-0066-0000-660491ef0efd"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "task_get",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "best seo tools",
+        "location_code": 2826,
+        "language_code": "en",
+        "device": "mobile",
+        "os": "android",
+        "depth": 10,
+        "postback_url": "https://hunter-unhappily-sevenfold.ngrok-free.dev/functions/v1/serp-webhook?token=PLACEHOLDER",
+        "postback_data": "advanced",
+        "tag": "fixture:commercial_shopping"
+      },
+      "result": [
+        {
+          "keyword": "best seo tools",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2826,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=best%20seo%20tools&hl=en&gl=GB&ie=UTF-8&uule=w+CAIQIFISCamRx0IRO1oCEXoliDJDoPjE",
+          "datetime": "2026-05-26 06:49:43 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": [
+            "ai_overview",
+            "organic",
+            "people_also_search",
+            "people_also_ask",
+            "video"
+          ],
+          "se_results_count": 0,
+          "pages_count": 1,
+          "items_count": 13,
+          "items": [
+            {
+              "type": "ai_overview",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[1]/div[1]",
+              "asynchronous_ai_overview": false,
+              "markdown": "The top SEO tools provide essential capabilities like `competitor analysis, keyword research, site auditing, and rank tracking` . Leading platforms like [Semrush](https://www.semrush.com/seo/) or Ahrefs stand out for comprehensive campaigns, while free tools like Google Search Console remain indispensable.[[1]](https://seo.ai/blog/best-seo-ranking-tools)[[2]](https://zapier.com/blog/best-seo-tools/)[[3]](https://www.01net.com/en/seo/tools/)[[4]](https://www.theardor.com.au/best-seo-tools/)[[5]](https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40)\n\nTop SEO tools are categorized by their primary strengths:\n\nAll-in-One Suites\n\n- **Semrush:** The industry-standard tool for comprehensive competitor analysis, site auditing, and keyword research.\n- **Ahrefs:** Renowned for its massive backlink database and highly accurate keyword tracking, making it a favorite for competitor research.\n- **[SE Ranking](https://seranking.com/):** A highly capable and more budget-friendly alternative offering robust rank tracking and competitor analysis.[[1]](https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40)[[2]](https://www.techradar.com/news/best-seo-tool)[[3]](https://www.01net.com/en/seo/tools/)[[4]](https://www.flowlu.com/blog/productivity/best-seo-tools/)[[5]](https://www.expertmarket.com/seo-services/best-seo-audit-tool)\n\nEssential Free Tools\n\n- **Google Search Console:** The most crucial, free tool for tracking your actual Google search performance, uncovering indexed pages, and fixing technical issues.\n- **Google Analytics:** Essential for understanding how organic search traffic interacts with and converts on your website once they click through.[[1]](https://tjcreative.co.uk/blog/seo/best-seo-tools/)\n\nTechnical & On-Page SEO\n\n- **[Screaming Frog](https://www.screamingfrog.co.uk/seo-spider/):** The go-to desktop crawler for auditing technical issues, broken links, and redirect chains on your site.\n- **[Surfer SEO](https://surferseo.com/):** A top choice for content optimization, comparing your pages against top-ranking competitors and providing data-driven NLP guidelines.[[1]](https://zapier.com/blog/best-seo-tools/)[[2]](https://searchatlas.com/blog/seo-monitoring-tools/)[[3]](https://www.plerdy.com/blog/all-in-one-seo-software/)[[4]](https://growthnatives.com/blogs/seo/top-ai-seo-tools/)\n\nSpecialized & Beginner-Friendly\n\n- **Mangools:** A beginner-friendly suite that bundles keyword research, rank tracking, and backlink analysis into a highly intuitive interface.[[1]](https://zapier.com/blog/best-seo-tools/)\n\n[](https://zapier.com/blog/best-seo-tools/) The 11 best SEO tools - Zapier The 11 best SEO tools * seoClarity for an SEO AI assistant tool. * Surfer for AI integration. * Mangools for beginners. * Semrush for SEO rank tracking. * SEOpt...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:0)\n![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:1)\nZapier[](https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40) ![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:2)\n2m Best SEO Tools for 2025 (COMPLETE Guide)![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:3)\nYouTube·LearnWire[](https://www.techradar.com/news/best-seo-tool) The 14 best SEO tools of 2026: Improve your search and AI visibility I've been using, testing, and experimenting with the best SEO tools for over a decade. Like all search engine optimizers, I have spent much of that time using f...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:4)\n![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:5)\nTechRadar[](https://tjcreative.co.uk/blog/seo/best-seo-tools/) Best SEO Tools To Use in 2026 - TJ Creative TJ Creative's number one SEO tool of all time? Google Search Console. Google Search Console is one of the best SEO tool on the market at the moment. It allows y...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:6)\n![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:7)\ntjcreative.co.uk[](https://www.01net.com/en/seo/tools/) The 10 Best SEO Tools to Use in 2026 [All Tested] - 01net.com No doubt, SEO is the #1 factor in the whole ranking game. For this reason, the best SEO tools in 2026 are necessary. Today, we have plenty of ground to cover. O...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:8)\n![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:9)\n01net.com[](https://zapier.com/blog/best-seo-tools/) ![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:10)\nZapier https://zapier.com The 11 best SEO tools - Zapier The 11 best SEO tools * seoClarity for an SEO AI assistant tool. * Surfer for AI integration. * Mangools for beginners. * Semrush for SEO rank tracking. * SEOpt...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:11)\n[](https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40) ![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:12)\nYouTube·LearnWire https://www.youtube.com Best SEO Tools for 2025 (COMPLETE Guide)![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:13)\n2m Ahrefs is identified as a leading SEO tool favored by professionals who manage clients and work in SEO for a living. It attracts around 10 million monthly visit...[](https://www.techradar.com/news/best-seo-tool) ![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:14)\nTechRadar https://www.techradar.com The 14 best SEO tools of 2026: Improve your search and AI visibility I've been using, testing, and experimenting with the best SEO tools for over a decade. Like all search engine optimizers, I have spent much of that time using f...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:15)\n[](https://tjcreative.co.uk/blog/seo/best-seo-tools/) ![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:16)\ntjcreative.co.uk https://tjcreative.co.uk Best SEO Tools To Use in 2026 - TJ Creative TJ Creative's number one SEO tool of all time? Google Search Console. Google Search Console is one of the best SEO tool on the market at the moment. It allows y...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:17)\n[](https://www.01net.com/en/seo/tools/) ![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:18)\n01net.com https://www.01net.com The 10 Best SEO Tools to Use in 2026 [All Tested] - 01net.com No doubt, SEO is the #1 factor in the whole ranking game. For this reason, the best SEO tools in 2026 are necessary. Today, we have plenty of ground to cover. O...![](https://api.dataforseo.com/cdn/i/05260949-1824-0066-0000-660491ef0efd:19)",
+              "items": [
+                {
+                  "type": "ai_overview_element",
+                  "position": "left",
+                  "title": null,
+                  "text": "The top SEO tools provide essential capabilities like competitor analysis, keyword research, site auditing, and rank tracking. Leading platforms like Semrush or Ahrefs stand out for comprehensive campaigns, while free tools like Google Search Console remain indispensable.",
+                  "markdown": "The top SEO tools provide essential capabilities like `competitor analysis, keyword research, site auditing, and rank tracking` . Leading platforms like [Semrush](https://www.semrush.com/seo/) or Ahrefs stand out for comprehensive campaigns, while free tools like Google Search Console remain indispensable.[[1]](https://seo.ai/blog/best-seo-ranking-tools)[[2]](https://zapier.com/blog/best-seo-tools/)[[3]](https://www.01net.com/en/seo/tools/)[[4]](https://www.theardor.com.au/best-seo-tools/)[[5]](https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40)",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Semrush",
+                      "description": null,
+                      "url": "https://www.semrush.com/seo/",
+                      "domain": "www.semrush.com"
+                    }
+                  ],
+                  "images": null,
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "SEO.ai",
+                      "domain": "seo.ai",
+                      "url": "https://seo.ai/blog/best-seo-ranking-tools",
+                      "title": "The 18 Best SEO Ranking Tools Every Marketer Should Know",
+                      "text": "What are the best SEO ranking tools available today? The best SEO ranking tools include SEO.AI, Ahrefs, SEMrush, and Google Analytics. These tools offer compreh..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Zapier",
+                      "domain": "zapier.com",
+                      "url": "https://zapier.com/blog/best-seo-tools/",
+                      "title": "The 11 best SEO tools - Zapier",
+                      "text": "The 11 best SEO tools * seoClarity for an SEO AI assistant tool. * Surfer for AI integration. * Mangools for beginners. * Semrush for SEO rank tracking. * SEOptime..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "01net.com",
+                      "domain": "www.01net.com",
+                      "url": "https://www.01net.com/en/seo/tools/",
+                      "title": "The 10 Best SEO Tools to Use in 2026 [All Tested] - 01net.com",
+                      "text": "No doubt, SEO is the #1 factor in the whole ranking game. For this reason, the best SEO tools in 2026 are necessary. Today, we have plenty of ground to cover. Our ..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "The Ardor",
+                      "domain": "www.theardor.com.au",
+                      "url": "https://www.theardor.com.au/best-seo-tools/",
+                      "title": "40 Best SEO Tools I'm Using in 2026 (Personally Tested)",
+                      "text": "There is no single “most effective” SEO tool, as effectiveness depends entirely on your specific goals, but Google Search Console is widely considered the most ..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "YouTube",
+                      "domain": "www.youtube.com",
+                      "url": "https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40",
+                      "title": "Best SEO Tools for 2025 (COMPLETE Guide)",
+                      "text": "Ahrefs is identified as a leading SEO tool favored by professionals who manage clients and work in SEO for a living. It attracts around 10 million monthly visitors"
+                    }
+                  ]
+                },
+                {
+                  "type": "ai_overview_element",
+                  "position": "left",
+                  "title": null,
+                  "text": "Top SEO tools are categorized by their primary strengths:",
+                  "markdown": "Top SEO tools are categorized by their primary strengths:",
+                  "links": null,
+                  "images": null,
+                  "references": null
+                },
+                {
+                  "type": "ai_overview_element",
+                  "position": "left",
+                  "title": null,
+                  "text": "Semrush : The industry-standard tool for comprehensive competitor analysis, site auditing, and keyword research. Semrush Ahrefs : Renowned for its massive backlink database and highly accurate keyword tracking, making it a favorite for competitor research. Ahrefs SE Ranking : A highly capable and more budget-friendly alternative offering robust rank tracking and competitor analysis.",
+                  "markdown": "- **Semrush:** The industry-standard tool for comprehensive competitor analysis, site auditing, and keyword research.\n- **Ahrefs:** Renowned for its massive backlink database and highly accurate keyword tracking, making it a favorite for competitor research.\n- **[SE Ranking](https://seranking.com/):** A highly capable and more budget-friendly alternative offering robust rank tracking and competitor analysis.[[1]](https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40)[[2]](https://www.techradar.com/news/best-seo-tool)[[3]](https://www.01net.com/en/seo/tools/)[[4]](https://www.flowlu.com/blog/productivity/best-seo-tools/)[[5]](https://www.expertmarket.com/seo-services/best-seo-audit-tool)",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "SE Ranking",
+                      "description": null,
+                      "url": "https://seranking.com/",
+                      "domain": "seranking.com"
+                    }
+                  ],
+                  "images": null,
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "YouTube",
+                      "domain": "www.youtube.com",
+                      "url": "https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40",
+                      "title": "Best SEO Tools for 2025 (COMPLETE Guide)",
+                      "text": "Ahrefs is identified as a leading SEO tool favored by professionals who manage clients and work in SEO for a living. It attracts around 10 million monthly visit..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "TechRadar",
+                      "domain": "www.techradar.com",
+                      "url": "https://www.techradar.com/news/best-seo-tool",
+                      "title": "The 14 best SEO tools of 2026: Improve your search and AI visibility",
+                      "text": "I've been using, testing, and experimenting with the best SEO tools for over a decade. Like all search engine optimizers, I have spent much of that time using f..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "01net.com",
+                      "domain": "www.01net.com",
+                      "url": "https://www.01net.com/en/seo/tools/",
+                      "title": "The 10 Best SEO Tools to Use in 2026 [All Tested] - 01net.com",
+                      "text": "No doubt, SEO is the #1 factor in the whole ranking game. For this reason, the best SEO tools in 2026 are necessary. Today, we have plenty of ground to cover. O..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Flowlu",
+                      "domain": "www.flowlu.com",
+                      "url": "https://www.flowlu.com/blog/productivity/best-seo-tools/",
+                      "title": "10 Best SEO Tools & Software (Free & Paid) | 2026 Guide",
+                      "text": "Semrush SEMrush is one of the most widely used SEO platforms among agencies. It's especially strong in keyword research and rank tracking, making it a common ch..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Expert Market",
+                      "domain": "www.expertmarket.com",
+                      "url": "https://www.expertmarket.com/seo-services/best-seo-audit-tool",
+                      "title": "Best SEO Audit Tools",
+                      "text": "Industry-grade SEO tool Semrush is the gold standard of site audits. It runs a website crawl faster than similar programs we've used and delivers plain-English ..."
+                    }
+                  ]
+                },
+                {
+                  "type": "ai_overview_element",
+                  "position": "left",
+                  "title": null,
+                  "text": "Google Search Console : The most crucial, free tool for tracking your actual Google search performance, uncovering indexed pages, and fixing technical issues. Google Search Console Google Analytics : Essential for understanding how organic search traffic interacts with and converts on your website once they click through. Google Analytics",
+                  "markdown": "- **Google Search Console:** The most crucial, free tool for tracking your actual Google search performance, uncovering indexed pages, and fixing technical issues.\n- **Google Analytics:** Essential for understanding how organic search traffic interacts with and converts on your website once they click through.[[1]](https://tjcreative.co.uk/blog/seo/best-seo-tools/)",
+                  "links": null,
+                  "images": null,
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "tjcreative.co.uk",
+                      "domain": "tjcreative.co.uk",
+                      "url": "https://tjcreative.co.uk/blog/seo/best-seo-tools/",
+                      "title": "Best SEO Tools To Use in 2026 - TJ Creative",
+                      "text": "TJ Creative's number one SEO tool of all time? Google Search Console. Google Search Console is one of the best SEO tool on the market at the moment. It allows y..."
+                    }
+                  ]
+                },
+                {
+                  "type": "ai_overview_element",
+                  "position": "left",
+                  "title": null,
+                  "text": "Screaming Frog : The go-to desktop crawler for auditing technical issues, broken links, and redirect chains on your site. Surfer SEO : A top choice for content optimization, comparing your pages against top-ranking competitors and providing data-driven NLP guidelines.",
+                  "markdown": "- **[Screaming Frog](https://www.screamingfrog.co.uk/seo-spider/):** The go-to desktop crawler for auditing technical issues, broken links, and redirect chains on your site.\n- **[Surfer SEO](https://surferseo.com/):** A top choice for content optimization, comparing your pages against top-ranking competitors and providing data-driven NLP guidelines.[[1]](https://zapier.com/blog/best-seo-tools/)[[2]](https://searchatlas.com/blog/seo-monitoring-tools/)[[3]](https://www.plerdy.com/blog/all-in-one-seo-software/)[[4]](https://growthnatives.com/blogs/seo/top-ai-seo-tools/)",
+                  "links": [
+                    {
+                      "type": "link_element",
+                      "title": "Screaming Frog",
+                      "description": null,
+                      "url": "https://www.screamingfrog.co.uk/seo-spider/",
+                      "domain": "www.screamingfrog.co.uk"
+                    },
+                    {
+                      "type": "link_element",
+                      "title": "Surfer SEO",
+                      "description": null,
+                      "url": "https://surferseo.com/",
+                      "domain": "surferseo.com"
+                    }
+                  ],
+                  "images": null,
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Zapier",
+                      "domain": "zapier.com",
+                      "url": "https://zapier.com/blog/best-seo-tools/",
+                      "title": "The 11 best SEO tools - Zapier",
+                      "text": "The 11 best SEO tools * seoClarity for an SEO AI assistant tool. * Surfer for AI integration. * Mangools for beginners. * Semrush for SEO rank tracking. * SEOpt..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Search Atlas",
+                      "domain": "searchatlas.com",
+                      "url": "https://searchatlas.com/blog/seo-monitoring-tools/",
+                      "title": "12 Best SEO Monitoring Tools to Track and Boost Your Rankings",
+                      "text": "Unlike traditional SEO tools that focus solely on rank tracking and backlinks, Surfer SEO takes a unique approach by analyzing on-page SEO factors and comparing..."
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Plerdy",
+                      "domain": "www.plerdy.com",
+                      "url": "https://www.plerdy.com/blog/all-in-one-seo-software/",
+                      "title": "12 Best All-in-One SEO Software – Plerdy",
+                      "text": "3. Surfer SEO Surfer SEO lists keywords, analyzes pages, and improves content based on top-ranking competitor page content and NLP (natural language processing)"
+                    },
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Growth Natives",
+                      "domain": "growthnatives.com",
+                      "url": "https://growthnatives.com/blogs/seo/top-ai-seo-tools/",
+                      "title": "Top AI SEO Tools Transforming Your Workflow in 2025",
+                      "text": "Surfer SEO enhances content refinement by leveraging Natural Language Processing (NLP) to decode what top-performing pages are doing right. It scrapes and analy..."
+                    }
+                  ]
+                },
+                {
+                  "type": "ai_overview_element",
+                  "position": "left",
+                  "title": null,
+                  "text": "Mangools : A beginner-friendly suite that bundles keyword research, rank tracking, and backlink analysis into a highly intuitive interface. Mangools",
+                  "markdown": "- **Mangools:** A beginner-friendly suite that bundles keyword research, rank tracking, and backlink analysis into a highly intuitive interface.[[1]](https://zapier.com/blog/best-seo-tools/)",
+                  "links": null,
+                  "images": null,
+                  "references": [
+                    {
+                      "type": "ai_overview_reference",
+                      "position": "left",
+                      "source": "Zapier",
+                      "domain": "zapier.com",
+                      "url": "https://zapier.com/blog/best-seo-tools/",
+                      "title": "The 11 best SEO tools - Zapier",
+                      "text": "The 11 best SEO tools * seoClarity for an SEO AI assistant tool. * Surfer for AI integration. * Mangools for beginners. * Semrush for SEO rank tracking. * SEOptime..."
+                    }
+                  ]
+                }
+              ],
+              "references": [
+                {
+                  "type": "ai_overview_reference",
+                  "position": "right",
+                  "source": "Zapier",
+                  "domain": "zapier.com",
+                  "url": "https://zapier.com/blog/best-seo-tools/",
+                  "title": "The 11 best SEO tools - Zapier",
+                  "text": "The 11 best SEO tools * seoClarity for an SEO AI assistant tool. * Surfer for AI integration. * Mangools for beginners. * Semrush for SEO rank tracking. * SEOptime..."
+                },
+                {
+                  "type": "ai_overview_reference",
+                  "position": "right",
+                  "source": "YouTube",
+                  "domain": "www.youtube.com",
+                  "url": "https://www.youtube.com/watch?v=XYanmJ-L1nQ&t=40",
+                  "title": "Best SEO Tools for 2025 (COMPLETE Guide)",
+                  "text": "Ahrefs is identified as a leading SEO tool favored by professionals who manage clients and work in SEO for a living. It attracts around 10 million monthly visitors"
+                },
+                {
+                  "type": "ai_overview_reference",
+                  "position": "right",
+                  "source": "TechRadar",
+                  "domain": "www.techradar.com",
+                  "url": "https://www.techradar.com/news/best-seo-tool",
+                  "title": "The 14 best SEO tools of 2026: Improve your search and AI visibility",
+                  "text": "I've been using, testing, and experimenting with the best SEO tools for over a decade. Like all search engine optimizers, I have spent much of that time using feat..."
+                },
+                {
+                  "type": "ai_overview_reference",
+                  "position": "right",
+                  "source": "tjcreative.co.uk",
+                  "domain": "tjcreative.co.uk",
+                  "url": "https://tjcreative.co.uk/blog/seo/best-seo-tools/",
+                  "title": "Best SEO Tools To Use in 2026 - TJ Creative",
+                  "text": "TJ Creative's number one SEO tool of all time? Google Search Console. Google Search Console is one of the best SEO tool on the market at the moment. It allows you ..."
+                },
+                {
+                  "type": "ai_overview_reference",
+                  "position": "right",
+                  "source": "01net.com",
+                  "domain": "www.01net.com",
+                  "url": "https://www.01net.com/en/seo/tools/",
+                  "title": "The 10 Best SEO Tools to Use in 2026 [All Tested] - 01net.com",
+                  "text": "No doubt, SEO is the #1 factor in the whole ranking game. For this reason, the best SEO tools in 2026 are necessary. Today, we have plenty of ground to cover. Our ..."
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.reddit.com",
+              "title": "Best SEO tool : r/SEO",
+              "url": "https://www.reddit.com/r/SEO/comments/1ehb8w3/best_seo_tool/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "130+ comments",
+              "website_name": "Reddit · r/SEO",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "For boosting short tail keyword rankings, consider tools like Ahrefs for in-depth competitive analysis, SEMrush for keyword tracking and ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2025-05-26 06:49:43 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 2,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[5]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "morningscore.io",
+              "title": "The 20 best SEO tools in 2026? I personally tested all tools",
+              "url": "https://morningscore.io/best-seo-tools/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://morningscore.io",
+              "website_name": "Morningscore",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "350 hours of personal test to find 20 best SEO tools: 1. Search Console - 2. Ahrefs - 3. Morningscore - 4. Semrush - 5. Surfer SEO - 6.",
+              "pre_snippet": "01/09/2026 00:00:00",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": [
+                {
+                  "type": "link_element",
+                  "title": "Which SEO tools are best as of...",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc1",
+                  "domain": "morningscore.io"
+                },
+                {
+                  "type": "link_element",
+                  "title": "Review of the 20 SEO tools",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc2",
+                  "domain": "morningscore.io"
+                },
+                {
+                  "type": "link_element",
+                  "title": "1. My personal test of Google...",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc3",
+                  "domain": "morningscore.io"
+                },
+                {
+                  "type": "link_element",
+                  "title": "2. My personal test of Ahrefs",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc4",
+                  "domain": "morningscore.io"
+                },
+                {
+                  "type": "link_element",
+                  "title": "5. My personal test of Surfer SEO",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc7",
+                  "domain": "morningscore.io"
+                },
+                {
+                  "type": "link_element",
+                  "title": "12. My personal test of SEO.ai",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc14",
+                  "domain": "morningscore.io"
+                },
+                {
+                  "type": "link_element",
+                  "title": "18. My personal test of Yoast...",
+                  "description": null,
+                  "url": "https://morningscore.io/best-seo-tools/#lwptoc20",
+                  "domain": "morningscore.io"
+                }
+              ],
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2026-01-09 00:00:00 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 3,
+              "rank_absolute": 4,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[7]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "zapier.com",
+              "title": "The 11 best SEO tools",
+              "url": "https://zapier.com/blog/best-seo-tools/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://zapier.com",
+              "website_name": "Zapier",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "What about Google's SEO tools? · Google Trends: Lets you explore global search trend data to capitalize on timely queries · Google Keyword ...",
+              "pre_snippet": "11/15/2024 00:00:00",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2024-11-15 00:00:00 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 4,
+              "rank_absolute": 5,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[9]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.semrush.com",
+              "title": "Semrush SEO Toolkit: Check Website SEO with Analysis Tools",
+              "url": "https://www.semrush.com/seo/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.semrush.com",
+              "website_name": "Semrush",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "From research to reporting, take your SEO to the next level with Semrush tools. Keyword research, backlink audit, rank tracking, competitor analysis & more.",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 1,
+              "rank_absolute": 6,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[10]/div[1]/div[1]/div[1]",
+              "title": "Find related products and services",
+              "items": [
+                "Best AI SEO tools",
+                "Best SEO tools for website",
+                "Best SEO tools for small businesses",
+                "SEO reporting tools",
+                "Best free SEO tools",
+                "Best SEO company"
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 5,
+              "rank_absolute": 7,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.seoreviewtools.com",
+              "title": "#1 Free SEO & AI Tools → SEO Review Tools",
+              "url": "https://www.seoreviewtools.com/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.seoreviewtools.com",
+              "website_name": "SEO Review Tools",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Best SEO Tools. Website Authority Checker · External Backlink checker · Domain Authority & Page Authority Checker · Google Rank Checker · SEO Keyword Research ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 6,
+              "rank_absolute": 8,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[13]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.hobo-web.co.uk",
+              "title": "What are the best SEO tools for beginners to use?",
+              "url": "https://www.hobo-web.co.uk/best-seo-tools/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.hobo-web.co.uk",
+              "website_name": "Hobo Web",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "SEMrush (aff) is an almost all-in-one SEO tool, especially for those getting started. It serves as a powerful seo toolkit, and, most importantly ...",
+              "pre_snippet": "10/05/2025 00:00:00",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2025-10-05 00:00:00 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "people_also_ask",
+              "rank_group": 1,
+              "rank_absolute": 9,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[15]/div[1]",
+              "items": [
+                {
+                  "type": "people_also_ask_element",
+                  "title": "What is the most used SEO tool?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[15]/div[1]/div[2]/div[2]/div[1]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": "Here are the best SEO tools right now:",
+                      "url": "https://www.marketermilk.com/blog/best-seo-tools",
+                      "domain": "www.marketermilk.com",
+                      "title": "24 best SEO tools I'm using in 2026 (free + paid) - Marketer Milk",
+                      "description": "Surfer (best for content optimization)\nGumloop (best for SEO automation workflows)\nAhrefs (best for competitor & backlink research)\nSemrush (best for all-in-one SEO management)\nKeySearch (best for budget keyword research)\nSE Ranking (best for affordable rank tracking + audits)",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Is SEO dead or evolving in 2026?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[15]/div[1]/div[2]/div[2]/div[2]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://clickmarketing.co.uk/is-seo-dead/",
+                      "domain": "clickmarketing.co.uk",
+                      "title": "Is SEO Dead in 2026? | Click Marketing",
+                      "description": "Contrary to popular belief, SEO remains a vital and effective tool in the digital marketing arsenal in 2026. Rather than becoming obsolete, SEO has evolved to become more sophisticated and user-centric.",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Can ChatGPT do an SEO audit?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[15]/div[1]/div[2]/div[2]/div[3]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://www.searchenginejournal.com/create-your-own-chatgpt-agent-for-on-page-seo-audits/546016/",
+                      "domain": "www.searchenginejournal.com",
+                      "title": "Create Your Own ChatGPT Agent For On-Page SEO Audits",
+                      "description": "Automate your SEO audits with a custom ChatGPT agent. Fetch HTML, analyze content, and implement actionable SEO recommendations effortlessly. 14 May 2025",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "What is the 80 20 rule of SEO?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[15]/div[1]/div[2]/div[2]/div[4]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_ai_overview_expanded_element",
+                      "items": null,
+                      "references": null,
+                      "asynchronous_ai_overview": true
+                    }
+                  ]
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 7,
+              "rank_absolute": 10,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[17]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.marketermilk.com",
+              "title": "24 best SEO tools I'm using in 2026 (free + paid)",
+              "url": "https://www.marketermilk.com/blog/best-seo-tools",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.marketermilk.com",
+              "website_name": "Marketer Milk",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "24 best SEO tools I've personally tested in 2026 · 1. Surfer · 2. Gumloop · 3. Ahrefs · 4. Semrush · 5. KeySearch · 6. SE Ranking · 7. Google ...",
+              "pre_snippet": "02/17/2026 00:00:00",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2026-02-17 00:00:00 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "video",
+              "rank_group": 1,
+              "rank_absolute": 11,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[19]",
+              "items": [
+                {
+                  "type": "video_element",
+                  "source": "Nathan Gotch",
+                  "title": "8 SEO Tools I Can't Live Without",
+                  "timestamp": "2025-04-22 00:00:00 +00:00",
+                  "url": "https://www.youtube.com/watch?v=gaCW6LOfD1I"
+                },
+                {
+                  "type": "video_element",
+                  "source": "Nathan Gotch",
+                  "title": "13 Best SEO Tools (My 2026 Stack)",
+                  "timestamp": "2024-07-18 00:00:00 +00:00",
+                  "url": "https://www.youtube.com/watch?v=CWJ5kWJdkHo"
+                },
+                {
+                  "type": "video_element",
+                  "source": "Kasra Dash",
+                  "title": "Best Free SEO Tools in 2026 (No Paid Tools Required)",
+                  "timestamp": "2026-03-01 00:00:00 +00:00",
+                  "url": "https://www.youtube.com/watch?v=VOLpViuXh5U"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 8,
+              "rank_absolute": 12,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[21]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "technologyadvice.com",
+              "title": "The 6 Best SEO Tools I Tried: Top Picks for Rankings & Analysis",
+              "url": "https://technologyadvice.com/blog/marketing/best-seo-tools/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://technologyadvice.com",
+              "website_name": "TechnologyAdvice",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "I tried, rated, and evaluated the 6 best SEO tools for 2025: Semrush, Ahrefs, UberSuggest, SE Ranking, Moz Pro, and SurferSEO. Hot takes & honest opinions.",
+              "pre_snippet": "07/02/2025 00:00:00",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "best seo",
+                "best seo tools",
+                "best seo tools",
+                "best seo",
+                "seo software",
+                "best seo tools",
+                "best seo tools",
+                "best seo tools for"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2025-07-02 00:00:00 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 2,
+              "rank_absolute": 13,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[23]",
+              "title": "People also search for",
+              "items": [
+                "Best seo tools reddit",
+                "Best seo tools free",
+                "Best SEO tools for YouTube",
+                "Best seo tools for beginners",
+                "SEO software tools free",
+                "Best SEO tools for Etsy"
+              ],
+              "rectangle": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

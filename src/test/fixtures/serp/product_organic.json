@@ -1,0 +1,510 @@
+{
+  "version": "0.1.20260525",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.0814 sec.",
+  "cost": 0.0006,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "05260949-1824-0066-0000-3872fb70fe8b",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.0260 sec.",
+      "cost": 0.0006,
+      "result_count": 1,
+      "path": [
+        "v3",
+        "serp",
+        "google",
+        "organic",
+        "task_get",
+        "advanced",
+        "05260949-1824-0066-0000-3872fb70fe8b"
+      ],
+      "data": {
+        "api": "serp",
+        "function": "task_get",
+        "se": "google",
+        "se_type": "organic",
+        "keyword": "semrush",
+        "location_code": 2826,
+        "language_code": "en",
+        "device": "mobile",
+        "os": "android",
+        "depth": 10,
+        "postback_url": "https://hunter-unhappily-sevenfold.ngrok-free.dev/functions/v1/serp-webhook?token=PLACEHOLDER",
+        "postback_data": "advanced",
+        "tag": "fixture:product_organic"
+      },
+      "result": [
+        {
+          "keyword": "semrush",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2826,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=semrush&hl=en&gl=GB&ie=UTF-8&uule=w+CAIQIFISCamRx0IRO1oCEXoliDJDoPjE",
+          "datetime": "2026-05-26 06:50:10 +00:00",
+          "spell": null,
+          "refinement_chips": null,
+          "item_types": [
+            "organic",
+            "people_also_ask",
+            "people_also_search",
+            "video"
+          ],
+          "se_results_count": 0,
+          "pages_count": 1,
+          "items_count": 10,
+          "items": [
+            {
+              "type": "organic",
+              "rank_group": 1,
+              "rank_absolute": 1,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.semrush.com",
+              "title": "Semrush",
+              "url": "https://www.semrush.com/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.semrush.com",
+              "website_name": "Semrush",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Semrush is the leading platform to grow and measure brand visibility across AI search, SEO, PPC, social, and more.",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": [
+                {
+                  "type": "link_element",
+                  "title": "Free Keyword Tool",
+                  "description": null,
+                  "url": "https://www.semrush.com/analytics/keywordmagic/",
+                  "domain": "www.semrush.com"
+                },
+                {
+                  "type": "link_element",
+                  "title": "Domain Overview",
+                  "description": null,
+                  "url": "https://www.semrush.com/analytics/overview/",
+                  "domain": "www.semrush.com"
+                },
+                {
+                  "type": "link_element",
+                  "title": "Log in",
+                  "description": null,
+                  "url": "https://www.semrush.com/login/",
+                  "domain": "www.semrush.com"
+                },
+                {
+                  "type": "link_element",
+                  "title": "SEO Checker",
+                  "description": null,
+                  "url": "https://www.semrush.com/siteaudit/",
+                  "domain": "www.semrush.com"
+                },
+                {
+                  "type": "link_element",
+                  "title": "Academy",
+                  "description": null,
+                  "url": "https://www.semrush.com/academy/",
+                  "domain": "www.semrush.com"
+                },
+                {
+                  "type": "link_element",
+                  "title": "SEO + AI Search",
+                  "description": null,
+                  "url": "https://www.semrush.com/pricing/seo-ai-search/",
+                  "domain": "www.semrush.com"
+                }
+              ],
+              "faq": null,
+              "extended_people_also_search": null,
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "people_also_ask",
+              "rank_group": 1,
+              "rank_absolute": 2,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[3]/div[1]",
+              "items": [
+                {
+                  "type": "people_also_ask_element",
+                  "title": "What exactly is Semrush?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[1]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_ai_overview_expanded_element",
+                      "items": null,
+                      "references": null,
+                      "asynchronous_ai_overview": true
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Is Semrush Russian?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[2]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://pestel-analysis.com/blogs/brief-history/semrush",
+                      "domain": "pestel-analysis.com",
+                      "title": "What is Brief History of Semrush Company? - PESTEL Analysis",
+                      "description": "Semrush Origins and Founding\n The official founding of the Semrush company occurred in 2008 in Moscow, Russia, with the core mission to enhance online visibility for marketers. Founded in 2008 by Oleg Shchegolev and Dmitry Melnikov. Initial tool developed in 2006 was 'Seodigger'. 27 Dec 2025",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Is SEO dead or evolving in 2026?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[3]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_expanded_element",
+                      "featured_title": null,
+                      "url": "https://clickmarketing.co.uk/is-seo-dead/",
+                      "domain": "clickmarketing.co.uk",
+                      "title": "Is SEO Dead in 2026? | Click Marketing",
+                      "description": "Contrary to popular belief, SEO remains a vital and effective tool in the digital marketing arsenal in 2026. Rather than becoming obsolete, SEO has evolved to become more sophisticated and user-centric.",
+                      "images": null,
+                      "timestamp": null,
+                      "table": null
+                    }
+                  ]
+                },
+                {
+                  "type": "people_also_ask_element",
+                  "title": "Is Semrush free or paid?",
+                  "seed_question": null,
+                  "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[4]",
+                  "expanded_element": [
+                    {
+                      "type": "people_also_ask_ai_overview_expanded_element",
+                      "items": null,
+                      "references": null,
+                      "asynchronous_ai_overview": true
+                    }
+                  ]
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 2,
+              "rank_absolute": 3,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[5]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "en.wikipedia.org",
+              "title": "Semrush",
+              "url": "https://en.wikipedia.org/wiki/Semrush",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://en.wikipedia.org",
+              "website_name": "Wikipedia",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "The platform is used for keyword research, competitive analysis, site audits, backlink tracking, domain authority tracking, and online visibility insights.",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "semrush login",
+                "semrush free",
+                "semrush tool",
+                "semrush keyword",
+                "semrush",
+                "semrush",
+                "semrush app",
+                "semrush guru"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 1,
+              "rank_absolute": 4,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[7]",
+              "title": "People also search for",
+              "items": [
+                "Semrush login",
+                "Semrush free",
+                "Semrush tool",
+                "Semrush keyword research",
+                "SEMrush download",
+                "Semrush Academy"
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "video",
+              "rank_group": 1,
+              "rank_absolute": 5,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[9]",
+              "items": [
+                {
+                  "type": "video_element",
+                  "source": "Marketing Island",
+                  "title": "What Is Semrush? (What Is SEMRush And What Does It Do?)",
+                  "timestamp": "2026-03-19 00:00:00 +00:00",
+                  "url": "https://www.youtube.com/watch?v=BIdFT1LVQWw"
+                },
+                {
+                  "type": "video_element",
+                  "source": "Style Factory",
+                  "title": "Semrush Review (2026) — All the Key Pros and Cons",
+                  "timestamp": "2026-03-02 00:00:00 +00:00",
+                  "url": "https://www.youtube.com/watch?v=d6Lia-rZhkg"
+                },
+                {
+                  "type": "video_element",
+                  "source": "Marketing Island",
+                  "title": "Semrush Review 2026 (Worth It for SEO?)",
+                  "timestamp": "2026-03-23 00:00:00 +00:00",
+                  "url": "https://www.youtube.com/watch?v=AIjQ093csjo"
+                }
+              ],
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 3,
+              "rank_absolute": 6,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.linkedin.com",
+              "title": "Semrush",
+              "url": "https://www.linkedin.com/company/semrush",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "592.7k+ followers",
+              "website_name": "LinkedIn · Semrush",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Semrush, An Adobe Company, is the leading digital brand visibility platform, empowering marketers to command their online presence and ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "semrush login",
+                "semrush free",
+                "semrush tool",
+                "semrush keyword",
+                "semrush",
+                "semrush",
+                "semrush app",
+                "semrush guru"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 4,
+              "rank_absolute": 7,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[13]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.capterra.co.uk",
+              "title": "Semrush Pricing, Cost & Reviews",
+              "url": "https://www.capterra.co.uk/software/151962/semrush",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.capterra.co.uk",
+              "website_name": "Capterra UK",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "Semrush (NYSE: SEMR) is the leading brand visibility platform, empowering marketers to command their online presence and create measurable impact.",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "semrush login",
+                "semrush free",
+                "semrush tool",
+                "semrush keyword",
+                "semrush",
+                "semrush",
+                "semrush app",
+                "semrush guru"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 5,
+              "rank_absolute": 8,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[15]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.instagram.com",
+              "title": "Semrush (@semrush) · Boston, MA",
+              "url": "https://www.instagram.com/semrush/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "168.6k+ followers",
+              "website_name": "Instagram · semrush",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "An Adobe Company. Helping 28M+ marketers be found everywhere search happens · Our new identity reflects how much the Semrush platform has strengthened over the ...",
+              "pre_snippet": null,
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "semrush login",
+                "semrush free",
+                "semrush tool",
+                "semrush keyword",
+                "semrush",
+                "semrush",
+                "semrush app",
+                "semrush guru"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": null,
+              "rectangle": null
+            },
+            {
+              "type": "organic",
+              "rank_group": 6,
+              "rank_absolute": 9,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[3]/div[1]/div[1]/div[17]/div[1]/div[1]/div[1]/div[1]",
+              "domain": "www.click.co.uk",
+              "title": "What Is SEMrush? - How To Set Up & More",
+              "url": "https://www.click.co.uk/insights/setting-up-your-first-semrush-project/",
+              "cache_url": null,
+              "related_search_url": null,
+              "breadcrumb": "https://www.click.co.uk",
+              "website_name": "Click Consult",
+              "is_image": false,
+              "is_video": false,
+              "is_featured_snippet": false,
+              "is_malicious": false,
+              "is_web_story": false,
+              "description": "SEMRush is an SEO software designed for competitor analysis, research and more. Here's how to set up your first project and start ...",
+              "pre_snippet": "09/23/2020 00:00:00",
+              "extended_snippet": null,
+              "images": null,
+              "amp_version": false,
+              "rating": null,
+              "price": null,
+              "highlighted": null,
+              "links": null,
+              "faq": null,
+              "extended_people_also_search": [
+                "semrush login",
+                "semrush free",
+                "semrush tool",
+                "semrush keyword",
+                "semrush",
+                "semrush",
+                "semrush app",
+                "semrush guru"
+              ],
+              "about_this_result": null,
+              "related_result": null,
+              "timestamp": "2020-09-23 00:00:00 +00:00",
+              "rectangle": null
+            },
+            {
+              "type": "people_also_search",
+              "rank_group": 2,
+              "rank_absolute": 10,
+              "page": 1,
+              "position": "left",
+              "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[11]/div[4]/div[1]/div[3]/div[1]",
+              "title": "People also search for",
+              "items": [
+                "Semrush app",
+                "Semrush Guru",
+                "Semrush alternatives",
+                "Semrush Adobe",
+                "Semrush SEO",
+                "Semrush dashboard"
+              ],
+              "rectangle": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
