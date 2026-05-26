@@ -281,33 +281,39 @@ export type Database = {
       }
       projects: {
         Row: {
+          alt_domains: string[]
           branded_terms: string[]
           client_name: string
           created_at: string
+          daily_serp_budget: number
+          default_location_code: number
           device: string
           domain: string
           id: string
-          location_code: number
           org_id: string
         }
         Insert: {
+          alt_domains?: string[]
           branded_terms?: string[]
           client_name: string
           created_at?: string
+          daily_serp_budget?: number
+          default_location_code?: number
           device?: string
           domain: string
           id?: string
-          location_code?: number
           org_id: string
         }
         Update: {
+          alt_domains?: string[]
           branded_terms?: string[]
           client_name?: string
           created_at?: string
+          daily_serp_budget?: number
+          default_location_code?: number
           device?: string
           domain?: string
           id?: string
-          location_code?: number
           org_id?: string
         }
         Relationships: [
@@ -316,6 +322,66 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      serp_jobs: {
+        Row: {
+          completed_at: string | null
+          cost: number
+          created_at: string
+          dataforseo_task_id: string | null
+          error: string | null
+          id: string
+          import_id: string
+          location_code: number
+          query_id: string
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          cost?: number
+          created_at?: string
+          dataforseo_task_id?: string | null
+          error?: string | null
+          id?: string
+          import_id: string
+          location_code?: number
+          query_id: string
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          cost?: number
+          created_at?: string
+          dataforseo_task_id?: string | null
+          error?: string | null
+          id?: string
+          import_id?: string
+          location_code?: number
+          query_id?: string
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serp_jobs_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "serp_jobs_query_id_fkey"
+            columns: ["query_id"]
+            isOneToOne: false
+            referencedRelation: "queries"
             referencedColumns: ["id"]
           },
         ]
@@ -409,25 +475,85 @@ export type Database = {
       }
       serp_snapshots: {
         Row: {
+          aio_citation_count: number
+          aio_word_count: number | null
           captured_at: string
           captured_date: string
-          features: Json
+          expires_at: string
+          has_ai_overview: boolean
+          has_featured_snippet: boolean
+          has_local_pack: boolean
+          has_shopping: boolean
+          has_top_stories: boolean
+          has_video: boolean
           id: string
+          location_code: number
+          pixels_above_first_organic: number | null
+          publisher_in_ai_overview: boolean
+          publisher_in_featured_snippet: boolean
+          publisher_in_organic_top_3: boolean
+          publisher_in_top_stories: boolean
+          publisher_organic_position: number | null
+          publisher_pixel_height: number | null
           query_id: string
+          raw_serp_data: Json | null
+          serp_response_version: string
+          top_organic_domains: string[]
+          top_stories_domains: string[]
         }
         Insert: {
+          aio_citation_count?: number
+          aio_word_count?: number | null
           captured_at?: string
           captured_date?: string
-          features?: Json
+          expires_at?: string
+          has_ai_overview?: boolean
+          has_featured_snippet?: boolean
+          has_local_pack?: boolean
+          has_shopping?: boolean
+          has_top_stories?: boolean
+          has_video?: boolean
           id?: string
+          location_code?: number
+          pixels_above_first_organic?: number | null
+          publisher_in_ai_overview?: boolean
+          publisher_in_featured_snippet?: boolean
+          publisher_in_organic_top_3?: boolean
+          publisher_in_top_stories?: boolean
+          publisher_organic_position?: number | null
+          publisher_pixel_height?: number | null
           query_id: string
+          raw_serp_data?: Json | null
+          serp_response_version?: string
+          top_organic_domains?: string[]
+          top_stories_domains?: string[]
         }
         Update: {
+          aio_citation_count?: number
+          aio_word_count?: number | null
           captured_at?: string
           captured_date?: string
-          features?: Json
+          expires_at?: string
+          has_ai_overview?: boolean
+          has_featured_snippet?: boolean
+          has_local_pack?: boolean
+          has_shopping?: boolean
+          has_top_stories?: boolean
+          has_video?: boolean
           id?: string
+          location_code?: number
+          pixels_above_first_organic?: number | null
+          publisher_in_ai_overview?: boolean
+          publisher_in_featured_snippet?: boolean
+          publisher_in_organic_top_3?: boolean
+          publisher_in_top_stories?: boolean
+          publisher_organic_position?: number | null
+          publisher_pixel_height?: number | null
           query_id?: string
+          raw_serp_data?: Json | null
+          serp_response_version?: string
+          top_organic_domains?: string[]
+          top_stories_domains?: string[]
         }
         Relationships: [
           {

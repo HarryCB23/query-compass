@@ -1,34 +1,45 @@
 /**
- * ImportView — loads a single import from the DB, fetches AI classifications
- * from the classifications table, and merges them with client-side branded
- * term detection as a fallback for unclassified queries.
+ * ImportView — loads a single import, classifications, and SERP snapshots.
  *
- * Classification precedence: DB (ai-haiku) > DB (pattern) > client-side branded check
+ * Tabs (via ?tab= search param):
+ *   queries     — existing analysis view + SERP columns
+ *   ai-surfaces — AIO/Top Stories/FS/busyness panels
  */
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/integrations/supabase/client'
 import { CLASSIFIER_PROMPT_VERSION } from '@/lib/classifierVersion'
 import { classifyQuery } from '@/lib/queryClassifier'
+import { SERP_LOCATIONS, locationLabel } from '@/lib/serpLocations'
 import { StatCard } from '@/components/StatCard'
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart'
 import { CategoryChangeChart } from '@/components/CategoryChangeChart'
 import { CategoryMetricCards } from '@/components/CategoryMetricCards'
 import { CategoryMetricsPanel } from '@/components/CategoryMetricsPanel'
-import { QueryTable } from '@/components/QueryTable'
+import { QueryTable, type SerpSnapshotData } from '@/components/QueryTable'
 import { CategoryFilter } from '@/components/CategoryFilter'
 import { EntityExplorer } from '@/components/EntityExplorer'
 import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import { SectionHeader } from '@/components/SectionHeader'
+import AiSurfacesTab from '@/components/AiSurfacesTab'
 import { Button } from '@/components/ui/button'
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import {
   ArrowLeft, BarChart3, TrendingUp, MousePointer, Eye, Search,
-  Target, Percent, Users, Filter, Download, Sparkles, Loader2,
+  Target, Percent, Users, Filter, Download, Sparkles, Loader2, Globe,
 } from 'lucide-react'
 import { UserMenu } from '@/components/UserMenu'
 import type { QueryData, CategoryStats, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import { toast } from 'sonner'
+
+const TASK_COST = 0.0006
 
 interface ClassificationInfo {
   category: QueryCategory
@@ -39,7 +50,10 @@ interface ClassificationInfo {
 export default function ImportView() {
   const { projectId, importId } = useParams<{ projectId: string; importId: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = (searchParams.get('tab') ?? 'queries') as 'queries' | 'ai-surfaces'
 
+  // ── Core data ─────────────────────────────────────────────────────────────
   const [projectName, setProjectName]         = useState<string>('')
   const [brandedTerms, setBrandedTerms]       = useState<string[]>([])
   const [queryData, setQueryData]             = useState<QueryData[]>([])
@@ -50,16 +64,56 @@ export default function ImportView() {
   const [categoryFilter, setCategoryFilter]   = useState<QueryCategory | 'all'>('all')
   const [entityFilter, setEntityFilter]       = useState<string | null>(null)
 
-  // Stable ref — holds query_id data so handleClassify can re-fetch classifications
-  // without needing ids/idToText in its dependency array.
+  // ── SERP state ─────────────────────────────────────────────────────────────
+  const [locationCode, setLocationCode]       = useState<number>(2826)
+  const [serpSnapshots, setSerpSnapshots]     = useState<Map<string, SerpSnapshotData>>(new Map())
+  const [enrichState, setEnrichState]         = useState<'idle' | 'submitting' | 'polling' | 'done'>('idle')
+  const [enrichProgress, setEnrichProgress]   = useState('')
+  const [enrichModalOpen, setEnrichModalOpen] = useState(false)
+  const [modalLocation, setModalLocation]     = useState<number>(2826)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Stable ref for query_id data
   const queryIdDataRef = useRef<{ ids: string[]; idToText: Map<string, string> }>({
     ids: [],
     idToText: new Map(),
   })
 
+  // ── Load SERP snapshots for current location ───────────────────────────────
+
+  const loadSerpSnapshots = useCallback(async (loc: number) => {
+    const { ids, idToText } = queryIdDataRef.current
+    if (ids.length === 0) return
+
+    const CHUNK = 100
+    const byQueryId = new Map<string, SerpSnapshotData>()
+    const now = new Date().toISOString()
+
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const { data } = await supabase
+        .from('serp_snapshots')
+        .select('query_id,captured_at,has_ai_overview,has_top_stories,has_featured_snippet,publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet,publisher_organic_position,publisher_in_organic_top_3,top_organic_domains')
+        .in('query_id', ids.slice(i, i + CHUNK))
+        .eq('location_code', loc)
+        .gt('expires_at', now)
+
+      if (data) {
+        for (const row of data) {
+          byQueryId.set(row.query_id, row as SerpSnapshotData)
+        }
+      }
+    }
+
+    // Re-key by query_text for QueryTable lookup
+    const byText = new Map<string, SerpSnapshotData>()
+    for (const [qid, snap] of byQueryId) {
+      const text = idToText.get(qid)
+      if (text) byText.set(text, snap)
+    }
+    setSerpSnapshots(byText)
+  }, [])
+
   // ── Fetch classifications from DB ──────────────────────────────────────────
-  // Chunked .in() at 100 UUIDs. Prefers ai-haiku over pattern when both exist.
-  // Returns a Map keyed by query_text for direct merge into QueryData.
 
   const loadClassifications = useCallback(async (
     ids: string[],
@@ -81,7 +135,6 @@ export default function ImportView() {
         const source: 'ai-haiku' | 'pattern' =
           (row.model_version as string).startsWith('claude-') ? 'ai-haiku' : 'pattern'
         const existing = rawMap.get(row.query_id)
-        // ai-haiku beats pattern; first write wins within same tier
         if (!existing || (source === 'ai-haiku' && existing.source !== 'ai-haiku')) {
           rawMap.set(row.query_id, {
             category: row.category as QueryCategory,
@@ -92,7 +145,6 @@ export default function ImportView() {
       }
     }
 
-    // Re-key from query_id → query_text for useMemo merge
     const textMap = new Map<string, ClassificationInfo>()
     for (const [qid, info] of rawMap) {
       const text = idToText.get(qid)
@@ -101,7 +153,7 @@ export default function ImportView() {
     setClassifications(textMap)
   }, [])
 
-  // ── "Classify with Claude" handler — client-driven chunking ───────────────
+  // ── Classify handler ───────────────────────────────────────────────────────
 
   const handleClassify = useCallback(async () => {
     if (!projectId || !importId) return
@@ -146,7 +198,97 @@ export default function ImportView() {
     }
   }, [projectId, importId, queryData.length, loadClassifications])
 
-  // ── Load project + import_queries, then classifications ───────────────────
+  // ── Enrich SERP handlers ───────────────────────────────────────────────────
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+  }, [])
+
+  const startPolling = useCallback(() => {
+    if (!importId) return
+    stopPolling()
+
+    pollRef.current = setInterval(async () => {
+      const { data } = await supabase
+        .from('serp_jobs')
+        .select('status')
+        .eq('import_id', importId)
+
+      if (!data) return
+
+      const counts = { complete: 0, error: 0, other: 0 }
+      for (const j of data) {
+        if (j.status === 'complete')      counts.complete++
+        else if (j.status === 'error')    counts.error++
+        else                              counts.other++
+      }
+
+      const done  = counts.complete + counts.error
+      const total = done + counts.other
+
+      setEnrichProgress(`Fetching results… ${done.toLocaleString()} of ${total.toLocaleString()} complete`)
+
+      if (counts.other === 0) {
+        stopPolling()
+        setEnrichState('done')
+        setEnrichProgress('')
+        await loadSerpSnapshots(locationCode)
+        toast.success(`SERP data ready — ${counts.complete} snapshots fetched`)
+      }
+    }, 10_000)
+  }, [importId, locationCode, loadSerpSnapshots, stopPolling])
+
+  const handleEnrichClick = useCallback(() => {
+    setModalLocation(locationCode)
+    setEnrichModalOpen(true)
+  }, [locationCode])
+
+  const handleEnrichConfirm = useCallback(async () => {
+    if (!importId) return
+    setEnrichModalOpen(false)
+    setEnrichState('submitting')
+
+    const total = queryData.length
+    const CHUNK = 100
+    let offset = 0
+
+    try {
+      while (offset < total) {
+        setEnrichProgress(`Submitting ${Math.min(offset + CHUNK, total).toLocaleString()} of ${total.toLocaleString()}…`)
+
+        let result = await supabase.functions.invoke('enrich-serp', {
+          body: { importId, chunkOffset: offset, chunkLimit: CHUNK, locationCode: modalLocation },
+        })
+
+        if (result.error) {
+          const errMsg = result.error instanceof Error ? result.error.message : String(result.error)
+          if (errMsg.includes('401') || errMsg.toLowerCase().includes('unauthorized')) {
+            await supabase.auth.refreshSession()
+            result = await supabase.functions.invoke('enrich-serp', {
+              body: { importId, chunkOffset: offset, chunkLimit: CHUNK, locationCode: modalLocation },
+            })
+          }
+          if (result.error) throw result.error
+        }
+
+        offset += CHUNK
+      }
+
+      // Switch location to the one we just submitted for
+      setLocationCode(modalLocation)
+      setEnrichState('polling')
+      startPolling()
+    } catch (err) {
+      toast.error('SERP enrichment failed: ' + (err instanceof Error ? err.message : String(err)))
+      setEnrichState('idle')
+      setEnrichProgress('')
+    }
+  }, [importId, queryData.length, modalLocation, startPolling])
+
+  // Cleanup polling on unmount
+  useEffect(() => () => stopPolling(), [stopPolling])
+
+  // ── Load project + import_queries ─────────────────────────────────────────
 
   useEffect(() => {
     if (!projectId || !importId) return
@@ -180,16 +322,21 @@ export default function ImportView() {
     }
 
     Promise.all([
-      supabase.from('projects').select('client_name, branded_terms').eq('id', projectId).single(),
+      supabase.from('projects')
+        .select('client_name, branded_terms, default_location_code')
+        .eq('id', projectId)
+        .single(),
       fetchAllRows(),
     ]).then(async ([{ data: proj }, rows]) => {
       if (proj) {
         setProjectName(proj.client_name)
         setBrandedTerms(proj.branded_terms)
+        const loc = proj.default_location_code ?? 2826
+        setLocationCode(loc)
+        setModalLocation(loc)
       }
       if (!rows) { setLoading(false); return }
 
-      // Build query_id ↔ query_text maps for classification lookup + re-fetch
       const idToText = new Map<string, string>()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const r of rows as any[]) {
@@ -198,7 +345,6 @@ export default function ImportView() {
       const ids = Array.from(idToText.keys())
       queryIdDataRef.current = { ids, idToText }
 
-      // Parse raw rows into QueryData (category defaults to 'other'; merge happens in useMemo)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const parsed: QueryData[] = (rows as any[]).map(r => {
         const query                    = (r.queries as { query_text: string }).query_text
@@ -241,7 +387,14 @@ export default function ImportView() {
     })
   }, [projectId, importId, loadClassifications])
 
-  // ── Merge DB classifications; branded check covers unclassified queries ───
+  // Load snapshots whenever location changes (and query IDs are available)
+  useEffect(() => {
+    if (!loading && queryIdDataRef.current.ids.length > 0) {
+      loadSerpSnapshots(locationCode)
+    }
+  }, [locationCode, loading, loadSerpSnapshots])
+
+  // ── Derived data ───────────────────────────────────────────────────────────
 
   const classifiedData = useMemo((): QueryData[] =>
     queryData.map(q => {
@@ -254,7 +407,6 @@ export default function ImportView() {
           classificationReasoning: dbClass.reasoning,
         }
       }
-      // No DB row — client-side branded check as fallback
       const patternCat = classifyQuery(q.query, { brandedTerms })
       return {
         ...q,
@@ -264,8 +416,6 @@ export default function ImportView() {
       }
     }),
   [queryData, brandedTerms, classifications])
-
-  // ── Category stats ─────────────────────────────────────────────────────────
 
   const categoryStats = useMemo((): CategoryStats[] => {
     const categories: QueryCategory[] = ['branded', 'informational', 'news', 'product', 'commercial', 'transactional', 'other']
@@ -354,10 +504,17 @@ export default function ImportView() {
     toast.success('CSV downloaded')
   }, [classifiedData, importId])
 
+  // ── Enrich modal cost estimate ─────────────────────────────────────────────
+  const willSubmit = queryData.length - serpSnapshots.size
+  const estimatedCost = willSubmit * TASK_COST
+
   if (loading) return <p className="text-muted-foreground text-center py-20">Loading import…</p>
+
+  const enrichBusy = enrichState === 'submitting' || enrichState === 'polling'
 
   return (
     <div className="min-h-screen bg-background">
+      {/* ── Header ───────────────────────────────────────────────────────── */}
       <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="container py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -370,6 +527,33 @@ export default function ImportView() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Enrich SERP button */}
+            <Button
+              onClick={handleEnrichClick}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={enrichBusy}
+            >
+              {enrichBusy ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {enrichProgress || 'Enriching…'}
+                </>
+              ) : enrichState === 'done' ? (
+                <>
+                  <Globe className="w-4 h-4" />
+                  Re-enrich SERP
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4" />
+                  Enrich SERP
+                </>
+              )}
+            </Button>
+
+            {/* Classify button */}
             <Button
               onClick={handleClassify}
               variant="outline"
@@ -394,101 +578,213 @@ export default function ImportView() {
                 </>
               )}
             </Button>
+
             <Button onClick={handleDownloadCSV} variant="outline" size="sm" className="gap-2">
               <Download className="w-4 h-4" />Download CSV
             </Button>
             <Link to={`/projects/${projectId}/settings`}>
               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
-                Edit branded terms in Settings
+                Settings
               </Button>
             </Link>
             <UserMenu />
           </div>
         </div>
+
+        {/* ── Tab bar ──────────────────────────────────────────────────── */}
+        <div className="container flex items-center gap-1 pb-0 border-t border-border/50">
+          {(['queries', 'ai-surfaces'] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setSearchParams(t === 'queries' ? {} : { tab: t })}
+              className={[
+                'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
+                tab === t
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground',
+              ].join(' ')}
+            >
+              {t === 'queries' ? 'Queries' : 'AI Surfaces'}
+            </button>
+          ))}
+
+          {/* Location selector — shown in header for both tabs */}
+          <div className="ml-auto flex items-center gap-2 py-1.5">
+            <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+            <Select
+              value={String(locationCode)}
+              onValueChange={v => setLocationCode(Number(v))}
+            >
+              <SelectTrigger className="h-7 text-xs w-44 border-border/60">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SERP_LOCATIONS.map(l => (
+                  <SelectItem key={l.code} value={String(l.code)} className="text-xs">
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {serpSnapshots.size > 0 && (
+              <span className="text-[11px] text-muted-foreground">
+                {serpSnapshots.size.toLocaleString()} enriched
+              </span>
+            )}
+          </div>
+        </div>
       </header>
 
-      <main className="container py-8 space-y-8 animate-fade-in">
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Total Queries"      value={overallStats.queryCount}              icon={<Search       className="w-5 h-5 text-primary" />} />
-          <StatCard title="Total Clicks"       value={overallStats.totalClicksCurrent}      change={overallStats.clicksChange}      icon={<MousePointer className="w-5 h-5 text-primary" />} />
-          <StatCard title="Total Impressions"  value={overallStats.totalImpressionsCurrent} change={overallStats.impressionsChange}  icon={<Eye          className="w-5 h-5 text-primary" />} />
-          <StatCard title="Biggest Shift"
-            value={CATEGORY_LABELS[[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.category ?? 'other']}
-            change={[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.clicksChangePercent ?? 0}
-            icon={<TrendingUp className="w-5 h-5 text-primary" />}
-          />
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<BarChart3 className="w-4 h-4" />} title="Clicks by Category" />
-            <CategoryDistributionChart stats={categoryStats} dataKey="clicks" />
+      {/* ── Tab content ──────────────────────────────────────────────────── */}
+      {tab === 'ai-surfaces' ? (
+        <AiSurfacesTab
+          classifiedData={classifiedData}
+          serpSnapshots={serpSnapshots}
+          locationCode={locationCode}
+        />
+      ) : (
+        <main className="container py-8 space-y-8 animate-fade-in">
+          {/* Stats */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard title="Total Queries"      value={overallStats.queryCount}              icon={<Search       className="w-5 h-5 text-primary" />} />
+            <StatCard title="Total Clicks"       value={overallStats.totalClicksCurrent}      change={overallStats.clicksChange}      icon={<MousePointer className="w-5 h-5 text-primary" />} />
+            <StatCard title="Total Impressions"  value={overallStats.totalImpressionsCurrent} change={overallStats.impressionsChange}  icon={<Eye          className="w-5 h-5 text-primary" />} />
+            <StatCard title="Biggest Shift"
+              value={CATEGORY_LABELS[[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.category ?? 'other']}
+              change={[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.clicksChangePercent ?? 0}
+              icon={<TrendingUp className="w-5 h-5 text-primary" />}
+            />
           </div>
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<TrendingUp className="w-4 h-4" />} title="Category Change (% Clicks)" />
-            <CategoryChangeChart stats={categoryStats} />
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<Target className="w-4 h-4" />} title="Average Position by Category" subtitle="(lower is better)" />
-            <CategoryMetricCards stats={categoryStats} metric="position" />
-          </div>
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<Percent className="w-4 h-4" />} title="CTR by Category" />
-            <CategoryMetricCards stats={categoryStats} metric="ctr" />
-          </div>
-        </div>
-
-        {/* Entity explorer */}
-        <div className="p-6 glass-card">
-          <SectionHeader icon={<Users className="w-4 h-4" />} title="News Entity Explorer" subtitle="Click an entity to see performance" />
-          <EntityExplorer queries={classifiedData} onEntitySelect={(entity, queries) => {
-            setEntityFilter(entity); setCategoryFilter('news')
-            toast.success(`Filtered to "${entity}" — ${queries.length} queries`)
-          }} />
-        </div>
-
-        {/* Category filter */}
-        <div className="p-6 glass-card">
-          <SectionHeader icon={<Filter className="w-4 h-4" />} title="Filter by Category" subtitle={entityFilter ? `Filtered: "${entityFilter}"` : undefined} />
-          {entityFilter && (
-            <Button variant="ghost" size="sm" onClick={() => setEntityFilter(null)} className="text-xs mb-4">
-              Clear entity filter
-            </Button>
-          )}
-          <CategoryFilter
-            selected={categoryFilter}
-            onChange={cat => { setCategoryFilter(cat); if (cat !== 'news') setEntityFilter(null) }}
-            counts={categoryCounts}
-          />
-        </div>
-
-        {selectedCategoryStats && (
+          {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <CategoryMetricsPanel stats={selectedCategoryStats} />
             <div className="p-6 glass-card">
-              <SectionHeader icon={<TrendingUp className="w-4 h-4" />} title="Top 20 Shifting Queries" subtitle="by absolute click change" />
-              <div className="max-h-80 overflow-y-auto">
-                <TopShiftingQueries queries={classifiedData} category={categoryFilter as QueryCategory} limit={20} />
+              <SectionHeader icon={<BarChart3 className="w-4 h-4" />} title="Clicks by Category" />
+              <CategoryDistributionChart stats={categoryStats} dataKey="clicks" />
+            </div>
+            <div className="p-6 glass-card">
+              <SectionHeader icon={<TrendingUp className="w-4 h-4" />} title="Category Change (% Clicks)" />
+              <CategoryChangeChart stats={categoryStats} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="p-6 glass-card">
+              <SectionHeader icon={<Target className="w-4 h-4" />} title="Average Position by Category" subtitle="(lower is better)" />
+              <CategoryMetricCards stats={categoryStats} metric="position" />
+            </div>
+            <div className="p-6 glass-card">
+              <SectionHeader icon={<Percent className="w-4 h-4" />} title="CTR by Category" />
+              <CategoryMetricCards stats={categoryStats} metric="ctr" />
+            </div>
+          </div>
+
+          {/* Entity explorer */}
+          <div className="p-6 glass-card">
+            <SectionHeader icon={<Users className="w-4 h-4" />} title="News Entity Explorer" subtitle="Click an entity to see performance" />
+            <EntityExplorer queries={classifiedData} onEntitySelect={(entity, queries) => {
+              setEntityFilter(entity); setCategoryFilter('news')
+              toast.success(`Filtered to "${entity}" — ${queries.length} queries`)
+            }} />
+          </div>
+
+          {/* Category filter */}
+          <div className="p-6 glass-card">
+            <SectionHeader icon={<Filter className="w-4 h-4" />} title="Filter by Category" subtitle={entityFilter ? `Filtered: "${entityFilter}"` : undefined} />
+            {entityFilter && (
+              <Button variant="ghost" size="sm" onClick={() => setEntityFilter(null)} className="text-xs mb-4">
+                Clear entity filter
+              </Button>
+            )}
+            <CategoryFilter
+              selected={categoryFilter}
+              onChange={cat => { setCategoryFilter(cat); if (cat !== 'news') setEntityFilter(null) }}
+              counts={categoryCounts}
+            />
+          </div>
+
+          {selectedCategoryStats && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CategoryMetricsPanel stats={selectedCategoryStats} />
+              <div className="p-6 glass-card">
+                <SectionHeader icon={<TrendingUp className="w-4 h-4" />} title="Top 20 Shifting Queries" subtitle="by absolute click change" />
+                <div className="max-h-80 overflow-y-auto">
+                  <TopShiftingQueries queries={classifiedData} category={categoryFilter as QueryCategory} limit={20} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Query table */}
+          <div className="p-6 glass-card">
+            <SectionHeader icon={<Search className="w-4 h-4" />} title="Query Details" subtitle={entityFilter ? `Filtered by "${entityFilter}"` : undefined} />
+            <QueryTable
+              data={entityFilter ? classifiedData.filter(q => q.query.toLowerCase().includes(entityFilter.toLowerCase())) : classifiedData}
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              serpSnapshots={serpSnapshots}
+            />
+          </div>
+        </main>
+      )}
+
+      {/* ── Enrich SERP modal ─────────────────────────────────────────────── */}
+      <Dialog open={enrichModalOpen} onOpenChange={setEnrichModalOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Enrich SERP data</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Location</Label>
+              <Select
+                value={String(modalLocation)}
+                onValueChange={v => setModalLocation(Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SERP_LOCATIONS.map(l => (
+                    <SelectItem key={l.code} value={String(l.code)}>
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total queries</span>
+                <span className="font-mono">{queryData.length.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Already cached</span>
+                <span className="font-mono">{(modalLocation === locationCode ? serpSnapshots.size : 0).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between font-medium border-t border-border/50 pt-1 mt-1">
+                <span>Will submit</span>
+                <span className="font-mono">
+                  ~{(queryData.length - (modalLocation === locationCode ? serpSnapshots.size : 0)).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Estimated cost</span>
+                <span className="font-mono">
+                  ${((queryData.length - (modalLocation === locationCode ? serpSnapshots.size : 0)) * TASK_COST).toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Query table */}
-        <div className="p-6 glass-card">
-          <SectionHeader icon={<Search className="w-4 h-4" />} title="Query Details" subtitle={entityFilter ? `Filtered by "${entityFilter}"` : undefined} />
-          <QueryTable
-            data={entityFilter ? classifiedData.filter(q => q.query.toLowerCase().includes(entityFilter.toLowerCase())) : classifiedData}
-            categoryFilter={categoryFilter}
-            onCategoryFilterChange={setCategoryFilter}
-          />
-        </div>
-      </main>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEnrichModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleEnrichConfirm}>Confirm &amp; enrich</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
