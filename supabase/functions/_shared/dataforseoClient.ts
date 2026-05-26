@@ -180,6 +180,24 @@ function domainMatches(candidate: string | null | undefined, publisherDomains: s
   return publisherDomains.some(pd => getRegisteredDomain(pd) === candidateReg)
 }
 
+// ── Exported: DataforSEO GET (task_get) ──────────────────────────────────────
+
+export async function dfsGet(
+  path: string,
+  credentials: { login: string; password: string },
+): Promise<unknown> {
+  const auth = btoa(`${credentials.login}:${credentials.password}`)
+  const resp = await fetch(`${DATAFORSEO_BASE_URL}${path}`, {
+    method: 'GET',
+    headers: { 'Authorization': `Basic ${auth}` },
+  })
+  if (!resp.ok) {
+    const text = await resp.text()
+    throw new Error(`DataforSEO GET ${resp.status}: ${text}`)
+  }
+  return await resp.json()
+}
+
 // ── Internal: DataforSEO API call with retry ─────────────────────────────────
 
 async function dfsPost(
@@ -339,8 +357,12 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
     const tagParts = tag ? tag.split(':') : []
     const importId: string | null = tagParts[0] ?? null
     const queryId: string | null = tagParts[1] ?? null
-    const locationCode: number | null =
-      typeof t?.data?.location_code === 'number' ? (t.data.location_code as number) : null
+    const locationCode: number | null = (() => {
+      const lc = t?.data?.location_code
+      if (typeof lc === 'number') return lc
+      if (typeof lc === 'string') { const n = parseInt(lc, 10); return isNaN(n) ? null : n }
+      return null
+    })()
 
     const statusCode: number = t?.status_code ?? 0
 

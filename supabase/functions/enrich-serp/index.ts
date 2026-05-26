@@ -328,6 +328,38 @@ Deno.serve(async (req) => {
     }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } })
   }
 
+  // ── Pre-INSERT serp_jobs (status='submitting', task_id=NULL) ──────────────
+  // Insert BEFORE calling DataforSEO so the webhook can always find the row,
+  // even if it fires in the ~500ms window between submission and our UPDATE.
+
+  const preInsertRows = uncachedRows.map(r => ({
+    import_id: importId,
+    query_id: r.query_id,
+    location_code: effectiveLocationCode,
+    status: 'submitting',
+    cost: TASK_COST_DEFAULT,
+  }))
+
+  const { data: insertedJobs, error: preInsertError } = await svc
+    .from('serp_jobs')
+    .insert(preInsertRows)
+    .select('id, query_id')
+
+  if (preInsertError || !insertedJobs) {
+    return new Response(JSON.stringify({
+      submitted: 0,
+      cached: cachedIds.size,
+      errors: [preInsertError?.message ?? 'pre-insert returned no rows'],
+      processed_offset: chunkOffset,
+      processed_count: queryRows.length,
+    }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } })
+  }
+
+  // queryId → DB row id (for patching task_id after submission)
+  const queryIdToJobId = new Map<string, string>(
+    insertedJobs.map((j: { id: string; query_id: string }) => [j.query_id, j.id])
+  )
+
   // ── Submit to DataforSEO ──────────────────────────────────────────────────
   // postback_url: SUPABASE_URL/functions/v1/serp-webhook?token=DATAFORSEO_WEBHOOK_SECRET
   // tag format: "{importId}:{queryId}"
@@ -343,53 +375,56 @@ Deno.serve(async (req) => {
     importId,
   }))
 
+  const errors: string[] = []
   let submitResult: Awaited<ReturnType<typeof submitSerpTasks>>
+
   try {
     submitResult = await submitSerpTasks(tasks, {
       login: DFS_LOGIN,
       password: DFS_PASSWORD,
     })
   } catch (err) {
-    // Permanent API failure (not per-task): log, return error. Do NOT create
-    // serp_jobs rows — only write rows for tasks that were actually accepted.
+    // Permanent API failure: mark all pre-inserted rows as error
+    const errMsg = err instanceof Error ? err.message : String(err)
+    for (const jobId of queryIdToJobId.values()) {
+      await svc.from('serp_jobs')
+        .update({ status: 'error', error: errMsg })
+        .eq('id', jobId)
+        .eq('status', 'submitting')  // don't overwrite if webhook already completed it
+    }
     return new Response(JSON.stringify({
       submitted: 0,
       cached: cachedIds.size,
-      errors: [err instanceof Error ? err.message : String(err)],
+      errors: [errMsg],
       processed_offset: chunkOffset,
       processed_count: queryRows.length,
     }), { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } })
   }
 
-  // ── Insert serp_jobs rows ─────────────────────────────────────────────────
-  // One row per successfully-submitted task. Per-task 4xx errors (from
-  // DataforSEO's task_post response) are surfaced in submitResult.errors
-  // but do NOT get serp_jobs rows — the task was never accepted.
+  // TEST ONLY — uncomment to exercise webhook tag-fallback path:
+  // await new Promise(r => setTimeout(r, 30_000))
 
-  const errors: string[] = submitResult.errors.map(e => `query ${e.queryId}: ${e.error}`)
+  // ── Patch task_id onto submitted rows ─────────────────────────────────────
+  // Per-task errors from DataforSEO: mark as error. Accepted tasks: set task_id + status='submitted'.
 
-  if (submitResult.submitted.length > 0) {
-    const jobRows = submitResult.submitted.map(s => ({
-      dataforseo_task_id: s.dataforseoTaskId,
-      import_id: importId,
-      query_id: s.queryId,
-      location_code: effectiveLocationCode,
-      status: 'submitted',
-      cost: TASK_COST_DEFAULT,
-    }))
+  for (const e of submitResult.errors) {
+    errors.push(`query ${e.queryId}: ${e.error}`)
+    const jobId = queryIdToJobId.get(e.queryId)
+    if (jobId) {
+      await svc.from('serp_jobs')
+        .update({ status: 'error', error: e.error })
+        .eq('id', jobId)
+        .eq('status', 'submitting')  // don't overwrite if webhook already completed it
+    }
+  }
 
-    // Insert in chunks to stay within supabase-js payload limits
-    for (let i = 0; i < jobRows.length; i += CHUNK) {
-      const { error: insertError } = await svc
-        .from('serp_jobs')
-        .insert(jobRows.slice(i, i + CHUNK))
-
-      if (insertError) {
-        // Non-fatal: log but continue — DataforSEO submissions already fired,
-        // the webhook will still arrive and we can recover the job via task_id.
-        console.error('serp_jobs insert error:', insertError.message)
-        errors.push(`serp_jobs insert batch ${i}: ${insertError.message}`)
-      }
+  for (const s of submitResult.submitted) {
+    const jobId = queryIdToJobId.get(s.queryId)
+    if (jobId) {
+      await svc.from('serp_jobs')
+        .update({ dataforseo_task_id: s.dataforseoTaskId, status: 'submitted' })
+        .eq('id', jobId)
+        .eq('status', 'submitting')  // don't overwrite if webhook already completed it
     }
   }
 

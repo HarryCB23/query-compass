@@ -66,7 +66,16 @@ Deno.serve(async (req) => {
 
   let rawBody: unknown
   try {
-    rawBody = await req.json()
+    let bodyText: string
+    if (req.headers.get('content-encoding') === 'gzip') {
+      const buf = await req.arrayBuffer()
+      const ds = new DecompressionStream('gzip')
+      const stream = new Response(buf).body!.pipeThrough(ds)
+      bodyText = await new Response(stream).text()
+    } else {
+      bodyText = await req.text()
+    }
+    rawBody = JSON.parse(bodyText)
   } catch (err) {
     console.error('serp-webhook: failed to parse body:', err)
     return new Response(JSON.stringify({ processed: 0, errors: 1, detail: 'body parse failed' }), {
@@ -101,7 +110,7 @@ Deno.serve(async (req) => {
         continue
       }
 
-      const { data: job, error: jobError } = await svc
+      const { data: primaryJob, error: jobError } = await svc
         .from('serp_jobs')
         .select('id, query_id, import_id, location_code, status')
         .eq('dataforseo_task_id', task.taskId)
@@ -112,6 +121,34 @@ Deno.serve(async (req) => {
         errors++
         continue
       }
+
+      let job = primaryJob
+
+      // ── Tag-fallback lookup ───────────────────────────────────────────────
+      // If task_id lookup missed (row still has NULL task_id — the ~500ms race
+      // window between submission and our UPDATE), find via importId+queryId+
+      // locationCode from the tag/data and patch the task_id onto the row.
+      if (!job && task.importId && task.queryId && task.locationCode) {
+        const { data: fallbackJob } = await svc
+          .from('serp_jobs')
+          .select('id, query_id, import_id, location_code, status')
+          .eq('import_id', task.importId)
+          .eq('query_id', task.queryId)
+          .eq('location_code', task.locationCode)
+          .in('status', ['submitting', 'submitted'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (fallbackJob) {
+          console.log(`serp-webhook: tag-fallback matched job ${fallbackJob.id} for task ${task.taskId}`)
+          await svc.from('serp_jobs')
+            .update({ dataforseo_task_id: task.taskId })
+            .eq('id', fallbackJob.id)
+          job = fallbackJob
+        }
+      }
+
       if (!job) {
         console.warn(`serp-webhook: no serp_jobs row for dataforseo_task_id=${task.taskId} — skipping`)
         continue
@@ -174,6 +211,7 @@ Deno.serve(async (req) => {
       const expiresAt = new Date(Date.now() + TTL_MS).toISOString()
       const now = new Date().toISOString()
 
+      console.log(`serp-webhook: upserting snapshot for query ${job.query_id} location ${job.location_code}`)
       const { error: upsertError } = await svc
         .from('serp_snapshots')
         .upsert({
@@ -213,10 +251,11 @@ Deno.serve(async (req) => {
         })
 
       if (upsertError) {
-        console.error(`serp-webhook: snapshot upsert failed for query ${job.query_id}:`, upsertError.message)
+        console.error(`serp-webhook: snapshot upsert failed for query ${job.query_id}:`, upsertError.message, JSON.stringify(upsertError))
         errors++
         continue
       }
+      console.log(`serp-webhook: snapshot upsert OK for query ${job.query_id}`)
 
       // f. Mark serp_job complete
       const { error: completeError } = await svc

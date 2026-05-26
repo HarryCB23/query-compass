@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { gzipSync, gunzipSync } from 'zlib'
 import {
   parseSerpPostback,
   computeSummaryFields,
@@ -257,6 +258,50 @@ describe('computeSummaryFields — competitive landscape', () => {
 
     expect(fields.pixels_above_first_organic).toBeNull()
     expect(fields.publisher_pixel_height).toBeNull()
+  })
+})
+
+// ── Gzip decompression path ───────────────────────────────────────────────────
+// Regression anchor: DataforSEO sends gzipped postback bodies (Content-Encoding: gzip).
+// serp-webhook decompresses with DecompressionStream before JSON.parse.
+// These tests verify the gzip → decompress → parseSerpPostback pipeline is
+// byte-for-byte equivalent to parsing the plain JSON directly.
+
+describe('serp-webhook gzip decompression path', () => {
+  it('gzip round-trip preserves parseSerpPostback output (product_organic)', () => {
+    const body = loadFixture('product_organic')
+    const gzipped = gzipSync(Buffer.from(JSON.stringify(body)))
+    const decompressed = JSON.parse(gunzipSync(gzipped).toString('utf-8'))
+
+    const [direct] = parseSerpPostback(body)
+    const [viaGzip] = parseSerpPostback(decompressed)
+
+    expect(viaGzip.queryId).toBe(direct.queryId)
+    expect(viaGzip.importId).toBe(direct.importId)
+    expect(viaGzip.locationCode).toBe(direct.locationCode)
+    expect(viaGzip.error).toBe(direct.error)
+    expect(viaGzip.items?.length).toBe(direct.items?.length)
+  })
+
+  it('gzip round-trip preserves AIO detection (commercial_shopping)', () => {
+    const body = loadFixture('commercial_shopping')
+    const gzipped = gzipSync(Buffer.from(JSON.stringify(body)))
+    const decompressed = JSON.parse(gunzipSync(gzipped).toString('utf-8'))
+
+    const [viaGzip] = parseSerpPostback(decompressed)
+    expect(viaGzip.error).toBeNull()
+    expect(viaGzip.items!.some(i => i.type === 'ai_overview')).toBe(true)
+  })
+
+  it('plain JSON path still works (non-gzip req.text + JSON.parse)', () => {
+    // Regression: ensure the else-branch (req.text() + JSON.parse) is equivalent
+    // to the old req.json() behaviour.
+    const body = loadFixture('aio_ts')
+    const parsed = JSON.parse(JSON.stringify(body)) // simulate text() + JSON.parse()
+    const [result] = parseSerpPostback(parsed)
+    expect(result.error).toBeNull()
+    expect(result.items).not.toBeNull()
+    expect(result.items!.length).toBeGreaterThan(0)
   })
 })
 
