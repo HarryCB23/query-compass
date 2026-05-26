@@ -259,8 +259,27 @@ export async function submitSerpTasks(
  * Parses the raw body from a DataforSEO postback request.
  * Pure function — no I/O. Safe to call in Node test context.
  *
- * DataforSEO postback body shape:
- *   { tasks: [ { id, tag, status_code, status_message, result: [...] } ] }
+ * DataforSEO postback body shape (confirmed against live fixtures):
+ *   {
+ *     tasks: [{
+ *       id: string,            -- DataforSEO task ID
+ *       status_code: number,   -- per-task code; use this, NOT the outer envelope's
+ *       data: { tag: string, keyword: string, ... },
+ *       result: [{ items: DataForSeoItem[] }] | null
+ *     }]
+ *   }
+ *
+ * tag is at task.data.tag (NOT task.tag — those are different fields).
+ * tag format: '{importId}:{queryId}'
+ *
+ * status_code 20000 = task completed (may have empty items — no result is
+ * still 20000 with items: []  OR a 4xxxx code; see fixture verification notes).
+ * Non-20000 per-task codes are treated as errors.
+ *
+ * TODO: verify no_result fixture status_code. If DataforSEO sends 40xxx for
+ * "keyword returned no data", treat it as complete-with-no-data rather than
+ * error (serp_job → complete, serp_snapshot upserted with all-false columns).
+ * Update this function after fixture capture confirms the exact code.
  *
  * Returns one ParsedTaskResult per task in the postback.
  * error is non-null when DataforSEO signals the task failed.
@@ -275,7 +294,8 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
     // deno-lint-ignore no-explicit-any
     const t = task as any
     const taskId: string = t?.id ?? ''
-    const tag: string | null = t?.tag ?? null
+    // tag lives at task.data.tag — NOT task.tag
+    const tag: string | null = t?.data?.tag ?? null
     // tag format: '{importId}:{queryId}'
     const queryId = tag ? (tag.split(':')[1] ?? null) : null
 
@@ -289,6 +309,7 @@ export function parseSerpPostback(body: unknown): ParsedTaskResult[] {
       }
     }
 
+    // result may be null, missing, or an empty array when no SERP data exists
     const resultItems: DataForSeoItem[] = t?.result?.[0]?.items ?? []
     return { taskId, queryId, items: resultItems, error: null }
   })
@@ -317,6 +338,11 @@ export function computeSummaryFields(
   // ── Layer 1: feature presence ──────────────────────────────────────────────
   const types = new Set(items.map(i => i.type))
 
+  // TODO: verify AI Overview type string against live fixture.
+  // DataforSEO docs use both 'ai_overview' and 'answer_box' in different places.
+  // If the fixture shows a different type string, update this constant and the
+  // has_ai_overview column logic throughout. The fixture for 'latest news'
+  // (UK, 2026) is the most likely to contain an AI Overview.
   const has_ai_overview     = types.has('ai_overview')
   const has_top_stories     = types.has('top_stories')
   const has_featured_snippet = types.has('featured_snippet')
