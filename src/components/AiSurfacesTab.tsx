@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CategoryBadge } from './CategoryBadge'
 import type { QueryData, QueryCategory } from '@/types/query'
@@ -31,21 +32,34 @@ function ProgressBar({ value, max, colorClass }: { value: number; max: number; c
 }
 
 export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationCode: _locationCode }: AiSurfacesTabProps) {
+  const [selectedCategory, setSelectedCategory] = useState<QueryCategory | null>(null)
+
   const enrichedQueries = useMemo(
     () => classifiedData.filter(q => serpSnapshots.has(q.query)),
     [classifiedData, serpSnapshots],
   )
 
+  // When a category is active, filter all panels to that category's queries.
+  const activeQueries = useMemo(
+    () => selectedCategory ? enrichedQueries.filter(q => q.category === selectedCategory) : enrichedQueries,
+    [enrichedQueries, selectedCategory],
+  )
+
   const enrichedCount = enrichedQueries.length
+  const activeCount   = activeQueries.length
   const hasData = enrichedCount > 0
+
+  function toggleCategory(cat: QueryCategory) {
+    setSelectedCategory(prev => prev === cat ? null : cat)
+  }
 
   // ── Panel 1: AIO coverage by category ────────────────────────────────────
 
   const aioCoverage = useMemo(() => {
     return CATEGORIES.map(cat => {
       const catQueries = enrichedQueries.filter(q => q.category === cat)
-      const withAio = catQueries.filter(q => serpSnapshots.get(q.query)?.has_ai_overview).length
-      const pubInAio = catQueries.filter(q => serpSnapshots.get(q.query)?.publisher_in_ai_overview).length
+      const withAio   = catQueries.filter(q => serpSnapshots.get(q.query)?.has_ai_overview).length
+      const pubInAio  = catQueries.filter(q => serpSnapshots.get(q.query)?.publisher_in_ai_overview).length
       return { cat, total: catQueries.length, withAio, pubInAio }
     }).filter(r => r.total > 0)
   }, [enrichedQueries, serpSnapshots])
@@ -55,22 +69,22 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
   const topStoriesCoverage = useMemo(() => {
     return CATEGORIES.map(cat => {
       const catQueries = enrichedQueries.filter(q => q.category === cat)
-      const withTS = catQueries.filter(q => serpSnapshots.get(q.query)?.has_top_stories).length
-      const pubInTS = catQueries.filter(q => serpSnapshots.get(q.query)?.publisher_in_top_stories).length
+      const withTS    = catQueries.filter(q => serpSnapshots.get(q.query)?.has_top_stories).length
+      const pubInTS   = catQueries.filter(q => serpSnapshots.get(q.query)?.publisher_in_top_stories).length
       return { cat, total: catQueries.length, withTS, pubInTS }
     }).filter(r => r.total > 0)
   }, [enrichedQueries, serpSnapshots])
 
-  // ── Panel 3: Featured Snippet ownership ──────────────────────────────────
+  // ── Panel 3: Featured Snippet ownership (filtered) ────────────────────────
 
   const fsCoverage = useMemo(() => {
-    const withFs = enrichedQueries.filter(q => serpSnapshots.get(q.query)?.has_featured_snippet)
-    const pubOwns = withFs.filter(q => serpSnapshots.get(q.query)?.publisher_in_featured_snippet).length
+    const withFs    = activeQueries.filter(q => serpSnapshots.get(q.query)?.has_featured_snippet)
+    const pubOwns   = withFs.filter(q => serpSnapshots.get(q.query)?.publisher_in_featured_snippet).length
     const competitor = withFs.length - pubOwns
     return { total: withFs.length, pubOwns, competitor }
-  }, [enrichedQueries, serpSnapshots])
+  }, [activeQueries, serpSnapshots])
 
-  // ── Panel 4: SERP busyness ────────────────────────────────────────────────
+  // ── Panel 4: SERP feature prevalence (filtered) ───────────────────────────
 
   const busyness = useMemo(() => {
     const features = [
@@ -81,15 +95,15 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     return features.map(f => ({
       label: f.label,
       colorClass: f.colorClass,
-      count: enrichedQueries.filter(q => (serpSnapshots.get(q.query) as Record<string, unknown>)?.[f.key]).length,
+      count: activeQueries.filter(q => (serpSnapshots.get(q.query) as Record<string, unknown>)?.[f.key]).length,
     }))
-  }, [enrichedQueries, serpSnapshots])
+  }, [activeQueries, serpSnapshots])
 
-  // ── Panel 6: Top competing domains ───────────────────────────────────────
+  // ── Panel 6: Top competing domains (filtered) ─────────────────────────────
 
   const topDomains = useMemo(() => {
     const freq = new Map<string, number>()
-    for (const q of enrichedQueries) {
+    for (const q of activeQueries) {
       const snap = serpSnapshots.get(q.query)
       if (!snap) continue
       for (const d of snap.top_organic_domains ?? []) {
@@ -99,14 +113,12 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     return [...freq.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 15)
-  }, [enrichedQueries, serpSnapshots])
+  }, [activeQueries, serpSnapshots])
 
   if (!hasData) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
-        <p className="text-muted-foreground text-sm">
-          No SERP data for this location yet.
-        </p>
+        <p className="text-muted-foreground text-sm">No SERP data for this location yet.</p>
         <p className="text-muted-foreground/60 text-xs">
           Use the Enrich SERP button to fetch data, then check back here.
         </p>
@@ -116,11 +128,32 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
 
   return (
     <div className="space-y-6">
-      <p className="text-xs text-muted-foreground">
-        Based on {enrichedCount.toLocaleString()} enriched {enrichedCount === 1 ? 'query' : 'queries'} of {classifiedData.length.toLocaleString()} total.
-      </p>
 
-      {/* Row 1 */}
+      {/* Summary row + active filter chip */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <p className="text-xs text-muted-foreground">
+          {selectedCategory
+            ? `${activeCount.toLocaleString()} of ${enrichedCount.toLocaleString()} enriched queries`
+            : `${enrichedCount.toLocaleString()} enriched ${enrichedCount === 1 ? 'query' : 'queries'} of ${classifiedData.length.toLocaleString()} total`
+          }
+        </p>
+        {selectedCategory && (
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border border-border bg-muted hover:bg-muted/80 transition-colors"
+          >
+            Filtered: <CategoryBadge category={selectedCategory} />
+            <X className="w-3 h-3 ml-0.5 text-muted-foreground" />
+          </button>
+        )}
+        {!selectedCategory && (
+          <p className="text-xs text-muted-foreground/60">
+            Click a category row to filter all panels.
+          </p>
+        )}
+      </div>
+
+      {/* Row 1 — category breakdown panels (always show all categories) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Panel 1 – AIO coverage by category */}
@@ -128,13 +161,23 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold">AI Overview Coverage by Category</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {aioCoverage.map(({ cat, total, withAio, pubInAio }) => (
-              <div key={cat} className="space-y-1">
+              <div
+                key={cat}
+                onClick={() => toggleCategory(cat)}
+                className={cn(
+                  'space-y-1 rounded-md px-2 py-1.5 cursor-pointer transition-colors',
+                  selectedCategory === cat
+                    ? 'bg-muted ring-1 ring-border'
+                    : 'hover:bg-muted/50',
+                  selectedCategory && selectedCategory !== cat && 'opacity-40',
+                )}
+              >
                 <div className="flex items-center justify-between">
                   <CategoryBadge category={cat} />
                   <span className="text-xs text-muted-foreground font-mono">
-                    {withAio}/{total} queries
+                    {withAio}/{total}
                     {pubInAio > 0 && (
                       <span className="ml-1 text-violet-400">({pubInAio} cited)</span>
                     )}
@@ -151,13 +194,23 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold">Top Stories Coverage by Category</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {topStoriesCoverage.map(({ cat, total, withTS, pubInTS }) => (
-              <div key={cat} className="space-y-1">
+              <div
+                key={cat}
+                onClick={() => toggleCategory(cat)}
+                className={cn(
+                  'space-y-1 rounded-md px-2 py-1.5 cursor-pointer transition-colors',
+                  selectedCategory === cat
+                    ? 'bg-muted ring-1 ring-border'
+                    : 'hover:bg-muted/50',
+                  selectedCategory && selectedCategory !== cat && 'opacity-40',
+                )}
+              >
                 <div className="flex items-center justify-between">
                   <CategoryBadge category={cat} />
                   <span className="text-xs text-muted-foreground font-mono">
-                    {withTS}/{total} queries
+                    {withTS}/{total}
                     {pubInTS > 0 && (
                       <span className="ml-1 text-orange-400">({pubInTS} featured)</span>
                     )}
@@ -170,7 +223,7 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
         </Card>
       </div>
 
-      {/* Row 2 */}
+      {/* Row 2 — filtered panels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* Panel 3 – Featured Snippet ownership */}
@@ -214,9 +267,9 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
               <div key={label} className="space-y-1">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{label}</span>
-                  <span className="font-mono">{count} / {enrichedCount}</span>
+                  <span className="font-mono">{count} / {activeCount}</span>
                 </div>
-                <ProgressBar value={count} max={enrichedCount} colorClass={colorClass} />
+                <ProgressBar value={count} max={activeCount} colorClass={colorClass} />
               </div>
             ))}
           </CardContent>
