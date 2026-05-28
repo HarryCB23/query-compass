@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CategoryBadge } from './CategoryBadge';
 import type { QueryData, QueryCategory } from '@/types/query';
+import { scoreQuery, type RiskTier } from '@/lib/riskScoring';
 import { cn } from '@/lib/utils';
 
 // Small pill showing classification source — informative but visually quiet.
@@ -50,7 +51,7 @@ interface QueryTableProps {
   serpSnapshots?: Map<string, SerpSnapshotData>;
 }
 
-type SortKey = 'query' | 'clicksCurrent' | 'clicksChange' | 'impressionsCurrent' | 'impressionsChange' | 'category';
+type SortKey = 'query' | 'clicksCurrent' | 'clicksChange' | 'impressionsCurrent' | 'impressionsChange' | 'category' | 'estLost';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 100;
@@ -61,6 +62,20 @@ function ageLabel(capturedAt: string): string {
   const h = Math.floor(diffMs / 3_600_000)
   if (h < 24) return `${h}h ago`
   return `${Math.floor(h / 24)}d ago`
+}
+
+// Tier chip for risk column
+function TierBadge({ tier }: { tier: RiskTier }) {
+  return (
+    <span className={cn(
+      'inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
+      tier === 'high'   && 'bg-rose-500/15 text-rose-400',
+      tier === 'medium' && 'bg-amber-500/15 text-amber-400',
+      tier === 'low'    && 'bg-emerald-500/15 text-emerald-400',
+    )}>
+      {tier === 'high' ? 'AIO' : tier === 'medium' ? 'rich' : 'low'}
+    </span>
+  )
 }
 
 // Feature pill: filled dot = true, empty = false
@@ -112,12 +127,18 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
         case 'impressionsCurrent': comparison = a.impressionsCurrent - b.impressionsCurrent; break;
         case 'impressionsChange':  comparison = a.impressionsChangePercent - b.impressionsChangePercent; break;
         case 'category':        comparison = a.category.localeCompare(b.category); break;
+        case 'estLost': {
+          const lostA = serpSnapshots ? scoreQuery(serpSnapshots.get(a.query) ?? null, a.clicksCurrent, a.clicksPrevious).estLostCurrent : 0;
+          const lostB = serpSnapshots ? scoreQuery(serpSnapshots.get(b.query) ?? null, b.clicksCurrent, b.clicksPrevious).estLostCurrent : 0;
+          comparison = lostA - lostB;
+          break;
+        }
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 
     return result;
-  }, [data, searchTerm, categoryFilter, sortKey, sortDirection]);
+  }, [data, searchTerm, categoryFilter, sortKey, sortDirection, serpSnapshots]);
 
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
     if (sortKey !== columnKey) return <ArrowUpDown className="w-4 h-4 text-muted-foreground/50" />;
@@ -182,6 +203,9 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
               </th>
               {showSerp && (
                 <>
+                  <th className="cursor-pointer hover:bg-muted transition-colors text-right" onClick={() => handleSort('estLost')}>
+                    <div className="flex items-center justify-end gap-2 text-xs">Est. Lost <SortIcon columnKey="estLost" /></div>
+                  </th>
                   <th className="text-center text-xs">AIO</th>
                   <th className="text-center text-xs">Top Stories</th>
                   <th className="text-center text-xs">Feat. Snippet</th>
@@ -218,6 +242,28 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
                   <td className="text-right font-mono">{formatChange(row.clicksChangePercent, true)}</td>
                   <td className="text-right font-mono">{row.impressionsCurrent.toLocaleString()}</td>
                   <td className="text-right font-mono">{formatChange(row.impressionsChangePercent, true)}</td>
+                  {showSerp && (() => {
+                    const rs = scoreQuery(snap ?? null, row.clicksCurrent, row.clicksPrevious)
+                    return (
+                      <td className="text-right">
+                        {rs.scored ? (
+                          <div className="flex items-center justify-end gap-1">
+                            <TierBadge tier={rs.tier} />
+                            {rs.estLostCurrent > 0 && (
+                              <span className={cn(
+                                'font-mono text-xs',
+                                rs.tier === 'high' ? 'text-rose-400' : 'text-amber-400',
+                              )}>
+                                ~{Math.round(rs.estLostCurrent).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/30 text-xs">—</span>
+                        )}
+                      </td>
+                    )
+                  })()}
                   {showSerp && (
                     <>
                       <td className="text-center">

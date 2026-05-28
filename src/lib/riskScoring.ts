@@ -1,53 +1,46 @@
 /**
- * riskScoring.ts — locked Phase 5 traffic-risk model.
+ * riskScoring.ts — Phase 5 tiered CTR-drop model.
  *
- * Formula (multiplicative, client-side, no DB storage in v1):
+ * Tier assignment (priority order — first match wins):
+ *   has_ai_overview                                       → high  (AI cannibalisation)
+ *   has_top_stories                                       → low   (publisher-friendly news SERP)
+ *   has_video | has_local_pack | has_shopping | has_fs    → medium (SERP competition, not AI)
+ *   else                                                  → low
  *
- *   hostile_weight = 1 − Π(1 − wᵢ)   over present click-removing features
- *   feature_weight = has_top_stories ? hostile_weight × 0.30 : hostile_weight
- *     ↳ Top Stories = unconditional 70% relief, NOT a penalty
- *   position_mult  = pos 1–3→1.0 | 4–6→0.75 | 7–10→0.50 | null/other→0.30
- *   risk_intensity = feature_weight × position_mult   (0–1, volume-independent)
- *   at_risk_clicks = clicks_current × risk_intensity
+ * CTR-drop constants (tunable):
+ *   high   0.75  — AIO estimated 75% CTR reduction
+ *   medium 0.15  — PROVISIONAL: placeholder until pixel-displacement data (Phase 4.5)
+ *   low    0.00
  *
- * Weights are constants here — not stored in the DB (v1 design decision, locked).
+ * Per-query output:
+ *   estLostCurrent = clicksCurrent × ctrDrop
+ *   estLostLatent  = clicksPrevious × ctrDrop  (only when clicksCurrent=0 & prev>0)
+ *
+ * Project composite:
+ *   blendedComposite = (aiLost + serpLost) / Σ clicksCurrent (scored)
  */
 
-// ── Constants ────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 
-/** Click-removing SERP features and their independent weights. */
-export const FEATURE_WEIGHTS = {
-  has_ai_overview:      0.80,
-  has_local_pack:       0.20,
-  has_shopping:         0.20,
-  has_featured_snippet: 0.10,
-  has_video:            0.10,
-} as const
-
-/** Top Stories applies unconditional 70% relief to hostile_weight. */
-export const TOP_STORIES_RELIEF = 0.30
-
-/** Position multiplier lookup. Positions >10 are treated as absent (not ranking). */
-export const POSITION_MULTIPLIERS = {
-  top3:   1.00,  // 1–3
-  mid:    0.75,  // 4–6
-  bottom: 0.50,  // 7–10
-  absent: 0.30,  // null or >10
-} as const
-
-/** risk_intensity thresholds for bucket assignment. */
-export const BUCKET_THRESHOLDS = {
-  high:   0.50,
-  medium: 0.20,
+/**
+ * Estimated CTR reduction by tier.
+ * medium is PROVISIONAL — will be replaced with measured pixel-displacement
+ * CTR drop in Phase 4.5 once pixel-height data is available.
+ */
+export const CTR_DROP = {
+  high:   0.75,
+  medium: 0.15,  // PROVISIONAL — Phase 4.5 pixel-displacement data pending
+  low:    0.00,
 } as const
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export type RiskBucket = 'high' | 'medium' | 'low'
+export type RiskTier = 'high' | 'medium' | 'low'
+export type RiskKind = 'ai' | 'serp' | 'none'
 
 /**
- * Minimal snapshot shape needed for scoring.
- * Compatible with (and a subset of) SerpSnapshotData from QueryTable.tsx.
+ * Minimal snapshot fields needed for tier assignment.
+ * Compatible with SerpSnapshotData from QueryTable.tsx.
  */
 export interface SerpSnapshot {
   has_ai_overview:      boolean
@@ -56,17 +49,15 @@ export interface SerpSnapshot {
   has_video:            boolean
   has_local_pack:       boolean
   has_shopping:         boolean
-  publisher_organic_position: number | null
 }
 
 export interface QueryScore {
-  featureWeight:  number
-  positionMult:   number
-  riskIntensity:  number
-  bucket:         RiskBucket
-  atRiskCurrent:  number   // clicks_current × risk_intensity
-  atRiskLatent:   number   // (clicks_previous ?? 0) × risk_intensity
-  scored:         boolean  // false when snapshot is null (unenriched query)
+  scored:          boolean   // false when snapshot is null (unenriched)
+  tier:            RiskTier
+  ctrDrop:         number
+  estLostCurrent:  number    // clicksCurrent × ctrDrop
+  estLostLatent:   number    // clicksPrevious × ctrDrop (latent) else 0
+  riskKind:        RiskKind  // 'ai' | 'serp' | 'none'
 }
 
 export interface ScoredQuery {
@@ -76,33 +67,53 @@ export interface ScoredQuery {
 }
 
 export interface AggregateRisk {
-  /** Σ(atRiskCurrent) / Σ(clicks_current) for scored queries with clicks_current > 0. */
-  currentComposite:       number
-  pctCurrentClicksAtRisk: number   // same × 100
-  /** Scored queries with riskIntensity > 0 / total scored. */
-  pctQueriesAtRisk:       number
-  /** null when there are no latent queries (single-period upload or none dormant). */
-  latentComposite:        number | null
-  latentQueryCount:       number
-  /** Σ clicks_previous for latent queries (clicks_current=0, clicks_previous>0). */
-  latentClicks:           number
+  /** (aiLost + serpLost) / Σ clicksCurrent for scored queries. */
+  blendedComposite:  number
+  /** aiLost / Σ clicksCurrent */
+  aiComponent:       number
+  /** serpLost / Σ clicksCurrent */
+  serpComponent:     number
+  /** (high + medium count) / scored count */
+  pctQueriesAtRisk:  number
   buckets: {
-    high:   { queryCount: number; currentClicks: number }
-    medium: { queryCount: number; currentClicks: number }
-    low:    { queryCount: number; currentClicks: number }
+    high:   { queryCount: number; currentClicks: number; estLostClicks: number }
+    medium: { queryCount: number; currentClicks: number; estLostClicks: number }
+    low:    { queryCount: number; currentClicks: number; estLostClicks: number }
+  }
+  latent: {
+    queryCount:     number
+    previousClicks: number
+    estLostLatent:  number
+    /** null when there are no latent queries. */
+    composite:      number | null
   }
   coverage: {
-    scored:         number   // queries with a snapshot
-    total:          number   // all queries
-    scoredClickPct: number   // % of clicks_current represented by scored queries
+    scored:         number
+    total:          number
+    scoredClickPct: number
   }
+}
+
+// ── Tier assignment ───────────────────────────────────────────────────────────
+
+/** Assign a risk tier to a snapshot. Priority order: first match wins. */
+export function tierOf(snapshot: SerpSnapshot): RiskTier {
+  if (snapshot.has_ai_overview) return 'high'
+  if (snapshot.has_top_stories) return 'low'
+  if (
+    snapshot.has_video ||
+    snapshot.has_local_pack ||
+    snapshot.has_shopping ||
+    snapshot.has_featured_snippet
+  ) return 'medium'
+  return 'low'
 }
 
 // ── Core scoring function ─────────────────────────────────────────────────────
 
 /**
- * Score a single query. Pass snapshot=null for unenriched (unscored) queries.
- * All zero-current-click queries are still scored if they have a snapshot.
+ * Score a single query. Pass snapshot=null/undefined for unenriched queries.
+ * Unscored queries are excluded from all aggregates; counted in coverage.
  */
 export function scoreQuery(
   snapshot: SerpSnapshot | null | undefined,
@@ -111,43 +122,22 @@ export function scoreQuery(
 ): QueryScore {
   if (!snapshot) {
     return {
-      featureWeight: 0, positionMult: 0, riskIntensity: 0,
-      bucket: 'low', atRiskCurrent: 0, atRiskLatent: 0, scored: false,
+      scored: false, tier: 'low', ctrDrop: 0,
+      estLostCurrent: 0, estLostLatent: 0, riskKind: 'none',
     }
   }
 
-  // hostile_weight = 1 − Π(1 − wᵢ) over features that are present
-  const hostileProduct = (Object.entries(FEATURE_WEIGHTS) as [keyof SerpSnapshot, number][])
-    .reduce((prod, [key, w]) => snapshot[key] ? prod * (1 - w) : prod, 1)
-  const hostileWeight = 1 - hostileProduct
-
-  // Top Stories: unconditional 70% relief (multiplied, not subtracted)
-  const featureWeight = snapshot.has_top_stories
-    ? hostileWeight * TOP_STORIES_RELIEF
-    : hostileWeight
-
-  // Position multiplier
-  const pos = snapshot.publisher_organic_position
-  const positionMult =
-    pos === null || pos > 10 ? POSITION_MULTIPLIERS.absent
-    : pos <= 3               ? POSITION_MULTIPLIERS.top3
-    : pos <= 6               ? POSITION_MULTIPLIERS.mid
-                             : POSITION_MULTIPLIERS.bottom
-
-  const riskIntensity = featureWeight * positionMult
-  const bucket: RiskBucket =
-    riskIntensity >= BUCKET_THRESHOLDS.high   ? 'high'
-    : riskIntensity >= BUCKET_THRESHOLDS.medium ? 'medium'
-    : 'low'
+  const tier    = tierOf(snapshot)
+  const ctrDrop = CTR_DROP[tier]
+  const isLatent = clicksCurrent === 0 && (clicksPrevious ?? 0) > 0
 
   return {
-    featureWeight,
-    positionMult,
-    riskIntensity,
-    bucket,
-    atRiskCurrent: clicksCurrent * riskIntensity,
-    atRiskLatent:  (clicksPrevious ?? 0) * riskIntensity,
-    scored: true,
+    scored:         true,
+    tier,
+    ctrDrop,
+    estLostCurrent: clicksCurrent * ctrDrop,
+    estLostLatent:  isLatent ? (clicksPrevious ?? 0) * ctrDrop : 0,
+    riskKind:       tier === 'high' ? 'ai' : tier === 'medium' ? 'serp' : 'none',
   }
 }
 
@@ -155,61 +145,65 @@ export function scoreQuery(
 
 /** Aggregate scored queries into project-level (or category-level) metrics. */
 export function aggregateRisk(queries: ScoredQuery[]): AggregateRisk {
-  const scored  = queries.filter(q => q.score.scored)
-  const total   = queries.length
+  const scored = queries.filter(q => q.score.scored)
+  const total  = queries.length
 
-  // ── Coverage ──────────────────────────────────────────────────────────────
+  // Coverage
   const totalClicks  = queries.reduce((s, q) => s + q.clicksCurrent, 0)
   const scoredClicks = scored.reduce((s, q) => s + q.clicksCurrent, 0)
   const scoredClickPct = totalClicks > 0 ? (scoredClicks / totalClicks) * 100 : 0
 
-  // ── Current risk — only scored queries with clicks_current > 0 ────────────
-  const currentBase = scored.filter(q => q.clicksCurrent > 0)
-  const sumARC    = currentBase.reduce((s, q) => s + q.score.atRiskCurrent, 0)
-  const sumClicks = currentBase.reduce((s, q) => s + q.clicksCurrent, 0)
-  const currentComposite = sumClicks > 0 ? sumARC / sumClicks : 0
+  // Composite (only scored queries with clicks_current > 0)
+  const withClicks = scored.filter(q => q.clicksCurrent > 0)
+  const sumCurrentClicks = withClicks.reduce((s, q) => s + q.clicksCurrent, 0)
+  const aiLost   = withClicks.filter(q => q.score.tier === 'high').reduce((s, q) => s + q.score.estLostCurrent, 0)
+  const serpLost = withClicks.filter(q => q.score.tier === 'medium').reduce((s, q) => s + q.score.estLostCurrent, 0)
+  const blendedComposite = sumCurrentClicks > 0 ? (aiLost + serpLost) / sumCurrentClicks : 0
+  const aiComponent      = sumCurrentClicks > 0 ? aiLost   / sumCurrentClicks : 0
+  const serpComponent    = sumCurrentClicks > 0 ? serpLost / sumCurrentClicks : 0
 
-  // ── Latent risk — scored, clicks_current=0, clicks_previous>0 ────────────
-  const latent = scored.filter(q => q.clicksCurrent === 0 && (q.clicksPrevious ?? 0) > 0)
-  const sumLatentARL = latent.reduce((s, q) => s + q.score.atRiskLatent, 0)
-  const sumLatentPrev = latent.reduce((s, q) => s + (q.clicksPrevious ?? 0), 0)
-  const latentComposite = latent.length > 0 && sumLatentPrev > 0
-    ? sumLatentARL / sumLatentPrev
-    : null
-
-  // ── pctQueriesAtRisk — scored queries where intensity > 0 ─────────────────
-  const atRiskCount  = scored.filter(q => q.score.riskIntensity > 0).length
+  // pctQueriesAtRisk — high or medium tier
+  const atRiskCount = scored.filter(q => q.score.tier !== 'low').length
   const pctQueriesAtRisk = scored.length > 0 ? (atRiskCount / scored.length) * 100 : 0
 
-  // ── Buckets (over all scored queries) ────────────────────────────────────
+  // Buckets (all scored queries, including zero-click)
   const buckets = {
-    high:   { queryCount: 0, currentClicks: 0 },
-    medium: { queryCount: 0, currentClicks: 0 },
-    low:    { queryCount: 0, currentClicks: 0 },
+    high:   { queryCount: 0, currentClicks: 0, estLostClicks: 0 },
+    medium: { queryCount: 0, currentClicks: 0, estLostClicks: 0 },
+    low:    { queryCount: 0, currentClicks: 0, estLostClicks: 0 },
   }
   for (const q of scored) {
-    const b = buckets[q.score.bucket]
+    const b = buckets[q.score.tier]
     b.queryCount++
-    b.currentClicks += q.clicksCurrent
+    b.currentClicks  += q.clicksCurrent
+    b.estLostClicks  += q.score.estLostCurrent
   }
 
+  // Latent — scored, clicks_current=0, clicks_previous>0
+  const latentQueries = scored.filter(q => q.clicksCurrent === 0 && (q.clicksPrevious ?? 0) > 0)
+  const latentPrevClicks = latentQueries.reduce((s, q) => s + (q.clicksPrevious ?? 0), 0)
+  const latentLost       = latentQueries.reduce((s, q) => s + q.score.estLostLatent, 0)
+  const latentComposite  = latentQueries.length > 0 && latentPrevClicks > 0
+    ? latentLost / latentPrevClicks
+    : null
+
   return {
-    currentComposite,
-    pctCurrentClicksAtRisk: currentComposite * 100,
+    blendedComposite,
+    aiComponent,
+    serpComponent,
     pctQueriesAtRisk,
-    latentComposite,
-    latentQueryCount: latent.length,
-    latentClicks: sumLatentPrev,
     buckets,
-    coverage: {
-      scored: scored.length,
-      total,
-      scoredClickPct,
+    latent: {
+      queryCount:     latentQueries.length,
+      previousClicks: latentPrevClicks,
+      estLostLatent:  latentLost,
+      composite:      latentComposite,
     },
+    coverage: { scored: scored.length, total, scoredClickPct },
   }
 }
 
-/** Aggregate by category. Returns a Map so callers can look up by category key. */
+/** Aggregate by category. Returns a Map keyed by category string. */
 export function aggregateByCategory(
   queries: Array<ScoredQuery & { category: string }>,
   categories: string[],

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   scoreQuery,
   aggregateRisk,
-  FEATURE_WEIGHTS,
-  POSITION_MULTIPLIERS,
+  tierOf,
+  CTR_DROP,
   type SerpSnapshot,
   type ScoredQuery,
 } from '@/lib/riskScoring'
@@ -18,228 +18,218 @@ function makeSnap(overrides: Partial<SerpSnapshot> = {}): SerpSnapshot {
     has_video:            false,
     has_local_pack:       false,
     has_shopping:         false,
-    publisher_organic_position: 1,
     ...overrides,
   }
 }
 
-const CLEAN_SNAP = makeSnap()  // all false, pos 1 — genuinely zero risk
+// ── tierOf ────────────────────────────────────────────────────────────────────
+
+describe('tierOf', () => {
+  it('AIO present → high regardless of other features', () => {
+    expect(tierOf(makeSnap({ has_ai_overview: true, has_top_stories: true, has_video: true }))).toBe('high')
+    expect(tierOf(makeSnap({ has_ai_overview: true }))).toBe('high')
+  })
+
+  it('Top Stories, no AIO → low (even with video)', () => {
+    expect(tierOf(makeSnap({ has_top_stories: true }))).toBe('low')
+    expect(tierOf(makeSnap({ has_top_stories: true, has_video: true }))).toBe('low')
+    expect(tierOf(makeSnap({ has_top_stories: true, has_local_pack: true, has_shopping: true }))).toBe('low')
+  })
+
+  it('rich SERP features, no AIO, no TS → medium', () => {
+    expect(tierOf(makeSnap({ has_video: true }))).toBe('medium')
+    expect(tierOf(makeSnap({ has_local_pack: true }))).toBe('medium')
+    expect(tierOf(makeSnap({ has_shopping: true }))).toBe('medium')
+    expect(tierOf(makeSnap({ has_featured_snippet: true }))).toBe('medium')
+    expect(tierOf(makeSnap({ has_video: true, has_shopping: true }))).toBe('medium')
+  })
+
+  it('clean SERP (no features) → low', () => {
+    expect(tierOf(makeSnap())).toBe('low')
+  })
+})
 
 // ── scoreQuery ────────────────────────────────────────────────────────────────
 
 describe('scoreQuery', () => {
-
-  it('all-false snapshot (40102 — no results) → risk_intensity 0, scored true', () => {
-    const r = scoreQuery(CLEAN_SNAP, 500, 400)
-    expect(r.scored).toBe(true)
-    expect(r.riskIntensity).toBe(0)
-    expect(r.bucket).toBe('low')
-    expect(r.atRiskCurrent).toBe(0)
-    expect(r.atRiskLatent).toBe(0)
-  })
-
   it('null snapshot → scored false, all zeros', () => {
     const r = scoreQuery(null, 500, 400)
     expect(r.scored).toBe(false)
-    expect(r.riskIntensity).toBe(0)
-    expect(r.atRiskCurrent).toBe(0)
-    expect(r.atRiskLatent).toBe(0)
+    expect(r.ctrDrop).toBe(0)
+    expect(r.estLostCurrent).toBe(0)
+    expect(r.estLostLatent).toBe(0)
+    expect(r.riskKind).toBe('none')
   })
 
   it('undefined snapshot → scored false', () => {
-    const r = scoreQuery(undefined, 100, null)
-    expect(r.scored).toBe(false)
+    expect(scoreQuery(undefined, 100, null).scored).toBe(false)
   })
 
-  it('pure news SERP (only has_top_stories, no click-removing features) → intensity 0', () => {
-    // hostile_weight = 0 (no click-removing features)
-    // feature_weight = 0 × 0.30 = 0 (top stories relief applied, still 0)
-    const r = scoreQuery(makeSnap({ has_top_stories: true }), 1000, 800)
-    expect(r.featureWeight).toBe(0)
-    expect(r.riskIntensity).toBe(0)
-    expect(r.bucket).toBe('low')
-    expect(r.atRiskCurrent).toBe(0)
+  it('AIO present → tier high, ctrDrop 0.75, riskKind ai', () => {
+    const r = scoreQuery(makeSnap({ has_ai_overview: true }), 1000, 800)
+    expect(r.tier).toBe('high')
+    expect(r.ctrDrop).toBe(CTR_DROP.high)
+    expect(r.riskKind).toBe('ai')
+    expect(r.scored).toBe(true)
   })
 
-  it('AIO only, pos 1 → 0.80 × 1.0 = 0.80, High', () => {
+  it('AIO with other features → still high (AIO wins)', () => {
+    const r = scoreQuery(makeSnap({ has_ai_overview: true, has_top_stories: true, has_video: true }), 100, null)
+    expect(r.tier).toBe('high')
+    expect(r.ctrDrop).toBe(0.75)
+  })
+
+  it('Top Stories only → tier low, ctrDrop 0.0', () => {
+    const r = scoreQuery(makeSnap({ has_top_stories: true }), 500, 300)
+    expect(r.tier).toBe('low')
+    expect(r.ctrDrop).toBe(0.0)
+    expect(r.estLostCurrent).toBe(0)
+    expect(r.riskKind).toBe('none')
+  })
+
+  it('Top Stories + video → still low (TS wins over video)', () => {
+    const r = scoreQuery(makeSnap({ has_top_stories: true, has_video: true }), 200, null)
+    expect(r.tier).toBe('low')
+  })
+
+  it('Shopping/local/FS/video only → tier medium, ctrDrop 0.15, riskKind serp', () => {
+    for (const feature of ['has_video', 'has_local_pack', 'has_shopping', 'has_featured_snippet'] as const) {
+      const r = scoreQuery(makeSnap({ [feature]: true }), 1000, null)
+      expect(r.tier).toBe('medium')
+      expect(r.ctrDrop).toBe(CTR_DROP.medium)
+      expect(r.riskKind).toBe('serp')
+    }
+  })
+
+  it('clean SERP → low, estLostCurrent 0', () => {
+    const r = scoreQuery(makeSnap(), 300, 250)
+    expect(r.tier).toBe('low')
+    expect(r.estLostCurrent).toBe(0)
+    expect(r.riskKind).toBe('none')
+  })
+
+  it('estLostCurrent = clicksCurrent × ctrDrop', () => {
     const r = scoreQuery(makeSnap({ has_ai_overview: true }), 1000, null)
-    expect(r.featureWeight).toBeCloseTo(FEATURE_WEIGHTS.has_ai_overview)
-    expect(r.positionMult).toBe(POSITION_MULTIPLIERS.top3)
-    expect(r.riskIntensity).toBeCloseTo(0.80)
-    expect(r.bucket).toBe('high')
-    expect(r.atRiskCurrent).toBeCloseTo(800)
+    expect(r.estLostCurrent).toBeCloseTo(1000 * 0.75)
+
+    const r2 = scoreQuery(makeSnap({ has_video: true }), 200, null)
+    expect(r2.estLostCurrent).toBeCloseTo(200 * 0.15)
   })
 
-  it('AIO + Shopping, pos 1 → hostile = 1-(0.2×0.8) = 0.84, High', () => {
-    // hostile_product = (1-0.80)(1-0.20) = 0.20 × 0.80 = 0.16
-    // hostile_weight  = 1 - 0.16 = 0.84
-    const r = scoreQuery(makeSnap({ has_ai_overview: true, has_shopping: true }), 1000, null)
-    expect(r.featureWeight).toBeCloseTo(0.84)
-    expect(r.riskIntensity).toBeCloseTo(0.84)
-    expect(r.bucket).toBe('high')
-  })
-
-  it('AIO + Top Stories, pos 1 → 0.80 × 0.30 = 0.24, Medium', () => {
-    // hostile_weight = 0.80 (AIO only, top stories is relief not penalty)
-    // feature_weight = 0.80 × 0.30 = 0.24
-    const r = scoreQuery(makeSnap({ has_ai_overview: true, has_top_stories: true }), 500, null)
-    expect(r.featureWeight).toBeCloseTo(0.24)
-    expect(r.riskIntensity).toBeCloseTo(0.24)
-    expect(r.bucket).toBe('medium')
-  })
-
-  it('AIO only, null position → 0.80 × 0.30 = 0.24, Medium', () => {
-    const r = scoreQuery(
-      makeSnap({ has_ai_overview: true, publisher_organic_position: null }),
-      300, 400,
-    )
-    expect(r.positionMult).toBe(POSITION_MULTIPLIERS.absent)
-    expect(r.riskIntensity).toBeCloseTo(0.80 * 0.30)
-    expect(r.bucket).toBe('medium')
-  })
-
-  it('position 4–6 → positionMult 0.75', () => {
-    const r = scoreQuery(makeSnap({ has_ai_overview: true, publisher_organic_position: 5 }), 100, null)
-    expect(r.positionMult).toBe(POSITION_MULTIPLIERS.mid)
-    expect(r.riskIntensity).toBeCloseTo(0.80 * 0.75)
-  })
-
-  it('position 7–10 → positionMult 0.50', () => {
-    const r = scoreQuery(makeSnap({ has_ai_overview: true, publisher_organic_position: 9 }), 100, null)
-    expect(r.positionMult).toBe(POSITION_MULTIPLIERS.bottom)
-    expect(r.riskIntensity).toBeCloseTo(0.80 * 0.50)
-  })
-
-  it('position > 10 → treated as absent (0.30)', () => {
-    const r = scoreQuery(makeSnap({ has_ai_overview: true, publisher_organic_position: 15 }), 100, null)
-    expect(r.positionMult).toBe(POSITION_MULTIPLIERS.absent)
-  })
-
-  it('zero current clicks, prev > 0, AIO pos 1 → atRiskCurrent 0, atRiskLatent = prev × 0.80, bucket High', () => {
+  it('clicksCurrent=0, clicksPrevious>0, AIO → estLostCurrent 0, estLostLatent = prev × 0.75', () => {
     const r = scoreQuery(makeSnap({ has_ai_overview: true }), 0, 500)
     expect(r.scored).toBe(true)
-    expect(r.atRiskCurrent).toBe(0)
-    expect(r.atRiskLatent).toBeCloseTo(500 * 0.80)
-    expect(r.bucket).toBe('high')
+    expect(r.tier).toBe('high')
+    expect(r.estLostCurrent).toBe(0)
+    expect(r.estLostLatent).toBeCloseTo(500 * 0.75)
   })
 
-  it('null clicks_previous → atRiskLatent 0', () => {
+  it('null clicksPrevious → estLostLatent 0', () => {
     const r = scoreQuery(makeSnap({ has_ai_overview: true }), 100, null)
-    expect(r.atRiskLatent).toBe(0)
+    expect(r.estLostLatent).toBe(0)
   })
 
-  it('high threshold: intensity exactly 0.50 → High', () => {
-    // Need feature_weight × position_mult = 0.50
-    // AIO(0.80) × pos mid(0.75) = 0.60 → High
-    // Use Featured Snippet(0.10) × pos absent(0.30) = 0.03 → Low
-    // Use AIO+TS: 0.80×0.30=0.24 → Medium; at pos top3(1.0) = 0.24 → Medium
-    // Use AIO(0.80) at pos 7-10(0.50) → 0.40 → Medium... need exactly 0.50
-    // Let's just verify bucket boundaries by intensity
-    const high = scoreQuery(makeSnap({ has_ai_overview: true, publisher_organic_position: null }), 100, null)
-    // 0.80 × 0.30 = 0.24 → medium
-    expect(high.bucket).toBe('medium')
-    const alsoHigh = scoreQuery(makeSnap({ has_ai_overview: true }), 100, null)
-    // 0.80 × 1.0 = 0.80 → high
-    expect(alsoHigh.bucket).toBe('high')
+  it('clicksCurrent>0, clicksPrevious>0 → estLostLatent 0 (not a dormant query)', () => {
+    const r = scoreQuery(makeSnap({ has_ai_overview: true }), 100, 200)
+    expect(r.estLostLatent).toBe(0)
   })
-
-  it('all five hostile features, pos 1 → maximum compounding', () => {
-    // hostile_product = (1-0.80)(1-0.20)(1-0.20)(1-0.10)(1-0.10)
-    //                 = 0.20 × 0.80 × 0.80 × 0.90 × 0.90
-    //                 = 0.20 × 0.80 × 0.80 × 0.81
-    //                 = 0.103...
-    // hostile_weight  = 1 - 0.103... ≈ 0.896...
-    const r = scoreQuery(makeSnap({
-      has_ai_overview: true, has_local_pack: true, has_shopping: true,
-      has_featured_snippet: true, has_video: true,
-    }), 1000, null)
-    const expectedHostile = 1 - (0.20 * 0.80 * 0.80 * 0.90 * 0.90)
-    expect(r.featureWeight).toBeCloseTo(expectedHostile)
-    expect(r.riskIntensity).toBeCloseTo(expectedHostile)
-    expect(r.bucket).toBe('high')
-  })
-
 })
 
 // ── aggregateRisk ─────────────────────────────────────────────────────────────
 
 describe('aggregateRisk', () => {
-
-  it('empty input → zeroes, no latent', () => {
+  it('empty → zeroes, no latent', () => {
     const r = aggregateRisk([])
-    expect(r.currentComposite).toBe(0)
-    expect(r.latentComposite).toBeNull()
-    expect(r.latentQueryCount).toBe(0)
+    expect(r.blendedComposite).toBe(0)
+    expect(r.aiComponent).toBe(0)
+    expect(r.serpComponent).toBe(0)
+    expect(r.latent.composite).toBeNull()
     expect(r.coverage.scored).toBe(0)
     expect(r.coverage.total).toBe(0)
   })
 
-  it('all unscored (no snapshots) → composite 0, coverage.scored 0', () => {
+  it('all unscored → composites 0, scored 0', () => {
     const queries: ScoredQuery[] = [
       { score: scoreQuery(null, 1000, 500), clicksCurrent: 1000, clicksPrevious: 500 },
-      { score: scoreQuery(null, 500,  300), clicksCurrent: 500,  clicksPrevious: 300 },
     ]
     const r = aggregateRisk(queries)
     expect(r.coverage.scored).toBe(0)
-    expect(r.coverage.total).toBe(2)
-    expect(r.currentComposite).toBe(0)
-    expect(r.latentComposite).toBeNull()
+    expect(r.blendedComposite).toBe(0)
   })
 
-  it('single AIO query, pos 1, 1000 clicks → composite ≈ 0.80', () => {
-    const snap = makeSnap({ has_ai_overview: true })
+  it('single AIO query → blended = aiComponent = 0.75, serp = 0', () => {
     const queries: ScoredQuery[] = [
-      { score: scoreQuery(snap, 1000, 800), clicksCurrent: 1000, clicksPrevious: 800 },
+      { score: scoreQuery(makeSnap({ has_ai_overview: true }), 1000, 800), clicksCurrent: 1000, clicksPrevious: 800 },
     ]
     const r = aggregateRisk(queries)
-    expect(r.currentComposite).toBeCloseTo(0.80)
-    expect(r.pctCurrentClicksAtRisk).toBeCloseTo(80)
-    expect(r.coverage.scored).toBe(1)
-    expect(r.latentComposite).toBeNull()  // no dormant queries
+    expect(r.blendedComposite).toBeCloseTo(0.75)
+    expect(r.aiComponent).toBeCloseTo(0.75)
+    expect(r.serpComponent).toBe(0)
   })
 
-  it('latent queries detected when clicks_current=0, clicks_previous>0', () => {
-    const snap = makeSnap({ has_ai_overview: true })
+  it('blendedComposite = aiComponent + serpComponent', () => {
     const queries: ScoredQuery[] = [
-      { score: scoreQuery(snap, 0, 500),    clicksCurrent: 0,   clicksPrevious: 500 },
-      { score: scoreQuery(snap, 1000, 800), clicksCurrent: 1000, clicksPrevious: 800 },
+      { score: scoreQuery(makeSnap({ has_ai_overview: true }), 1000, null), clicksCurrent: 1000, clicksPrevious: null },
+      { score: scoreQuery(makeSnap({ has_video: true }),        1000, null), clicksCurrent: 1000, clicksPrevious: null },
     ]
     const r = aggregateRisk(queries)
-    expect(r.latentQueryCount).toBe(1)
-    expect(r.latentClicks).toBe(500)
-    expect(r.latentComposite).toBeCloseTo(0.80)
-    // current composite only uses clicks_current > 0
-    expect(r.currentComposite).toBeCloseTo(0.80)
+    // aiLost = 1000×0.75, serpLost = 1000×0.15, total = 2000
+    // blended = (750+150)/2000 = 0.45
+    expect(r.blendedComposite).toBeCloseTo(0.45)
+    expect(r.aiComponent).toBeCloseTo(750 / 2000)
+    expect(r.serpComponent).toBeCloseTo(150 / 2000)
+    expect(r.blendedComposite).toBeCloseTo(r.aiComponent + r.serpComponent)
+  })
+
+  it('Top Stories queries → AI component 0 (low tier contributes nothing)', () => {
+    const queries: ScoredQuery[] = [
+      { score: scoreQuery(makeSnap({ has_top_stories: true }), 1000, null), clicksCurrent: 1000, clicksPrevious: null },
+    ]
+    const r = aggregateRisk(queries)
+    expect(r.blendedComposite).toBe(0)
+    expect(r.aiComponent).toBe(0)
+    expect(r.buckets.low.queryCount).toBe(1)
+  })
+
+  it('latent queries detected: clicks_current=0, clicks_previous>0, AIO', () => {
+    const queries: ScoredQuery[] = [
+      { score: scoreQuery(makeSnap({ has_ai_overview: true }), 0,    500), clicksCurrent: 0,    clicksPrevious: 500 },
+      { score: scoreQuery(makeSnap({ has_ai_overview: true }), 1000, 800), clicksCurrent: 1000, clicksPrevious: 800 },
+    ]
+    const r = aggregateRisk(queries)
+    expect(r.latent.queryCount).toBe(1)
+    expect(r.latent.previousClicks).toBe(500)
+    expect(r.latent.estLostLatent).toBeCloseTo(500 * 0.75)
+    expect(r.latent.composite).toBeCloseTo(0.75)
+    // blended only uses queries with clicks_current > 0
+    expect(r.blendedComposite).toBeCloseTo(0.75)
   })
 
   it('bucket counts are correct', () => {
-    const highSnap = makeSnap({ has_ai_overview: true })                       // 0.80 × 1.0 = 0.80 High
-    const medSnap  = makeSnap({ has_ai_overview: true, has_top_stories: true }) // 0.24 Medium
-    const lowSnap  = makeSnap()                                                 // 0.0 Low
     const queries: ScoredQuery[] = [
-      { score: scoreQuery(highSnap, 100, null), clicksCurrent: 100, clicksPrevious: null },
-      { score: scoreQuery(medSnap,  200, null), clicksCurrent: 200, clicksPrevious: null },
-      { score: scoreQuery(lowSnap,  50,  null), clicksCurrent: 50,  clicksPrevious: null },
+      { score: scoreQuery(makeSnap({ has_ai_overview: true }), 100, null), clicksCurrent: 100, clicksPrevious: null },
+      { score: scoreQuery(makeSnap({ has_video: true }),        200, null), clicksCurrent: 200, clicksPrevious: null },
+      { score: scoreQuery(makeSnap(),                           50,  null), clicksCurrent: 50,  clicksPrevious: null },
     ]
     const r = aggregateRisk(queries)
     expect(r.buckets.high.queryCount).toBe(1)
     expect(r.buckets.high.currentClicks).toBe(100)
+    expect(r.buckets.high.estLostClicks).toBeCloseTo(75)
     expect(r.buckets.medium.queryCount).toBe(1)
     expect(r.buckets.medium.currentClicks).toBe(200)
+    expect(r.buckets.medium.estLostClicks).toBeCloseTo(30)
     expect(r.buckets.low.queryCount).toBe(1)
-    expect(r.buckets.low.currentClicks).toBe(50)
+    expect(r.buckets.low.estLostClicks).toBe(0)
   })
 
-  it('coverage.scoredClickPct reflects proportion of clicks in scored queries', () => {
-    const snap = makeSnap({ has_ai_overview: true })
+  it('coverage.scoredClickPct reflects scored proportion of total clicks', () => {
     const queries: ScoredQuery[] = [
-      { score: scoreQuery(snap, 1000, null), clicksCurrent: 1000, clicksPrevious: null },  // scored
-      { score: scoreQuery(null, 1000, null), clicksCurrent: 1000, clicksPrevious: null },  // unscored
+      { score: scoreQuery(makeSnap({ has_ai_overview: true }), 1000, null), clicksCurrent: 1000, clicksPrevious: null },
+      { score: scoreQuery(null,                                1000, null), clicksCurrent: 1000, clicksPrevious: null },
     ]
     const r = aggregateRisk(queries)
     expect(r.coverage.scored).toBe(1)
     expect(r.coverage.total).toBe(2)
     expect(r.coverage.scoredClickPct).toBeCloseTo(50)
   })
-
 })
