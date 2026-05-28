@@ -86,31 +86,42 @@ export default function ImportView() {
     const { ids, idToText } = queryIdDataRef.current
     if (ids.length === 0) return
 
-    // Load all non-expired snapshots for this location in one request.
-    // .range(0, 9999) bypasses PostgREST's default 1000-row cap.
+    // Paginate in 1000-row pages — PostgREST max_rows=1000 overrides any
+    // single .range() call wider than 1000 (see Phase 2 retrospective).
     // Filter to this import's query_ids in-memory to avoid URL-length issues
     // from large .in() arrays (Cloudflare 8KB limit).
     const idSet = new Set(ids)
-    const { data } = await supabase
-      .from('serp_snapshots')
-      .select([
-        'query_id,captured_at',
-        'has_ai_overview,has_top_stories,has_featured_snippet,has_video,has_local_pack,has_shopping',
-        'publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet',
-        'publisher_organic_position,publisher_in_organic_top_3,top_organic_domains',
-      ].join(','))
-      .eq('location_code', loc)
-      .gt('expires_at', new Date().toISOString())
-      .range(0, 9999)
-
     const byText = new Map<string, SerpSnapshotData>()
-    if (data) {
+    const PAGE = 1000
+    const COLS = [
+      'query_id,captured_at',
+      'has_ai_overview,has_top_stories,has_featured_snippet,has_video,has_local_pack,has_shopping',
+      'publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet',
+      'publisher_organic_position,publisher_in_organic_top_3,top_organic_domains',
+    ].join(',')
+    const now = new Date().toISOString()
+    let from = 0
+
+    while (true) {
+      const { data } = await supabase
+        .from('serp_snapshots')
+        .select(COLS)
+        .eq('location_code', loc)
+        .gt('expires_at', now)
+        .range(from, from + PAGE - 1)
+
+      if (!data || data.length === 0) break
+
       for (const row of data) {
         if (!idSet.has(row.query_id)) continue
         const text = idToText.get(row.query_id)
         if (text) byText.set(text, row as SerpSnapshotData)
       }
+
+      if (data.length < PAGE) break
+      from += PAGE
     }
+
     setSerpSnapshots(byText)
   }, [])
 
