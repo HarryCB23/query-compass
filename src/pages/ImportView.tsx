@@ -22,6 +22,7 @@ import { EntityExplorer } from '@/components/EntityExplorer'
 import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import { SectionHeader } from '@/components/SectionHeader'
 import AiSurfacesTab from '@/components/AiSurfacesTab'
+import RiskSummaryTab from '@/components/RiskSummaryTab'
 import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -51,7 +52,7 @@ export default function ImportView() {
   const { projectId, importId } = useParams<{ projectId: string; importId: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = (searchParams.get('tab') ?? 'queries') as 'queries' | 'ai-surfaces'
+  const tab = (searchParams.get('tab') ?? 'queries') as 'queries' | 'ai-surfaces' | 'risk-summary'
 
   // ── Core data ─────────────────────────────────────────────────────────────
   const [projectName, setProjectName]         = useState<string>('')
@@ -85,30 +86,30 @@ export default function ImportView() {
     const { ids, idToText } = queryIdDataRef.current
     if (ids.length === 0) return
 
-    const CHUNK = 100
-    const byQueryId = new Map<string, SerpSnapshotData>()
-    const now = new Date().toISOString()
+    // Load all non-expired snapshots for this location in one request.
+    // .range(0, 9999) bypasses PostgREST's default 1000-row cap.
+    // Filter to this import's query_ids in-memory to avoid URL-length issues
+    // from large .in() arrays (Cloudflare 8KB limit).
+    const idSet = new Set(ids)
+    const { data } = await supabase
+      .from('serp_snapshots')
+      .select([
+        'query_id,captured_at',
+        'has_ai_overview,has_top_stories,has_featured_snippet,has_video,has_local_pack,has_shopping',
+        'publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet',
+        'publisher_organic_position,publisher_in_organic_top_3,top_organic_domains',
+      ].join(','))
+      .eq('location_code', loc)
+      .gt('expires_at', new Date().toISOString())
+      .range(0, 9999)
 
-    for (let i = 0; i < ids.length; i += CHUNK) {
-      const { data } = await supabase
-        .from('serp_snapshots')
-        .select('query_id,captured_at,has_ai_overview,has_top_stories,has_featured_snippet,publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet,publisher_organic_position,publisher_in_organic_top_3,top_organic_domains')
-        .in('query_id', ids.slice(i, i + CHUNK))
-        .eq('location_code', loc)
-        .gt('expires_at', now)
-
-      if (data) {
-        for (const row of data) {
-          byQueryId.set(row.query_id, row as SerpSnapshotData)
-        }
-      }
-    }
-
-    // Re-key by query_text for QueryTable lookup
     const byText = new Map<string, SerpSnapshotData>()
-    for (const [qid, snap] of byQueryId) {
-      const text = idToText.get(qid)
-      if (text) byText.set(text, snap)
+    if (data) {
+      for (const row of data) {
+        if (!idSet.has(row.query_id)) continue
+        const text = idToText.get(row.query_id)
+        if (text) byText.set(text, row as SerpSnapshotData)
+      }
     }
     setSerpSnapshots(byText)
   }, [])
@@ -593,7 +594,7 @@ export default function ImportView() {
 
         {/* ── Tab bar ──────────────────────────────────────────────────── */}
         <div className="container flex items-center gap-1 pb-0 border-t border-border/50">
-          {(['queries', 'ai-surfaces'] as const).map(t => (
+          {(['queries', 'ai-surfaces', 'risk-summary'] as const).map(t => (
             <button
               key={t}
               onClick={() => setSearchParams(t === 'queries' ? {} : { tab: t })}
@@ -604,7 +605,7 @@ export default function ImportView() {
                   : 'border-transparent text-muted-foreground hover:text-foreground',
               ].join(' ')}
             >
-              {t === 'queries' ? 'Queries' : 'AI Surfaces'}
+              {t === 'queries' ? 'Queries' : t === 'ai-surfaces' ? 'AI Surfaces' : 'Risk Summary'}
             </button>
           ))}
 
@@ -636,7 +637,14 @@ export default function ImportView() {
       </header>
 
       {/* ── Tab content ──────────────────────────────────────────────────── */}
-      {tab === 'ai-surfaces' ? (
+      {tab === 'risk-summary' ? (
+        <main className="container py-8 animate-fade-in">
+          <RiskSummaryTab
+            classifiedData={classifiedData}
+            serpSnapshots={serpSnapshots}
+          />
+        </main>
+      ) : tab === 'ai-surfaces' ? (
         <AiSurfacesTab
           classifiedData={classifiedData}
           serpSnapshots={serpSnapshots}

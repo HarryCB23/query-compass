@@ -31,6 +31,9 @@ export interface SerpSnapshotData {
   has_ai_overview: boolean
   has_top_stories: boolean
   has_featured_snippet: boolean
+  has_video: boolean
+  has_local_pack: boolean
+  has_shopping: boolean
   publisher_in_ai_overview: boolean
   publisher_in_top_stories: boolean
   publisher_in_featured_snippet: boolean
