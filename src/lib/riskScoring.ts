@@ -2,8 +2,8 @@
  * riskScoring.ts — Phase 5 tiered CTR-drop model.
  *
  * Tier assignment (priority order — first match wins):
+ *   has_top_stories                                       → low   (publisher-friendly news SERP — wins over everything)
  *   has_ai_overview                                       → high  (AI cannibalisation)
- *   has_top_stories                                       → low   (publisher-friendly news SERP)
  *   has_video | has_local_pack | has_shopping | has_fs    → medium (SERP competition, not AI)
  *   else                                                  → low
  *
@@ -98,8 +98,8 @@ export interface AggregateRisk {
 
 /** Assign a risk tier to a snapshot. Priority order: first match wins. */
 export function tierOf(snapshot: SerpSnapshot): RiskTier {
+  if (snapshot.has_top_stories) return 'low'   // publisher-friendly news SERP — wins over AIO
   if (snapshot.has_ai_overview) return 'high'
-  if (snapshot.has_top_stories) return 'low'
   if (
     snapshot.has_video ||
     snapshot.has_local_pack ||

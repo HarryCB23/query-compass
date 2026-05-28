@@ -25,9 +25,14 @@ function makeSnap(overrides: Partial<SerpSnapshot> = {}): SerpSnapshot {
 // ── tierOf ────────────────────────────────────────────────────────────────────
 
 describe('tierOf', () => {
-  it('AIO present → high regardless of other features', () => {
-    expect(tierOf(makeSnap({ has_ai_overview: true, has_top_stories: true, has_video: true }))).toBe('high')
+  it('AIO present, no Top Stories → high', () => {
     expect(tierOf(makeSnap({ has_ai_overview: true }))).toBe('high')
+    expect(tierOf(makeSnap({ has_ai_overview: true, has_video: true }))).toBe('high')
+  })
+
+  it('Top Stories present → low even when AIO also present (TS wins)', () => {
+    expect(tierOf(makeSnap({ has_top_stories: true, has_ai_overview: true }))).toBe('low')
+    expect(tierOf(makeSnap({ has_top_stories: true, has_ai_overview: true, has_video: true }))).toBe('low')
   })
 
   it('Top Stories, no AIO → low (even with video)', () => {
@@ -73,8 +78,15 @@ describe('scoreQuery', () => {
     expect(r.scored).toBe(true)
   })
 
-  it('AIO with other features → still high (AIO wins)', () => {
+  it('AIO with Top Stories → low (Top Stories wins)', () => {
     const r = scoreQuery(makeSnap({ has_ai_overview: true, has_top_stories: true, has_video: true }), 100, null)
+    expect(r.tier).toBe('low')
+    expect(r.ctrDrop).toBe(0.0)
+    expect(r.riskKind).toBe('none')
+  })
+
+  it('AIO without Top Stories → high', () => {
+    const r = scoreQuery(makeSnap({ has_ai_overview: true, has_video: true }), 100, null)
     expect(r.tier).toBe('high')
     expect(r.ctrDrop).toBe(0.75)
   })
