@@ -847,58 +847,107 @@ Each phase should land as a working state with passing tests.
 - [ ] Build `fetch-keyword-metrics` edge function for Keyword Difficulty + Search Volume (separate refresh cadence, longer TTL).
 - [ ] UI: SERP feature badges on query table, filter by feature, publisher presence indicators per surface.
 
-### Phase 5 — Traffic Risk scoring (spec LOCKED — supersedes any earlier additive model)
+### Phase 5 — Traffic Risk scoring ✅ SHIPPED
 
-> **Model decision (locked):** multiplicative, client-side, no DB storage in v1.
-> The earlier additive 0-100 model with `risk_weights`/`risk_scores` tables and a
-> `compute-risk-scores` edge function was built from a draft brief and has been removed
-> (migration `20260528000002_drop_premature_phase5_tables.sql`).
+#### Model evolution (retro)
 
-#### Locked formula
+Three models were evaluated before landing on the shipped design:
 
+1. **Additive 0–100 score** _(rejected before shipping)_ — `risk_scores` / `risk_weights`
+   tables + `compute-risk-scores` edge function built from a draft brief. Rejected because
+   arbitrary weight values produce an uninterpretable number and it conflates features that
+   have very different click-removal magnitudes. Tables dropped in
+   `20260528000002_drop_premature_phase5_tables.sql`.
+
+2. **Multiplicative intensity** _(rejected after prototyping)_ — `hostile_weight = 1 − Π(1 − wᵢ)`
+   with a `position_mult` (0.30–1.00 based on organic rank). Rejected because the
+   position multiplier buried AIO queries in Medium when the publisher ranked poorly —
+   precisely the queries that most need a High signal. Also produced a 0-High bucket
+   (no queries reaching ≥ 0.50 intensity) on a real corpus, making the High tier
+   meaningless in practice.
+
+3. **Tiered CTR-drop** _(shipped)_ — tier assigned by priority rules, then a fixed CTR-drop
+   percentage applied to clicks_current. Won because: (a) interpretable — "AIO present,
+   estimated 75% CTR loss" explains itself to a consultant; (b) grounded in published
+   CTR research (AIO ~75% organic drop); (c) correctly surfaces every AIO query in High
+   regardless of publisher position; (d) latent/recurring metric falls out naturally from
+   clicks_previous without extra modelling.
+
+#### Locked tier model (client-side, no DB storage in v1)
+
+**Priority order — first match wins:**
+
+| Priority | Condition | Tier | CTR-drop |
+|---|---|---|---|
+| 1 | `has_top_stories` | Low | 0% |
+| 2 | `has_ai_overview` | High | 75% |
+| 3 | `has_video ∨ has_local_pack ∨ has_shopping ∨ has_featured_snippet` | Medium | 15% _(PROVISIONAL)_ |
+| 4 | else (clean SERP) | Low | 0% |
+
+Top Stories wins unconditionally — even when AIO is also present. A news SERP with Top
+Stories is publisher-friendly; the publisher is distributed via the carousel rather than
+losing clicks to AIO.
+
+Medium CTR-drop (15%) is **PROVISIONAL** — a placeholder until Phase 4.5
+pixel-displacement data provides a measured figure.
+
+**Per-query outputs:**
 ```
-hostile_weight = 1 − Π(1 − wᵢ)   over click-removing features present
-  AIO              w = 0.80
-  Local Pack       w = 0.20
-  Shopping         w = 0.20
-  Featured Snippet w = 0.10
-  Video            w = 0.10
-
-feature_weight = has_top_stories ? hostile_weight × 0.30 : hostile_weight
-  (Top Stories = unconditional 70% traffic relief, NOT a penalty)
-
-position_mult:
-  publisher_organic_position 1–3  → 1.00
-  publisher_organic_position 4–6  → 0.75
-  publisher_organic_position 7–10 → 0.50
-  null (not ranking)              → 0.30
-
-risk_intensity  = feature_weight × position_mult   (0–1, volume-independent)
-at_risk_clicks  = clicks_current × risk_intensity  (volume-dependent output)
+estLostCurrent = clicks_current × ctrDrop
+estLostLatent  = clicks_previous × ctrDrop   (only when clicks_current = 0 AND clicks_previous > 0)
 ```
 
-Buckets: **High** ≥ 0.50 | **Medium** 0.20–0.50 | **Low** < 0.20
-
-Composite per project / category:
+**Project / category composite:**
 ```
-composite_risk = Σ at_risk_clicks ÷ Σ clicks_current
+blendedComposite = (aiLost + serpLost) / Σ clicks_current   (scored queries only)
+aiComponent      = aiLost   / Σ clicks_current
+serpComponent    = serpLost / Σ clicks_current
 ```
 
-No publisher presence mitigation — publisher placement is descriptive only.
+Latent/recurring metric: queries with `clicks_current = 0` and `clicks_previous > 0` on
+at-risk SERPs are surfaced separately — these are dormant queries (often news) that drove
+traffic in the previous period and may resurface.
 
-#### Implementation
+#### Implementation (all shipped)
 
-- [x] Constants (`FEATURE_WEIGHTS`, `POSITION_MULT`) in `src/lib/riskScoring.ts`
-- [x] Pure functions: `computeRiskIntensity()`, `computeAtRiskClicks()`, `computeComposite()`
-- [ ] Unit tests in `src/test/riskScoring.test.ts`
-- [ ] `RiskSummaryTab.tsx` — composite bar, per-category breakdown, at_risk_clicks
-- [ ] `QueryTable.tsx` — risk_intensity badge (High/Medium/Low) per row
-- [ ] `ImportView.tsx` — compute client-side on load, no Compute Risk button
+- [x] `src/lib/riskScoring.ts` — `tierOf()`, `scoreQuery()`, `aggregateRisk()`, `aggregateByCategory()`; CTR_DROP constants; fully typed
+- [x] `src/test/risk-scoring.test.ts` — 26 unit tests covering all tier rules, estLost maths, latent logic, composite arithmetic, coverage stats
+- [x] `src/components/RiskSummaryTab.tsx` — hero composite, AI/SERP composition line, tier breakdown table, latent callout, category breakdown
+- [x] `src/components/QueryTable.tsx` — Est. Lost column, TierBadge chip, sortable by estLost
+- [x] `src/pages/ImportView.tsx` — Risk Summary tab; paginated SERP snapshot fetch
+
+#### Bugs caught this phase
+
+1. **1000-row fetch cap (silent data truncation):** PostgREST `max_rows=1000` overrides
+   `.range(0, 9999)` — the single-call range fix was silently capped at 1000 rows,
+   returning only 54% of SERP data (1000/1867 snapshots). Fixed with a paginated loop
+   (`.range(from, from + PAGE - 1)`, break when `data.length < PAGE`).
+   Affected: AI Surfaces tab and Risk Summary tab both showed wrong counts until fixed.
+
+2. **AIO / Top Stories tier-priority inversion:** `tierOf()` initially checked
+   `has_ai_overview` before `has_top_stories`, classifying 28 co-occurrence queries at
+   location 1006886 as High instead of Low. Fixed by moving the Top Stories check first
+   in `tierOf()`. UI Tier Logic explainer card was always correct; the code lagged behind.
+
+#### Finding: News/Entities bifurcation
+
+At location 1006886, 1508 news queries split into:
+- **~34% breaking news** — Top Stories present → Low tier (publisher distributed via carousel)
+- **~18% AIO-exposed** — AI Overview, no Top Stories → High tier (evergreen/encyclopedic queries
+  where Google answers directly: "russo-ukrainian war", "israel hamas war", "imran khan news")
+- **~48% medium / other** — video, PAA-heavy, or clean SERPs
+
+This bifurcation — breaking-news (Top Stories protected) vs evergreen-entity (AIO-exposed) —
+is a meaningful sub-split within the News category. **Candidate for a later phase:**
+auto-classify news queries as `news_breaking` vs `news_evergreen` based on Top Stories
+presence and use this to set editorial priority in the risk view.
 
 #### Phase 6+ candidates (NOT in v1)
 PAA presence (`has_paa`), Knowledge Graph (`has_knowledge_graph`), publisher presence
 in PAA/KG (`publisher_in_paa`, `publisher_in_knowledge_graph`, `publisher_in_video`),
-CTR-decline volatility, weight tuning UI, DB-stored scores, materialised aggregations.
+measured pixel-displacement CTR drops replacing the 15% PROVISIONAL medium figure
+(Phase 4.5), breaking-vs-evergreen news sub-split, CTR-decline volatility,
+weight tuning UI, DB-stored scores, materialised aggregations.
 
 ### Phase 6 — Front-end polish at scale
 - [ ] Virtualised `QueryTable`.
