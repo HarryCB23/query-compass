@@ -847,15 +847,58 @@ Each phase should land as a working state with passing tests.
 - [ ] Build `fetch-keyword-metrics` edge function for Keyword Difficulty + Search Volume (separate refresh cadence, longer TTL).
 - [ ] UI: SERP feature badges on query table, filter by feature, publisher presence indicators per surface.
 
-### Phase 5 — Traffic Risk scoring
-- [ ] `risk_weights` table seeded with v1 weights from section 6.
-- [ ] `compute-risk-scores` edge function applies weights to (classification + SERP + metrics).
-- [ ] Implement derived flags: `zero_click_risk`, `publisher_in_aio`, `publisher_in_top_stories`, `publisher_owns_fs`, `ai_surface_flag`.
-- [ ] Materialised views for category, entity, profile aggregations.
-- [ ] Headline metrics on project dashboard: **Clicks at risk**, **Zero-click exposure %**, **AIO citation rate**, **Top Stories capture rate**, **Average traffic risk**.
-- [ ] UI: per-query risk score with component breakdown popover (transparency for consultants explaining numbers to clients).
-- [ ] Per-query badges: 🔴 Zero-click, ✓ In AIO, ✓ In Top Stories, ✓ Owns FS.
-- [ ] Weight tuning UI (admin only) — slider per weight, live re-score preview using stored `components` JSONB.
+### Phase 5 — Traffic Risk scoring (spec LOCKED — supersedes any earlier additive model)
+
+> **Model decision (locked):** multiplicative, client-side, no DB storage in v1.
+> The earlier additive 0-100 model with `risk_weights`/`risk_scores` tables and a
+> `compute-risk-scores` edge function was built from a draft brief and has been removed
+> (migration `20260528000002_drop_premature_phase5_tables.sql`).
+
+#### Locked formula
+
+```
+hostile_weight = 1 − Π(1 − wᵢ)   over click-removing features present
+  AIO              w = 0.80
+  Local Pack       w = 0.20
+  Shopping         w = 0.20
+  Featured Snippet w = 0.10
+  Video            w = 0.10
+
+feature_weight = has_top_stories ? hostile_weight × 0.30 : hostile_weight
+  (Top Stories = unconditional 70% traffic relief, NOT a penalty)
+
+position_mult:
+  publisher_organic_position 1–3  → 1.00
+  publisher_organic_position 4–6  → 0.75
+  publisher_organic_position 7–10 → 0.50
+  null (not ranking)              → 0.30
+
+risk_intensity  = feature_weight × position_mult   (0–1, volume-independent)
+at_risk_clicks  = clicks_current × risk_intensity  (volume-dependent output)
+```
+
+Buckets: **High** ≥ 0.50 | **Medium** 0.20–0.50 | **Low** < 0.20
+
+Composite per project / category:
+```
+composite_risk = Σ at_risk_clicks ÷ Σ clicks_current
+```
+
+No publisher presence mitigation — publisher placement is descriptive only.
+
+#### Implementation
+
+- [x] Constants (`FEATURE_WEIGHTS`, `POSITION_MULT`) in `src/lib/riskScoring.ts`
+- [x] Pure functions: `computeRiskIntensity()`, `computeAtRiskClicks()`, `computeComposite()`
+- [ ] Unit tests in `src/test/riskScoring.test.ts`
+- [ ] `RiskSummaryTab.tsx` — composite bar, per-category breakdown, at_risk_clicks
+- [ ] `QueryTable.tsx` — risk_intensity badge (High/Medium/Low) per row
+- [ ] `ImportView.tsx` — compute client-side on load, no Compute Risk button
+
+#### Phase 6+ candidates (NOT in v1)
+PAA presence (`has_paa`), Knowledge Graph (`has_knowledge_graph`), publisher presence
+in PAA/KG (`publisher_in_paa`, `publisher_in_knowledge_graph`, `publisher_in_video`),
+CTR-decline volatility, weight tuning UI, DB-stored scores, materialised aggregations.
 
 ### Phase 6 — Front-end polish at scale
 - [ ] Virtualised `QueryTable`.
@@ -916,7 +959,7 @@ Document all of these in `.env.example`.
 
 ## Notes for Claude Code
 
-- Use `npm` (not bun) for consistency; remove `bun.lockb` from repo.
+- Use `bun` as the package manager (bun.lockb is present and committed).
 - All Edge Functions should be Deno-compatible TypeScript with strict typing.
 - Migrations go in `supabase/migrations/` with timestamped filenames.
 - Use Supabase CLI (`npx supabase`) for local dev, including local Postgres for testing.

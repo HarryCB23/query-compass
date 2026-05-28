@@ -16,28 +16,37 @@ export type Database = {
     Tables: {
       classifications: {
         Row: {
+          category: string
           classified_at: string
           confidence: number | null
+          entities: Json
           id: string
-          intent: string
-          model_version: string | null
+          model_version: string
+          prompt_version: string
           query_id: string
+          reasoning: string | null
         }
         Insert: {
+          category?: string
           classified_at?: string
           confidence?: number | null
+          entities?: Json
           id?: string
-          intent: string
-          model_version?: string | null
+          model_version?: string
+          prompt_version?: string
           query_id: string
+          reasoning?: string | null
         }
         Update: {
+          category?: string
           classified_at?: string
           confidence?: number | null
+          entities?: Json
           id?: string
-          intent?: string
-          model_version?: string | null
+          model_version?: string
+          prompt_version?: string
           query_id?: string
+          reasoning?: string | null
         }
         Relationships: [
           {
@@ -407,72 +416,6 @@ export type Database = {
         }
         Relationships: []
       }
-      risk_scores: {
-        Row: {
-          breakdown: Json
-          id: string
-          import_id: string
-          scored_at: string
-          traffic_risk_score: number
-          weights_id: string | null
-        }
-        Insert: {
-          breakdown?: Json
-          id?: string
-          import_id: string
-          scored_at?: string
-          traffic_risk_score: number
-          weights_id?: string | null
-        }
-        Update: {
-          breakdown?: Json
-          id?: string
-          import_id?: string
-          scored_at?: string
-          traffic_risk_score?: number
-          weights_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "risk_scores_import_id_fkey"
-            columns: ["import_id"]
-            isOneToOne: true
-            referencedRelation: "imports"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "risk_scores_weights_id_fkey"
-            columns: ["weights_id"]
-            isOneToOne: false
-            referencedRelation: "risk_weights"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      risk_weights: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          label: string
-          weights: Json
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          label: string
-          weights: Json
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          label?: string
-          weights?: Json
-        }
-        Relationships: []
-      }
       serp_snapshots: {
         Row: {
           aio_citation_count: number
@@ -482,7 +425,9 @@ export type Database = {
           expires_at: string
           has_ai_overview: boolean
           has_featured_snippet: boolean
+          has_knowledge_graph: boolean
           has_local_pack: boolean
+          has_paa: boolean
           has_shopping: boolean
           has_top_stories: boolean
           has_video: boolean
@@ -491,8 +436,11 @@ export type Database = {
           pixels_above_first_organic: number | null
           publisher_in_ai_overview: boolean
           publisher_in_featured_snippet: boolean
+          publisher_in_knowledge_graph: boolean
           publisher_in_organic_top_3: boolean
+          publisher_in_paa: boolean
           publisher_in_top_stories: boolean
+          publisher_in_video: boolean
           publisher_organic_position: number | null
           publisher_pixel_height: number | null
           query_id: string
@@ -509,7 +457,9 @@ export type Database = {
           expires_at?: string
           has_ai_overview?: boolean
           has_featured_snippet?: boolean
+          has_knowledge_graph?: boolean
           has_local_pack?: boolean
+          has_paa?: boolean
           has_shopping?: boolean
           has_top_stories?: boolean
           has_video?: boolean
@@ -518,8 +468,11 @@ export type Database = {
           pixels_above_first_organic?: number | null
           publisher_in_ai_overview?: boolean
           publisher_in_featured_snippet?: boolean
+          publisher_in_knowledge_graph?: boolean
           publisher_in_organic_top_3?: boolean
+          publisher_in_paa?: boolean
           publisher_in_top_stories?: boolean
+          publisher_in_video?: boolean
           publisher_organic_position?: number | null
           publisher_pixel_height?: number | null
           query_id: string
@@ -536,7 +489,9 @@ export type Database = {
           expires_at?: string
           has_ai_overview?: boolean
           has_featured_snippet?: boolean
+          has_knowledge_graph?: boolean
           has_local_pack?: boolean
+          has_paa?: boolean
           has_shopping?: boolean
           has_top_stories?: boolean
           has_video?: boolean
@@ -545,8 +500,11 @@ export type Database = {
           pixels_above_first_organic?: number | null
           publisher_in_ai_overview?: boolean
           publisher_in_featured_snippet?: boolean
+          publisher_in_knowledge_graph?: boolean
           publisher_in_organic_top_3?: boolean
+          publisher_in_paa?: boolean
           publisher_in_top_stories?: boolean
+          publisher_in_video?: boolean
           publisher_organic_position?: number | null
           publisher_pixel_height?: number | null
           query_id?: string

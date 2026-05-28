@@ -97,11 +97,16 @@ export interface SerpSummaryFields {
   has_video: boolean
   has_local_pack: boolean
   has_shopping: boolean
+  has_paa: boolean
+  has_knowledge_graph: boolean
 
   // Layer 2: publisher presence
   publisher_in_ai_overview: boolean
   publisher_in_top_stories: boolean
   publisher_in_featured_snippet: boolean
+  publisher_in_paa: boolean
+  publisher_in_knowledge_graph: boolean
+  publisher_in_video: boolean
   publisher_organic_position: number | null
   publisher_in_organic_top_3: boolean
 
@@ -415,12 +420,14 @@ export function computeSummaryFields(
   const types = new Set(items.map(i => i.type))
 
   // 'ai_overview' confirmed against live fixture (commercial_shopping, UK 2026-05-26).
-  const has_ai_overview     = types.has('ai_overview')
-  const has_top_stories     = types.has('top_stories')
+  const has_ai_overview      = types.has('ai_overview')
+  const has_top_stories      = types.has('top_stories')
   const has_featured_snippet = types.has('featured_snippet')
-  const has_video           = types.has('video')
-  const has_local_pack      = types.has('local_pack')
-  const has_shopping        = types.has('shopping')
+  const has_video            = types.has('video')
+  const has_local_pack       = types.has('local_pack')
+  const has_shopping         = types.has('shopping')
+  const has_paa              = types.has('people_also_ask')
+  const has_knowledge_graph  = types.has('knowledge_graph')
 
   // ── Layer 2: publisher presence ────────────────────────────────────────────
   const organicItems = items.filter(i => i.type === 'organic')
@@ -443,6 +450,30 @@ export function computeSummaryFields(
     .filter(i => i.type === 'top_stories')
     .flatMap(i => i.items ?? [])
     .some(s => domainMatches(s.domain, publisherDomains))
+
+  // PAA: check expanded_element within each PAA question for publisher domain
+  const publisher_in_paa = items
+    .filter(i => i.type === 'people_also_ask')
+    .flatMap(i => i.items ?? [])
+    // deno-lint-ignore no-explicit-any
+    .flatMap((q: any) => q.expanded_element ?? [])
+    // deno-lint-ignore no-explicit-any
+    .some((e: any) => domainMatches(e.domain, publisherDomains))
+
+  const publisher_in_knowledge_graph = items
+    .filter(i => i.type === 'knowledge_graph')
+    // deno-lint-ignore no-explicit-any
+    .some((i: any) => {
+      // Knowledge graph items may have a 'links' array or a direct 'domain'
+      if (domainMatches(i.domain, publisherDomains)) return true
+      // deno-lint-ignore no-explicit-any
+      return (i.links ?? []).some((l: any) => domainMatches(l.domain, publisherDomains))
+    })
+
+  const publisher_in_video = items
+    .filter(i => i.type === 'video')
+    .flatMap(i => i.items ?? [])
+    .some(v => domainMatches(v.domain, publisherDomains))
 
   // ── Layer 3: competitive landscape ────────────────────────────────────────
   const aio = items.find(i => i.type === 'ai_overview') ?? null
@@ -482,9 +513,14 @@ export function computeSummaryFields(
     has_video,
     has_local_pack,
     has_shopping,
+    has_paa,
+    has_knowledge_graph,
     publisher_in_ai_overview,
     publisher_in_top_stories,
     publisher_in_featured_snippet,
+    publisher_in_paa,
+    publisher_in_knowledge_graph,
+    publisher_in_video,
     publisher_organic_position,
     publisher_in_organic_top_3,
     aio_citation_count,
