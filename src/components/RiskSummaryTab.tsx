@@ -29,8 +29,8 @@ interface RiskSummaryTabProps {
 
 // ── Tiny helpers ──────────────────────────────────────────────────────────────
 
-function pctStr(n: number, decimals = 1) {
-  return `${n.toFixed(decimals)}%`
+function pctStr(n: number | null | undefined, decimals = 1) {
+  return `${(n ?? 0).toFixed(decimals)}%`
 }
 
 function TierChip({ tier }: { tier: 'high' | 'medium' | 'low' }) {
@@ -204,7 +204,7 @@ export default function RiskSummaryTab({ classifiedData, serpSnapshots }: RiskSu
       </div>
 
       {/* ── Latent callout ─────────────────────────────────────────────────── */}
-      {latent.queryCount > 0 && latent.composite !== null && (
+      {(latent?.queryCount ?? 0) > 0 && latent?.composite != null && (
         <Card className="border-amber-500/30 bg-amber-500/5">
           <CardContent className="py-4 flex items-start gap-4">
             <div className="flex-1">
@@ -212,8 +212,8 @@ export default function RiskSummaryTab({ classifiedData, serpSnapshots }: RiskSu
               <p className="text-xs text-muted-foreground mt-0.5">
                 {latent.queryCount.toLocaleString()}{' '}
                 {latent.queryCount === 1 ? 'query' : 'queries'} with zero current clicks
-                but {latent.previousClicks.toLocaleString()} previous-period clicks, on at-risk SERPs.
-                Est. {latent.estLostLatent.toLocaleString(undefined, { maximumFractionDigits: 0 })} clicks
+                but {(latent.previousClicks ?? 0).toLocaleString()} previous-period clicks, on at-risk SERPs.
+                Est. {(latent.estLostLatent ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} clicks
                 lost when they resurface.
               </p>
             </div>
