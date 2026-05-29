@@ -279,15 +279,16 @@ export default function RiskSummaryTab({ classifiedData, serpSnapshots }: RiskSu
             <CardTitle className="text-sm font-semibold text-muted-foreground">Tier Logic</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-xs text-muted-foreground">
-            <p><span className="text-rose-400 font-medium">High (AIO)</span> — AI Overview present.
-              Estimated 75% CTR loss from organic results.</p>
-            <p><span className="text-amber-400 font-medium">Medium (Rich SERP)</span> — Video, Local Pack,
-              Shopping, or Featured Snippet; no AIO. 15% drop (provisional).</p>
-            <p><span className="text-emerald-400 font-medium">Low</span> — Top Stories present (publisher-friendly
-              news SERP), or clean SERP with no click-removing features. 0% modelled loss.</p>
+            <p><span className="text-rose-400 font-medium">High (AIO)</span> — AI Overview present,
+              no Top Stories. Estimated 75% CTR loss from organic results.</p>
+            <p><span className="text-amber-400 font-medium">Medium (Rich SERP)</span> — AIO + Top Stories
+              co-occurrence (AIO above TS, cannibalises despite carousel), or Video / Local Pack /
+              Shopping / Featured Snippet with no AIO. 15% drop.</p>
+            <p><span className="text-emerald-400 font-medium">Low</span> — Top Stories only (no AIO),
+              or clean SERP with no click-removing features. 0% modelled loss.</p>
             <p className="text-muted-foreground/60">
-              Top Stories always resolves Low even when other features also present —
-              it signals a news query where the publisher is likely distributed.
+              AIO + Top Stories → Medium: AIO renders at rank 1 above the Top Stories carousel
+              and cannibalises organic CTR even on news SERPs.
             </p>
           </CardContent>
         </Card>

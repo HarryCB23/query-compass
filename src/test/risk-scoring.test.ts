@@ -30,9 +30,14 @@ describe('tierOf', () => {
     expect(tierOf(makeSnap({ has_ai_overview: true, has_video: true }))).toBe('high')
   })
 
-  it('Top Stories present → low even when AIO also present (TS wins)', () => {
-    expect(tierOf(makeSnap({ has_top_stories: true, has_ai_overview: true }))).toBe('low')
-    expect(tierOf(makeSnap({ has_top_stories: true, has_ai_overview: true, has_video: true }))).toBe('low')
+  it('AIO + Top Stories co-occurrence → medium (AIO is above TS, cannibalises)', () => {
+    expect(tierOf(makeSnap({ has_ai_overview: true, has_top_stories: true }))).toBe('medium')
+    expect(tierOf(makeSnap({ has_ai_overview: true, has_top_stories: true, has_video: true }))).toBe('medium')
+  })
+
+  it('Top Stories only, no AIO → low', () => {
+    expect(tierOf(makeSnap({ has_top_stories: true }))).toBe('low')
+    expect(tierOf(makeSnap({ has_top_stories: true, has_video: true }))).toBe('low')
   })
 
   it('Top Stories, no AIO → low (even with video)', () => {
@@ -78,11 +83,11 @@ describe('scoreQuery', () => {
     expect(r.scored).toBe(true)
   })
 
-  it('AIO with Top Stories → low (Top Stories wins)', () => {
+  it('AIO + Top Stories → medium, ctrDrop 0.15, riskKind serp', () => {
     const r = scoreQuery(makeSnap({ has_ai_overview: true, has_top_stories: true, has_video: true }), 100, null)
-    expect(r.tier).toBe('low')
-    expect(r.ctrDrop).toBe(0.0)
-    expect(r.riskKind).toBe('none')
+    expect(r.tier).toBe('medium')
+    expect(r.ctrDrop).toBe(CTR_DROP.medium)
+    expect(r.riskKind).toBe('serp')
   })
 
   it('AIO without Top Stories → high', () => {

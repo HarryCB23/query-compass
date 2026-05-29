@@ -2,10 +2,16 @@
  * riskScoring.ts — Phase 5 tiered CTR-drop model.
  *
  * Tier assignment (priority order — first match wins):
- *   has_top_stories                                       → low   (publisher-friendly news SERP — wins over everything)
+ *   has_ai_overview AND has_top_stories                   → medium (AIO above TS — cannibalises despite TS presence)
+ *   has_top_stories                                       → low   (publisher-friendly news SERP)
  *   has_ai_overview                                       → high  (AI cannibalisation)
  *   has_video | has_local_pack | has_shopping | has_fs    → medium (SERP competition, not AI)
  *   else                                                  → low
+ *
+ * AIO+TS co-occurrence → Medium rationale:
+ *   AIO always renders at rank_absolute=1 (pinned top of SERP). When AIO and Top Stories
+ *   both appear, AIO is visually above Top Stories and cannibalises organic CTR despite
+ *   the TS carousel. No pixel data required — rank order is the proxy.
  *
  * CTR-drop constants (tunable):
  *   high   0.75  — AIO estimated 75% CTR reduction
@@ -98,7 +104,8 @@ export interface AggregateRisk {
 
 /** Assign a risk tier to a snapshot. Priority order: first match wins. */
 export function tierOf(snapshot: SerpSnapshot): RiskTier {
-  if (snapshot.has_top_stories) return 'low'   // publisher-friendly news SERP — wins over AIO
+  if (snapshot.has_ai_overview && snapshot.has_top_stories) return 'medium'  // AIO above TS — cannibalises
+  if (snapshot.has_top_stories) return 'low'
   if (snapshot.has_ai_overview) return 'high'
   if (
     snapshot.has_video ||
