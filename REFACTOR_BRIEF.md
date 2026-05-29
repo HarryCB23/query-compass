@@ -847,99 +847,52 @@ Each phase should land as a working state with passing tests.
 - [ ] Build `fetch-keyword-metrics` edge function for Keyword Difficulty + Search Volume (separate refresh cadence, longer TTL).
 - [ ] UI: SERP feature badges on query table, filter by feature, publisher presence indicators per surface.
 
-### Phase 4.5 — Pixel-displacement via SERP Screenshot (IN PROGRESS)
+### Phase 4.5 — Pixel-displacement via SERP Screenshot ❌ CLOSED AS INFEASIBLE
 
-Refines the Phase 5 tiered CTR-drop model: replaces the provisional Medium 15% flat rate
-with per-query scaled drops based on measured pixel displacement, and adds an
-AIO-above-Top-Stories reclassification to Medium.
+#### Finding
 
-DataforSEO pixel/rectangle data (`rectangle.y`) is on a **separate product**:
-`/v3/serp/screenshot/*`. Not available on the organic endpoint regardless of plan or
-`postback_data` parameter. Existing `pixels_above_first_organic` and
-`publisher_pixel_height` columns in `serp_snapshots` are always null from Phase 4.
+The DataforSEO Screenshot endpoint (`/v3/serp/screenshot/*`) returns **PNG images**, not
+structured per-element pixel coordinates. The `rectangle` field exists in the organic
+Advanced SERP response schema but is **never populated** — verified across:
 
-#### Locked model
+- 3 fixtures (aio_heavy, news_ts, mixed) via `task_get/advanced` — 0 non-null rectangles
+  across 42 items (mobile + desktop, both tested)
+- All screenshot-specific endpoint paths return 404 or 40402 ("Invalid Path")
+- `screenshot:1` parameter on the organic endpoint is silently accepted (20100) but
+  produces identical null-rectangle results — no effect
+- `/v3/appendix/user_data` confirms `serp.screenshot daily_limit: 0` — product disabled
+  on this account plan
 
-```
-MAX_DISPLACEMENT = 1000  (px — ceiling for scaling; anything ≥ 1000 → ceiling drop)
+There is no DataforSEO endpoint that provides automated per-query y-coordinates for
+SERP elements. The linear CTR-scaling model and the pixel-based AIO-above-TS rule both
+require data that does not exist as a queryable structured source from this provider.
 
-CTR_DROP = {
-  high:   { base: 0.75, ceiling: 0.90 },
-  medium: { base: 0.15, ceiling: 0.25 },
-  low:    { base: 0.00, ceiling: 0.00 },
-}
+#### Outcome
 
-ctr_drop = base + (ceiling − base) × clamp(pixels_above_first_organic / 1000, 0, 1)
-Null pixel data → ctr_drop = base  (graceful fallback; existing snapshots unaffected)
-```
+**Phase 5 flat-tier model (75%/15%/0%) is the final v1 risk model**, grounded in
+published CTR studies. Linear CTR scaling within tiers is deferred indefinitely pending
+a viable structured-pixel data source (e.g., a custom headless-browser pipeline).
 
-#### Tier logic update (priority order — first match wins)
+One deliverable from Phase 4.5 **was** shipped: the AIO+TS co-occurrence rule — using
+`rank_absolute` order as a visual proxy (AIO always renders at rank 1, Top Stories at
+rank 1–3; fixture investigation confirmed AIO rank_absolute=1 on "what is inflation").
+This is a zero-infrastructure change to `tierOf()`: `has_ai_overview AND has_top_stories → Medium`.
 
-| Priority | Condition | Tier | Notes |
-|---|---|---|---|
-| 1 | `has_top_stories AND has_ai_overview AND aio_pixel_y < top_stories_pixel_y` | **Medium** | AIO is above TS → cannibalises despite TS |
-| 2 | `has_top_stories` | **Low** | TS protection holds |
-| 3 | `has_ai_overview` | **High** | |
-| 4 | `has_video ∨ has_local_pack ∨ has_shopping ∨ has_featured_snippet` | **Medium** | |
-| 5 | else | **Low** | Clean SERP |
+#### Schema outcome
 
-**Safe fallback for rule 1:** if either `aio_pixel_y` or `top_stories_pixel_y` is null,
-default to rule 2 (TS wins). Existing 1867 snapshots without pixel data do not regress.
+- `serp_jobs.task_type` — **KEPT**. Future-proofs other task types; harmless default `'organic'`.
+- `serp_snapshots.aio_pixel_y`, `top_stories_pixel_y` — **DROPPED** (migration
+  `20260529000002_drop_unused_pixel_y_columns`). Unpopulatable; leaving them creates
+  permanent confusion ("why are these always null?").
+- `serp_snapshots.pixels_above_first_organic`, `publisher_pixel_height` — **KEPT** nullable.
+  These pre-existed from Phase 4 and reflect a real-but-deferred concept; they slot in if a
+  CV pipeline ever materialises.
 
-#### Schema (migration `phase45_pixel_displacement_schema`) ✅
+#### Fixtures retained
 
-- `serp_jobs.task_type text NOT NULL DEFAULT 'organic' CHECK (IN ('organic','screenshot'))`
-- `serp_snapshots.aio_pixel_y integer` — nullable, null until screenshot enriched
-- `serp_snapshots.top_stories_pixel_y integer` — nullable, null until screenshot enriched
-- `serp_snapshots.pixels_above_first_organic integer` — existed from Phase 4, nullable ✓
-- `serp_snapshots.publisher_pixel_height integer` — existed from Phase 4, nullable ✓
-
-#### Tag format extension
-
-```
-Old: "import_id:query_id"
-New: "import_id:query_id:organic"  or  "import_id:query_id:screenshot"
-Backwards compat: two-component tag → default type='organic'
-```
-
-#### enrich-serp coupled flow
-
-Per query in chunk: submit **both** organic AND screenshot tasks. Two `serp_jobs` rows
-per query. New `screenshotBackfill` parameter: when true, submit screenshot tasks only
-for queries that have an organic snapshot with `pixels_above_first_organic IS NULL`.
-
-#### serp-webhook partial-state upsert
-
-**Critical:** organic and screenshot postbacks arrive independently. Each must update
-only its own columns — never overwrite the other type's fields.
-
-```sql
--- Organic postback: upsert feature flags + raw_serp_data + summary fields
--- Screenshot postback: UPDATE serp_snapshots SET
---   pixels_above_first_organic = ..., publisher_pixel_height = ...,
---   aio_pixel_y = ..., top_stories_pixel_y = ...
--- WHERE query_id = ... AND location_code = ...
-```
-
-#### Implementation steps
-
-- [x] Schema migration applied and verified
-- [ ] **STOP: Step 2 — Fixture capture** (3 queries via DataforSEO Screenshot endpoint; verify rectangle.y structure before writing parser)
-- [ ] `dataforseoClient.ts`: `submitScreenshotTasks()`, `parseScreenshotPostback()`, `extractPixelFields()`
-- [ ] Tag format extension in `submitSerpTasks` + webhook parser (backwards-compat)
-- [ ] `enrich-serp`: coupled organic+screenshot submission; `screenshotBackfill` mode
-- [ ] `serp-webhook`: `task_type` routing + partial-state upsert
-- [ ] `riskScoring.ts`: base/ceiling CTR-drop scaling; 5-rule `tierOf()` with AIO-above-TS
-- [ ] Tests: pixel scaling (0/500/1000/1500px), null fallback, AIO+TS pixel cases
-- [ ] UI: remove "(provisional)", tier-average CTR drop, coverage: organic-only vs fully-enriched
-- [ ] Backfill run: 1867 screenshot tasks for Telegraph import
-- [ ] Brief retro
-
-#### Phase 4.5 STOP points
-
-1. **After fixture capture** — report rectangle.y path per element type before any parser code
-2. **After serp-webhook partial-state** — smoke-test one screenshot postback against existing organic data before bulk backfill
-3. **After backfill** — report pixel distribution, reclassification counts, updated composites
+`src/test/fixtures/screenshot/{aio_heavy,news_ts,mixed}.json` — kept as response-shape
+reference. If the screenshot product is ever activated (account upgrade), these fixtures
+confirm the item structure the parser should expect, with rectangles currently null.
 
 ### Phase 5 — Traffic Risk scoring ✅ SHIPPED
 
