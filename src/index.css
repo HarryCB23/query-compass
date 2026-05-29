@@ -6,112 +6,111 @@
 
 @layer base {
   :root {
-    /* Slate & Indigo Premium Palette */
-    --background: 220 14% 96%;
-    --foreground: 222 47% 11%;
+    /* ── Pure-grey neutral system (Phase 6.2) ──────────────────────────── */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 4%;
 
-    --primary: 239 84% 67%;
+    --primary: 0 0% 4%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 4%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 239 84% 67%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 4%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 239 84% 67%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 4%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Query category colors - refined */
-    --category-branded: 239 84% 67%;
+    /* ── Risk & tier tokens ─────────────────────────────────────────────── */
+    --risk:            0 72% 51%;   /* #DC2626 — AI-driven risk, nothing else */
+    --risk-foreground: 0 0% 100%;
+    --risk-subtle:     0 93% 94%;   /* #FEE2E2 */
+
+    --tier-high:   0 72% 51%;   /* red  */
+    --tier-medium: 0 0% 45%;    /* grey */
+    --tier-low:    0 0% 82%;    /* light grey */
+
+    /* ── Chart tokens ───────────────────────────────────────────────────── */
+    --chart-risk:     0 72% 51%;   /* red  — AI risk bars/segments */
+    --chart-neutral:  0 0% 20%;    /* dark — publisher-owned / protected */
+    --chart-muted:    0 0% 82%;    /* light — scaffolding / background track */
+    --chart-positive: 0 0% 20%;    /* monochrome — kept for backward compat */
+    --chart-negative: 0 72% 51%;   /* red — kept for backward compat */
+
+    /* ── Category colours (other tabs — values unchanged) ───────────────── */
+    --category-branded:       239 84% 67%;
     --category-informational: 199 89% 48%;
-    --category-news: 25 95% 53%;
-    --category-product: 160 84% 39%;
-    --category-commercial: 280 68% 60%;
+    --category-news:          25  95% 53%;
+    --category-product:       160 84% 39%;
+    --category-commercial:    280 68% 60%;
     --category-transactional: 346 77% 50%;
-    --category-other: 220 9% 46%;
+    --category-other:         220  9% 46%;
 
-    /* Chart colors - Emerald & Rose */
-    --chart-positive: 160 84% 39%;
-    --chart-negative: 350 89% 60%;
-    --chart-neutral: 220 9% 46%;
-
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(239 84% 67%) 0%, hsl(280 68% 60%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.9) 0%, hsl(220 14% 98% / 0.8) 100%);
-
-    /* Shadows - refined for glassmorphism */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.03);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.03);
-    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.02);
-    --shadow-glow: 0 0 0 1px hsl(239 84% 67% / 0.1), 0 4px 12px -2px hsl(239 84% 67% / 0.08);
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 220 9% 46%;
-    --sidebar-primary: 222 47% 11%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 239 84% 67%;
+    /* ── Sidebar (layout compat) ────────────────────────────────────────── */
+    --sidebar-background:          0 0% 98%;
+    --sidebar-foreground:          0 0% 45%;
+    --sidebar-primary:             0 0%  4%;
+    --sidebar-primary-foreground:  0 0% 100%;
+    --sidebar-accent:              0 0% 96%;
+    --sidebar-accent-foreground:   0 0%  4%;
+    --sidebar-border:              0 0% 90%;
+    --sidebar-ring:                0 0%  4%;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 239 84% 67%;
+    /* Mirror light values — dark mode out of scope for Phase 6.2 */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 0 0% 4%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 239 84% 67%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 239 84% 67%;
-
-    --shadow-glow: 0 0 0 1px hsl(239 84% 67% / 0.2), 0 4px 12px -2px hsl(239 84% 67% / 0.15);
-
-    --sidebar-background: 222 47% 6%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 239 84% 67%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 4%;
+    --risk: 0 72% 51%;
+    --risk-foreground: 0 0% 100%;
+    --risk-subtle: 0 93% 94%;
+    --tier-high: 0 72% 51%;
+    --tier-medium: 0 0% 45%;
+    --tier-low: 0 0% 82%;
+    --chart-risk: 0 72% 51%;
+    --chart-neutral: 0 0% 20%;
+    --chart-muted: 0 0% 82%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 45%;
+    --sidebar-primary: 0 0% 4%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 4%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 4%;
   }
 }
 
@@ -131,26 +130,22 @@
 }
 
 @layer components {
-  /* Glassmorphic stat card */
+  /* Stat card */
   .stat-card {
-    @apply bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200/60 p-6 transition-all duration-300;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.02);
+    @apply bg-card rounded-lg border border-border p-6 transition-colors duration-200;
   }
 
   .stat-card:hover {
-    box-shadow: 0 0 0 1px hsl(239 84% 67% / 0.12), 0 4px 12px -2px hsl(239 84% 67% / 0.1);
-    border-color: hsl(239 84% 67% / 0.25);
+    @apply border-foreground/20;
   }
 
-  /* Premium glass card */
+  /* Glass card (semantic alias for card, kept for other-tab compat) */
   .glass-card {
-    @apply bg-white/95 backdrop-blur-md rounded-xl border border-slate-200/50 transition-all duration-300;
-    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+    @apply bg-card rounded-lg border border-border transition-colors duration-200;
   }
 
   .glass-card:hover {
-    box-shadow: 0 0 0 1px hsl(239 84% 67% / 0.1), 0 4px 12px -2px hsl(239 84% 67% / 0.08);
-    border-color: hsl(239 84% 67% / 0.2);
+    @apply border-foreground/20;
   }
 
   .category-badge {
@@ -249,8 +244,20 @@
 }
 
 @layer utilities {
+  /* Typography scale */
+  .text-display  { font-size: 56px; font-weight: 700; line-height: 1;   font-variant-numeric: tabular-nums; }
+  .text-data-num { font-size: 18px; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .text-eyebrow  {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Legacy gradient (kept for other tabs, now monochrome) */
   .text-gradient {
-    background: var(--gradient-hero);
+    background: linear-gradient(135deg, hsl(0 0% 4%) 0%, hsl(0 0% 30%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

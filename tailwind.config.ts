@@ -70,10 +70,22 @@ export default {
           transactional: "hsl(var(--category-transactional))",
           other: "hsl(var(--category-other))",
         },
+        risk: {
+          DEFAULT:    "hsl(var(--risk))",
+          foreground: "hsl(var(--risk-foreground))",
+          subtle:     "hsl(var(--risk-subtle))",
+        },
+        tier: {
+          high:   "hsl(var(--tier-high))",
+          medium: "hsl(var(--tier-medium))",
+          low:    "hsl(var(--tier-low))",
+        },
         chart: {
           positive: "hsl(var(--chart-positive))",
           negative: "hsl(var(--chart-negative))",
-          neutral: "hsl(var(--chart-neutral))",
+          neutral:  "hsl(var(--chart-neutral))",
+          risk:     "hsl(var(--chart-risk))",
+          muted:    "hsl(var(--chart-muted))",
         },
       },
       borderRadius: {
