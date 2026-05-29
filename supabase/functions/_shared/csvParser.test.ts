@@ -180,6 +180,48 @@ Deno.test('parseGSCCSV: handles Windows CRLF line endings', () => {
   assertEquals(rows[0].query_text, 'test query')
 })
 
+Deno.test('parseGSCCSV: single-period export (plain headers, no dates)', () => {
+  // GSC single-period export: just "Clicks", "Impressions", "CTR", "Position" — no date ranges.
+  // The parser must map these to *_current and leave *_previous as null.
+  const csv = `Top queries,Clicks,Impressions,CTR,Position
+what is inflation,1250,42000,2.98%,3.2
+ukraine war latest,980,38500,2.55%,2.1
+best mortgage rates,740,29800,2.48%,4.7`
+
+  const { rows, errors } = parseGSCCSV(csv)
+  assertEquals(errors.length, 0)
+  assertEquals(rows.length, 3)
+  assertEquals(rows[0].query_text, 'what is inflation')
+  assertEquals(rows[0].clicks_current, 1250)
+  assertEquals(rows[0].impressions_current, 42000)
+  assertAlmostEquals(rows[0].ctr_current!, 0.0298, 1e-4)
+  assertAlmostEquals(rows[0].position_current!, 3.2, 1e-6)
+  // previous columns must all be null — no comparison period in this export
+  assertEquals(rows[0].clicks_previous, null)
+  assertEquals(rows[0].impressions_previous, null)
+  assertEquals(rows[0].ctr_previous, null)
+  assertEquals(rows[0].position_previous, null)
+})
+
+Deno.test('parseGSCCSV: single-period export — "Query" column alias', () => {
+  // Alternate header name "Query" (not "Top queries")
+  const csv = `Query,Clicks,Impressions,CTR,Position\nsite:example.com,50,900,5.56%,1.0`
+  const { rows, errors } = parseGSCCSV(csv)
+  assertEquals(errors.length, 0)
+  assertEquals(rows.length, 1)
+  assertEquals(rows[0].query_text, 'site:example.com')
+  assertEquals(rows[0].clicks_current, 50)
+  assertEquals(rows[0].clicks_previous, null)
+})
+
+Deno.test('parseGSCCSV: malformed headers return descriptive error', () => {
+  // No recognisable query column → parser returns error immediately
+  const { rows, errors } = parseGSCCSV('col1,col2,col3\nval1,val2,val3')
+  assertEquals(rows.length, 0)
+  assertEquals(errors.length >= 1, true)
+  assertEquals(errors[0].message.includes('header'), true)
+})
+
 Deno.test('tokeniseLine terminates — regression for off-by-one infinite loop', () => {
   // Previously: `while (i <= line.length)` caused an infinite loop when
   // i === line.length (line[i] is undefined, else branch pushed '' and never
