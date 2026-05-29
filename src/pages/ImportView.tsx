@@ -23,6 +23,7 @@ import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import { SectionHeader } from '@/components/SectionHeader'
 import AiSurfacesTab from '@/components/AiSurfacesTab'
 import RiskSummaryTab from '@/components/RiskSummaryTab'
+import OverviewTab from '@/components/OverviewTab'
 import { Button } from '@/components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -52,7 +53,7 @@ export default function ImportView() {
   const { projectId, importId } = useParams<{ projectId: string; importId: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = (searchParams.get('tab') ?? 'queries') as 'queries' | 'ai-surfaces' | 'risk-summary'
+  const tab = (searchParams.get('tab') ?? 'overview') as 'overview' | 'queries' | 'ai-surfaces' | 'risk-summary'
 
   // ── Core data ─────────────────────────────────────────────────────────────
   const [projectName, setProjectName]         = useState<string>('')
@@ -605,10 +606,10 @@ export default function ImportView() {
 
         {/* ── Tab bar ──────────────────────────────────────────────────── */}
         <div className="container flex items-center gap-1 pb-0 border-t border-border/50">
-          {(['queries', 'ai-surfaces', 'risk-summary'] as const).map(t => (
+          {(['overview', 'queries', 'ai-surfaces', 'risk-summary'] as const).map(t => (
             <button
               key={t}
-              onClick={() => setSearchParams(t === 'queries' ? {} : { tab: t })}
+              onClick={() => setSearchParams(t === 'overview' ? {} : { tab: t })}
               className={[
                 'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
                 tab === t
@@ -616,7 +617,7 @@ export default function ImportView() {
                   : 'border-transparent text-muted-foreground hover:text-foreground',
               ].join(' ')}
             >
-              {t === 'queries' ? 'Queries' : t === 'ai-surfaces' ? 'AI Surfaces' : 'Risk Summary'}
+              {t === 'overview' ? 'Overview' : t === 'queries' ? 'Queries' : t === 'ai-surfaces' ? 'AI Surfaces' : 'Risk Summary'}
             </button>
           ))}
 
@@ -648,7 +649,20 @@ export default function ImportView() {
       </header>
 
       {/* ── Tab content ──────────────────────────────────────────────────── */}
-      {tab === 'risk-summary' ? (
+      {tab === 'overview' ? (
+        <main className="container py-8 animate-fade-in">
+          <OverviewTab
+            classifiedData={classifiedData}
+            serpSnapshots={serpSnapshots}
+            onNavigateToQueries={(category) => {
+              if (category) {
+                setCategoryFilter(category)
+              }
+              setSearchParams({ tab: 'queries' })
+            }}
+          />
+        </main>
+      ) : tab === 'risk-summary' ? (
         <main className="container py-8 animate-fade-in">
           <RiskSummaryTab
             classifiedData={classifiedData}
