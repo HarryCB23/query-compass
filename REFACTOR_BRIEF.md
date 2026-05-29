@@ -922,21 +922,28 @@ Three models were evaluated before landing on the shipped design:
 
 #### Locked tier model (client-side, no DB storage in v1)
 
-**Priority order — first match wins:**
+**Priority order — first match wins** _(updated Phase 4.5 close-out: AIO+TS co-occurrence rule added)_:
 
 | Priority | Condition | Tier | CTR-drop |
 |---|---|---|---|
-| 1 | `has_top_stories` | Low | 0% |
-| 2 | `has_ai_overview` | High | 75% |
-| 3 | `has_video ∨ has_local_pack ∨ has_shopping ∨ has_featured_snippet` | Medium | 15% _(PROVISIONAL)_ |
-| 4 | else (clean SERP) | Low | 0% |
+| 1 | `has_ai_overview ∧ has_top_stories` | Medium | 15% |
+| 2 | `has_top_stories` (no AIO) | Low | 0% |
+| 3 | `has_ai_overview` (no TS) | High | 75% |
+| 4 | `has_video ∨ has_local_pack ∨ has_shopping ∨ has_featured_snippet` | Medium | 15% |
+| 5 | else (clean SERP) | Low | 0% |
 
-Top Stories wins unconditionally — even when AIO is also present. A news SERP with Top
-Stories is publisher-friendly; the publisher is distributed via the carousel rather than
-losing clicks to AIO.
+AIO+TS co-occurrence → Medium: AIO always renders at `rank_absolute=1` (confirmed in
+fixtures), above the Top Stories carousel. The carousel still distributes publisher content,
+but AIO cannibalises enough clicks to push the query out of the Low tier. `rank_absolute`
+order is the proxy for vertical position; no pixel data needed.
 
-Medium CTR-drop (15%) is **PROVISIONAL** — a placeholder until Phase 4.5
-pixel-displacement data provides a measured figure.
+Top Stories alone (no AIO) → Low unconditionally. A news SERP with Top Stories but no
+AIO is publisher-friendly; the publisher is distributed via the carousel.
+
+Medium CTR-drop (15%) remains a reasonable placeholder. Phase 4.5 pixel-displacement work
+was closed as infeasible (DataforSEO Screenshot product disabled on this account; `rectangle`
+field always null; `daily_limit: 0`). The 15% figure is not measured but is conservative
+and directionally correct for rich-SERP layouts.
 
 **Per-query outputs:**
 ```
@@ -995,6 +1002,64 @@ in PAA/KG (`publisher_in_paa`, `publisher_in_knowledge_graph`, `publisher_in_vid
 measured pixel-displacement CTR drops replacing the 15% PROVISIONAL medium figure
 (Phase 4.5), breaking-vs-evergreen news sub-split, CTR-decline volatility,
 weight tuning UI, DB-stored scores, materialised aggregations.
+
+### Phase 6.1 — Overview tab + cleanups ✅ CLOSED
+
+#### Scope shipped
+
+- **Overview tab as default landing** (`?tab=overview`). Sections:
+  - **B2 Hero composite** — blended click-loss %, AI vs SERP component split, 4 sub-metrics
+    (coverage, latent queries, AIO exposure, Top Stories exposure).
+  - **B3 News SERP-state panel** — Top Stories-protected vs exposed, clicks-weighted %,
+    low-coverage caveat, temporal framing ("right now" snapshot, not stable classification).
+  - **B4 Top 8 loss queries** — sorted by `estLostCurrent` descending; tier chip + category badge.
+  - **B5 Latent/recurring risk callout** — amber card; queries with zero current clicks but
+    non-zero previous clicks on at-risk SERPs.
+  - **B6 Category breakdown** — compact horizontal bars sorted by est. lost clicks;
+    click-to-navigate into Queries tab with category pre-filtered.
+  - Empty state guard when `coverage.scored === 0` (no SERP enrichment yet).
+
+- **Cleanups:**
+  - Supabase types regenerated from live schema (`generate_typescript_types`); `tsc --noEmit`
+    clean. Key change: `serp_jobs.task_type` added, `aio_pixel_y`/`top_stories_pixel_y` absent.
+  - AI Surfaces 1000-row cap — **verified fixed** (paginated fetch was already patched in Phase 5;
+    AI Surfaces reads from the same `serpSnapshots` Map and inherits the fix). Confirmed
+    1868/1868 snapshots loading correctly at the STOP 1 checkpoint.
+  - `ingest-csv` single-period header detection — **verified correct** (parser already handled
+    plain `Clicks`/`Impressions`/etc. headers via `detectColumn` fallback). Deliverable was
+    3 new Deno unit tests + 1 synthetic CSV fixture confirming the behaviour, not a code fix.
+
+- **Test count after Phase 6.1: 71 Vitest + 24 Deno = 95 total**
+  - Vitest: example (1), overview (11), risk-scoring (27), serp-parser (32) — all passing.
+  - Deno: csvParser (24, includes 3 new single-period tests added this phase).
+
+#### Key decision logged: breaking vs evergreen news bifurcation — dropped
+
+Considered auto-classifying news queries as `news_breaking` (Top Stories present) vs
+`news_evergreen` (AIO-exposed, no TS) as a stable sub-category. Dropped because:
+
+Top Stories presence is Google's snapshot judgment of newsworthiness at enrichment time,
+not a stable query attribute. A query like "Tom Cruise" can flip between Breaking and
+Evergreen as news cycles change. Labelling it as a permanent classification would imply
+stability the data does not have.
+
+The insight survives as the **B3 news SERP-state panel** on the Overview tab — explicitly
+framed as "right now" (a temporal observation, not a classification). The correct home for
+observing the flip over time is Phase 6.3 (cross-import trends), where change between
+enrichment snapshots can be visualised honestly.
+
+#### Phase 6.2 candidates (deferred — no immediate trigger)
+
+- PDF / CSV export of risk analysis for client deliverables.
+- Project-level summary across imports (depends on 6.3 data shape).
+
+#### Phase 6.3 (deferred — blocked on data)
+
+- Cross-import aggregation and trend over time.
+- Requires a second GSC import on the same project to test meaningfully.
+- Do not start until at least one real engagement has produced two imports.
+
+---
 
 ### Phase 6 — Front-end polish at scale
 - [ ] Virtualised `QueryTable`.
