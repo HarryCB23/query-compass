@@ -1,0 +1,895 @@
+{
+  "_fixture_note": "Captured 2026-05-29. Organic Advanced response (mobile, UK 2826). rectangle: null on ALL items � DataforSEO screenshot product disabled on this account (daily_limit=0). See Phase 4.5 STOP report.",
+  "task_id": "05291010-1824-0066-0000-87f1586ac01c",
+  "tag": "fixture-organic:aio_heavy",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "location_code": 2826,
+  "device": "mobile",
+  "postback_data": "advanced",
+  "items": [
+    {
+      "type": "ai_overview",
+      "rank_group": 1,
+      "rank_absolute": 1,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[1]/div[1]",
+      "asynchronous_ai_overview": false,
+      "markdown": "![Inflation: What It Is and How to Control Inflation Rates](https://api.dataforseo.com/cdn/i/05291010-1824-0066-0000-87f1586ac01c:4)\nInflation is `the general and sustained increase in the price level of goods and services within an economy over a period of time` . When this happens, each unit of your currency buys a smaller percentage of a good or service, meaning the purchasing power of money decreases.[[1]](https://en.wikipedia.org/wiki/Inflation)[[2]](https://www.tutor2u.net/economics/topics/inflation)[[3]](https://www.britannica.com/money/inflation-economics)\n\nKey Concepts\n\n- **Purchasing Power:** As average prices go up, a single unit of currency buys fewer items. If inflation is 3%, a basket of goods that cost £100 last year now costs £103.[[1]](https://www.bbc.co.uk/bitesize/guides/zrwtmfr/revision/5)[[2]](https://www.bankofengland.co.uk/monetary-policy/inflation)\n- **Inflation Rate:** This is the annualized percentage change in a general price index (e.g., the Consumer Price Index, or CPI). It indicates how quickly prices are rising.[[1]](https://www.bankofengland.co.uk/explainers/what-is-inflation)[[2]](https://en.wikipedia.org/wiki/Inflation)\n- **Deflation:** The exact opposite of inflation; a sustained decrease in the general price level of goods and services.[[1]](https://en.wikipedia.org/wiki/Inflation)\n- **Disinflation:** A situation where the *rate* of inflation is slowing down. Even if the inflation rate drops, overall prices may still be increasing, just at a slower pace than before.[[1]](https://www.ons.gov.uk/aboutus/usingpublicdatatoproducestatistics/learningaboutdata/learnmoreaboutwhoweareandwhatwedo/whatisinflationandhowdowecalculateit)[[2]](https://en.wikipedia.org/wiki/Inflation)\n\nWhat Causes Inflation?\n\n- **Demand-Pull:** Occurs when the overall demand for goods and services outpaces the economy's ability to produce them, driving up prices.\n- **Cost-Push:** Happens when the cost of producing goods and services increases (e.g., higher wages, more expensive raw materials), and businesses raise their prices to maintain their profit margins.\n- **Money Supply Growth:** When there is an increase in the volume of money and credit in an economy, money can lose its relative value.[[1]](https://www.merriam-webster.com/dictionary/inflation)[[2]](https://www.blackrock.com/us/individual/education/inflation)[[3]](https://www.xero.com/uk/glossary/inflation/)[[4]](https://www.britannica.com/money/inflation-economics)[[5]](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-inflation)\n\nHow is it Measured?Governments use baskets of typical household goods and services to track these price shifts over time. You can view current inflation data, economic metrics, and tracking tools through major national statistics agencies like the Office for National Statistics in the UK, the Bureau of Labor Statistics in the US, or central banks like the [Bank of England](https://www.bankofengland.co.uk/monetary-policy/inflation).[[1]](https://publications.parliament.uk/pa/ld201719/ldselect/ldeconaf/246/24604.htm)[[2]](https://www.bankofengland.co.uk/explainers)[[3]](https://www.rba.gov.au/education/resources/explainers/inflation-and-its-measurement.html)",
+      "items": [
+        {
+          "type": "ai_overview_element",
+          "position": "left",
+          "title": null,
+          "text": "Inflation is the general and sustained increase in the price level of goods and services within an economy over a period of time. When this happens, each unit of your currency buys a smaller percentage of a good or service, meaning the purchasing power of money decreases. Wikipedia +2",
+          "markdown": "![Inflation: What It Is and How to Control Inflation Rates](https://api.dataforseo.com/cdn/i/05291010-1824-0066-0000-87f1586ac01c:2)\nInflation is `the general and sustained increase in the price level of goods and services within an economy over a period of time` . When this happens, each unit of your currency buys a smaller percentage of a good or service, meaning the purchasing power of money decreases.[[1]](https://en.wikipedia.org/wiki/Inflation)[[2]](https://www.tutor2u.net/economics/topics/inflation)[[3]](https://www.britannica.com/money/inflation-economics)",
+          "links": null,
+          "images": [
+            {
+              "type": "images_element",
+              "alt": "Inflation: What It Is and How to Control Inflation Rates",
+              "url": null,
+              "image_url": "https://api.dataforseo.com/cdn/i/05291010-1824-0066-0000-87f1586ac01c:3"
+            }
+          ],
+          "references": [
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Wikipedia",
+              "domain": "en.wikipedia.org",
+              "url": "https://en.wikipedia.org/wiki/Inflation",
+              "title": "Inflation - Wikipedia",
+              "text": "In economics, inflation is an increase in the average price of goods and services in terms of money. This increase is measured using a price index, typically a ..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Tutor2u",
+              "domain": "www.tutor2u.net",
+              "url": "https://www.tutor2u.net/economics/topics/inflation",
+              "title": "Inflation | Topics | Economics - Tutor2u",
+              "text": "Inflation is a sustained rise in an economy'sgeneral price level. This means that, on average, the prices of goods and services are going up over time. As the p..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Britannica",
+              "domain": "www.britannica.com",
+              "url": "https://www.britannica.com/money/inflation-economics",
+              "title": "Inflation | Definition & Major Economic Theories | Britannica Money",
+              "text": "No matter how you define it, inflation pulls down pricing power. © alphaspirit/stock.adobe.com. Key People: Richard Nixon Thomas J. Sargent Abba P. Lerner Edmun..."
+            }
+          ]
+        },
+        {
+          "type": "ai_overview_element",
+          "position": "left",
+          "title": null,
+          "text": "Purchasing Power: As average prices go up, a single unit of currency buys fewer items. If inflation is 3%, a basket of goods that cost £100 last year now costs £103. Inflation Rate: This is the annualized percentage change in a general price index (e.g., the Consumer Price Index, or CPI). It indicates how quickly prices are rising. Deflation: The exact opposite of inflation; a sustained decrease in the general price level of goods and services. Disinflation: A situation where the rate of inflation is slowing down. Even if the inflation rate drops, overall prices may still be increasing, just at a slower pace than before.",
+          "markdown": "- **Purchasing Power:** As average prices go up, a single unit of currency buys fewer items. If inflation is 3%, a basket of goods that cost £100 last year now costs £103.[[1]](https://www.bbc.co.uk/bitesize/guides/zrwtmfr/revision/5)[[2]](https://www.bankofengland.co.uk/monetary-policy/inflation)\n- **Inflation Rate:** This is the annualized percentage change in a general price index (e.g., the Consumer Price Index, or CPI). It indicates how quickly prices are rising.[[1]](https://www.bankofengland.co.uk/explainers/what-is-inflation)[[2]](https://en.wikipedia.org/wiki/Inflation)\n- **Deflation:** The exact opposite of inflation; a sustained decrease in the general price level of goods and services.[[1]](https://en.wikipedia.org/wiki/Inflation)\n- **Disinflation:** A situation where the *rate* of inflation is slowing down. Even if the inflation rate drops, overall prices may still be increasing, just at a slower pace than before.[[1]](https://www.ons.gov.uk/aboutus/usingpublicdatatoproducestatistics/learningaboutdata/learnmoreaboutwhoweareandwhatwedo/whatisinflationandhowdowecalculateit)[[2]](https://en.wikipedia.org/wiki/Inflation)",
+          "links": null,
+          "images": null,
+          "references": [
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "BBC",
+              "domain": "www.bbc.co.uk",
+              "url": "https://www.bbc.co.uk/bitesize/guides/zrwtmfr/revision/5",
+              "title": "Inflation - The economy and business - Edexcel - GCSE ... - BBC",
+              "text": "Inflation * Inflation refers to a general and sustained increase in prices over time. It is measured using an index close indexA measure or indicator that is us..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Bank of England",
+              "domain": "www.bankofengland.co.uk",
+              "url": "https://www.bankofengland.co.uk/monetary-policy/inflation",
+              "title": "Inflation and the 2% target - Bank of England",
+              "text": "What is inflation? Inflation is a measure of how much the prices of goods (such as food or televisions) and services (such as haircuts or train tickets) have go..."
+            }
+          ]
+        },
+        {
+          "type": "ai_overview_element",
+          "position": "left",
+          "title": null,
+          "text": "Demand-Pull: Occurs when the overall demand for goods and services outpaces the economy's ability to produce them, driving up prices. Cost-Push: Happens when the cost of producing goods and services increases (e.g., higher wages, more expensive raw materials), and businesses raise their prices to maintain their profit margins. Money Supply Growth: When there is an increase in the volume of money and credit in an economy, money can lose its relative value.",
+          "markdown": "- **Demand-Pull:** Occurs when the overall demand for goods and services outpaces the economy's ability to produce them, driving up prices.\n- **Cost-Push:** Happens when the cost of producing goods and services increases (e.g., higher wages, more expensive raw materials), and businesses raise their prices to maintain their profit margins.\n- **Money Supply Growth:** When there is an increase in the volume of money and credit in an economy, money can lose its relative value.[[1]](https://www.merriam-webster.com/dictionary/inflation)[[2]](https://www.blackrock.com/us/individual/education/inflation)[[3]](https://www.xero.com/uk/glossary/inflation/)[[4]](https://www.britannica.com/money/inflation-economics)[[5]](https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-inflation)",
+          "links": null,
+          "images": null,
+          "references": [
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Merriam-Webster",
+              "domain": "www.merriam-webster.com",
+              "url": "https://www.merriam-webster.com/dictionary/inflation",
+              "title": "INFLATION Definition & Meaning - Merriam-Webster",
+              "text": "noun * : an act of inflating : a state of being inflated: such as. * a. : distension. * b. : a hypothetical extremely brief period of very rapid expansion of th..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "www.blackrock.com",
+              "domain": "www.blackrock.com",
+              "url": "https://www.blackrock.com/us/individual/education/inflation",
+              "title": "What is Inflation? - BlackRock",
+              "text": "What is a simple definition of inflation? Inflation is the rate of change in prices over time. When prices increase, purchasing power decreases, meaning your mo..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Xero",
+              "domain": "www.xero.com",
+              "url": "https://www.xero.com/uk/glossary/inflation/",
+              "title": "What is Inflation? | Definition - Xero",
+              "text": "Inflation is the rate of increase in prices over time. It is calculated based on the average price changes of selected goods and services. Inflation results fro..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Britannica",
+              "domain": "www.britannica.com",
+              "url": "https://www.britannica.com/money/inflation-economics",
+              "title": "Inflation | Definition & Major Economic Theories | Britannica Money",
+              "text": "No matter how you define it, inflation pulls down pricing power. © alphaspirit/stock.adobe.com. Key People: Richard Nixon Thomas J. Sargent Abba P. Lerner Edmund S..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "McKinsey & Company",
+              "domain": "www.mckinsey.com",
+              "url": "https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-inflation",
+              "title": "What is inflation: The causes and impact",
+              "text": "In general, there are two primary types, or causes, of short-term inflation: Demand-pull inflation occurs when the demand for goods and services in the economy ..."
+            }
+          ]
+        },
+        {
+          "type": "ai_overview_element",
+          "position": "left",
+          "title": null,
+          "text": "Bureau of Labor Statistics",
+          "markdown": "Governments use baskets of typical household goods and services to track these price shifts over time. You can view current inflation data, economic metrics, and tracking tools through major national statistics agencies like the Office for National Statistics in the UK, the Bureau of Labor Statistics in the US, or central banks like the [Bank of England](https://www.bankofengland.co.uk/monetary-policy/inflation).[[1]](https://publications.parliament.uk/pa/ld201719/ldselect/ldeconaf/246/24604.htm)[[2]](https://www.bankofengland.co.uk/explainers)[[3]](https://www.rba.gov.au/education/resources/explainers/inflation-and-its-measurement.html)",
+          "links": [
+            {
+              "type": "link_element",
+              "title": "Bank of England",
+              "description": null,
+              "url": "https://www.bankofengland.co.uk/monetary-policy/inflation",
+              "domain": "www.bankofengland.co.uk"
+            }
+          ],
+          "images": null,
+          "references": [
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "UK Parliament",
+              "domain": "publications.parliament.uk",
+              "url": "https://publications.parliament.uk/pa/ld201719/ldselect/ldeconaf/246/24604.htm",
+              "title": "House of Lords - Measuring Inflation - Economic Affairs Committee",
+              "text": "Chapter 1: Consumer price indices The Board of the UK Statistics Authority: responsible for oversight of the statistical system. The Office for National Statist..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Bank of England",
+              "domain": "www.bankofengland.co.uk",
+              "url": "https://www.bankofengland.co.uk/explainers",
+              "title": "Explainers: the economy made simple",
+              "text": "confused? Keep reading. What does the Bank of England do? We are not a high street bank – we are the central bank of the United Kingdom. What is GDP? It is perh..."
+            },
+            {
+              "type": "ai_overview_reference",
+              "position": "left",
+              "source": "Reserve Bank of Australia",
+              "domain": "www.rba.gov.au",
+              "url": "https://www.rba.gov.au/education/resources/explainers/inflation-and-its-measurement.html",
+              "title": "Inflation and its Measurement | Explainer | Education | RBA",
+              "text": "Inflation and its Measurement * How is Inflation Measured? Inflation is an increase in the level of prices of the goods and services that households buy. It is ..."
+            }
+          ]
+        }
+      ],
+      "references": [
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Bank of England",
+          "domain": "www.bankofengland.co.uk",
+          "url": "https://www.bankofengland.co.uk/explainers/what-is-inflation",
+          "title": "What is inflation? | Bank of England",
+          "text": "Inflation is when prices rise and how quickly they do so is called the rate of inflation."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Office for National Statistics",
+          "domain": "www.ons.gov.uk",
+          "url": "https://www.ons.gov.uk/aboutus/usingpublicdatatoproducestatistics/learningaboutdata/learnmoreaboutwhoweareandwhatwedo/whatisinflationandhowdowecalculateit",
+          "title": "What is inflation and how do we calculate it?",
+          "text": "Find out more about what inflation means and how we measure the rate of inflation. Last updated: 3 September 2024. Learn more in our ONS guide to inflation and how..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Wikipedia",
+          "domain": "en.wikipedia.org",
+          "url": "https://en.wikipedia.org/wiki/Inflation",
+          "title": "Inflation - Wikipedia",
+          "text": "In economics, inflation is an increase in the average price of goods and services in terms of money. This increase is measured using a price index, typically a con..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Merriam-Webster",
+          "domain": "www.merriam-webster.com",
+          "url": "https://www.merriam-webster.com/dictionary/inflation",
+          "title": "INFLATION Definition & Meaning - Merriam-Webster",
+          "text": "noun * : an act of inflating : a state of being inflated: such as. * a. : distension. * b. : a hypothetical extremely brief period of very rapid expansion of the u..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "www.blackrock.com",
+          "domain": "www.blackrock.com",
+          "url": "https://www.blackrock.com/us/individual/education/inflation",
+          "title": "What is Inflation? - BlackRock",
+          "text": "What is a simple definition of inflation? Inflation is the rate of change in prices over time. When prices increase, purchasing power decreases, meaning your money..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Tutor2u",
+          "domain": "www.tutor2u.net",
+          "url": "https://www.tutor2u.net/economics/topics/inflation",
+          "title": "Inflation | Topics | Economics - Tutor2u",
+          "text": "Inflation is a sustained rise in an economy'sgeneral price level. This means that, on average, the prices of goods and services are going up over time. As the pric..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Britannica",
+          "domain": "www.britannica.com",
+          "url": "https://www.britannica.com/money/inflation-economics",
+          "title": "Inflation | Definition & Major Economic Theories | Britannica Money",
+          "text": "No matter how you define it, inflation pulls down pricing power. © alphaspirit/stock.adobe.com. Key People: Richard Nixon Thomas J. Sargent Abba P. Lerner Edmund S..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "Xero",
+          "domain": "www.xero.com",
+          "url": "https://www.xero.com/uk/glossary/inflation/",
+          "title": "What is Inflation? | Definition - Xero",
+          "text": "Inflation is the rate of increase in prices over time. It is calculated based on the average price changes of selected goods and services. Inflation results from t..."
+        },
+        {
+          "type": "ai_overview_reference",
+          "position": "right",
+          "source": "BBC",
+          "domain": "www.bbc.co.uk",
+          "url": "https://www.bbc.co.uk/bitesize/guides/zrwtmfr/revision/5",
+          "title": "Inflation - The economy and business - Edexcel - GCSE ... - BBC",
+          "text": "Inflation * Inflation refers to a general and sustained increase in prices over time. It is measured using an index close indexA measure or indicator that is used ..."
+        }
+      ],
+      "rectangle": null
+    },
+    {
+      "type": "people_also_ask",
+      "rank_group": 1,
+      "rank_absolute": 2,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]",
+      "items": [
+        {
+          "type": "people_also_ask_element",
+          "title": "What is inflation in simple words?",
+          "seed_question": null,
+          "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[1]",
+          "expanded_element": [
+            {
+              "type": "people_also_ask_ai_overview_expanded_element",
+              "items": null,
+              "references": null,
+              "asynchronous_ai_overview": true
+            }
+          ]
+        },
+        {
+          "type": "people_also_ask_element",
+          "title": "What is inflation now in the UK?",
+          "seed_question": null,
+          "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[2]",
+          "expanded_element": [
+            {
+              "type": "people_also_ask_ai_overview_expanded_element",
+              "items": null,
+              "references": null,
+              "asynchronous_ai_overview": true
+            }
+          ]
+        },
+        {
+          "type": "people_also_ask_element",
+          "title": "How much is $100 in 2000 worth today?",
+          "seed_question": null,
+          "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[3]",
+          "expanded_element": [
+            {
+              "type": "people_also_ask_ai_overview_expanded_element",
+              "items": null,
+              "references": null,
+              "asynchronous_ai_overview": true
+            }
+          ]
+        },
+        {
+          "type": "people_also_ask_element",
+          "title": "What is the definition of inflation?",
+          "seed_question": null,
+          "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[3]/div[1]/div[2]/div[2]/div[4]",
+          "expanded_element": [
+            {
+              "type": "people_also_ask_ai_overview_expanded_element",
+              "items": null,
+              "references": null,
+              "asynchronous_ai_overview": true
+            }
+          ]
+        }
+      ],
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 1,
+      "rank_absolute": 3,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[5]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.bankofengland.co.uk",
+      "title": "What is inflation?",
+      "url": "https://www.bankofengland.co.uk/explainers/what-is-inflation",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.bankofengland.co.uk",
+      "website_name": "Bank of England",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "Inflation is the measure of the speed of those increases. When prices are rising quickly, it means inflation is high and you can't buy as much with your money.",
+      "pre_snippet": null,
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "Inflation is the measure of the speed of those increases"
+      ],
+      "links": [
+        {
+          "type": "link_element",
+          "title": "How do we know what the rate...",
+          "description": null,
+          "url": "https://www.bankofengland.co.uk/explainers/what-is-inflation#chapter-0",
+          "domain": "www.bankofengland.co.uk"
+        },
+        {
+          "type": "link_element",
+          "title": "What does % mean?",
+          "description": null,
+          "url": "https://www.bankofengland.co.uk/explainers/what-is-inflation#chapter-1",
+          "domain": "www.bankofengland.co.uk"
+        },
+        {
+          "type": "link_element",
+          "title": "How has the rate of inflation...",
+          "description": null,
+          "url": "https://www.bankofengland.co.uk/explainers/what-is-inflation#chapter-2",
+          "domain": "www.bankofengland.co.uk"
+        },
+        {
+          "type": "link_element",
+          "title": "Why is the rate of inflation...",
+          "description": null,
+          "url": "https://www.bankofengland.co.uk/explainers/what-is-inflation#chapter-3",
+          "domain": "www.bankofengland.co.uk"
+        }
+      ],
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": null,
+      "rectangle": null
+    },
+    {
+      "type": "people_also_search",
+      "rank_group": 1,
+      "rank_absolute": 4,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[7]",
+      "title": "People also search for",
+      "items": [
+        "What is inflation in economics",
+        "What is inflation rate",
+        "What is inflation rate, UK",
+        "What is inflation 2025",
+        "How is inflation measured",
+        "What is inflation 2026"
+      ],
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 2,
+      "rank_absolute": 5,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[9]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.federalreserve.gov",
+      "title": "What is inflation, and how does the Federal Reserve evaluate changes ...",
+      "url": "https://www.federalreserve.gov/faqs/economy_14419.htm",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.federalreserve.gov",
+      "website_name": "Federal Reserve (.gov)",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "22 Aug 2025 — Inflation is the increase in the prices of goods and services over time. Inflation cannot be measured by an increase in the cost of one product or service.",
+      "pre_snippet": "08/22/2025 00:00:00",
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "the increase in the prices of goods and services over time"
+      ],
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": "2025-08-22 00:00:00 +00:00",
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 3,
+      "rank_absolute": 6,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[11]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.imf.org",
+      "title": "Inflation: Prices on the Rise",
+      "url": "https://www.imf.org/en/publications/fandd/issues/series/back-to-basics/inflation",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.imf.org",
+      "website_name": "International Monetary Fund | IMF",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "Inflation is the rate of increase in prices over a given period of time. Inflation is typically a broad measure, such as the overall increase in prices or the ...",
+      "pre_snippet": null,
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "Inflation is the rate of increase in prices over a given period of time"
+      ],
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": null,
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 4,
+      "rank_absolute": 7,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[13]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.halifax.co.uk",
+      "title": "What Is Inflation? | Financial Planning",
+      "url": "https://www.halifax.co.uk/financial-planning/managing-your-plan/inflation.html",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.halifax.co.uk",
+      "website_name": "Halifax",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "Inflation is the increase in the price of goods (like clothes or food) and services (like hairdressing or plumbing) over a period of time.",
+      "pre_snippet": null,
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": null,
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": null,
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 5,
+      "rank_absolute": 8,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[15]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "en.wikipedia.org",
+      "title": "Inflation",
+      "url": "https://en.wikipedia.org/wiki/Inflation",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://en.wikipedia.org",
+      "website_name": "Wikipedia",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "In economics, inflation is an increase in the average price of goods and services in terms of money. : 579 This increase is measured using a price index, ...",
+      "pre_snippet": null,
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "an increase in the average price of goods and services in terms of money"
+      ],
+      "links": [
+        {
+          "type": "link_element",
+          "title": "Terminology",
+          "description": null,
+          "url": "https://en.wikipedia.org/wiki/Inflation#Terminology",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "type": "link_element",
+          "title": "History",
+          "description": null,
+          "url": "https://en.wikipedia.org/wiki/Inflation#History",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "type": "link_element",
+          "title": "Measures",
+          "description": null,
+          "url": "https://en.wikipedia.org/wiki/Inflation#Measures",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "type": "link_element",
+          "title": "Causes",
+          "description": null,
+          "url": "https://en.wikipedia.org/wiki/Inflation#Causes",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "type": "link_element",
+          "title": "Effects of inflation",
+          "description": null,
+          "url": "https://en.wikipedia.org/wiki/Inflation#Effects_of_inflation",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": null,
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 6,
+      "rank_absolute": 9,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[17]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.ons.gov.uk",
+      "title": "What is inflation and how do we calculate it?",
+      "url": "https://www.ons.gov.uk/aboutus/usingpublicdatatoproducestatistics/learningaboutdata/learnmoreaboutwhoweareandwhatwedo/whatisinflationandhowdowecalculateit",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.ons.gov.uk",
+      "website_name": "Office for National Statistics",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "3 Sept 2024 — Inflation is a measure of how the prices of goods and services are rising, which can affect people's household finances.",
+      "pre_snippet": "09/03/2024 00:00:00",
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "a measure of how the prices of goods and services are rising"
+      ],
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": "2024-09-03 00:00:00 +00:00",
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 7,
+      "rank_absolute": 10,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[19]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.icaew.com",
+      "title": "Economy explainers: what is inflation?",
+      "url": "https://www.icaew.com/insights/viewpoints-on-the-news/2025/nov-2025/inflation-explained",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.icaew.com",
+      "website_name": "ICAEW.com",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "19 Nov 2025 — What is inflation? Inflation measures how quickly the prices of goods and services are rising over time. For example, if a loaf of bread costs £ ...",
+      "pre_snippet": "11/19/2025 00:00:00",
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "how quickly the prices of goods and services are rising over time"
+      ],
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": "2025-11-19 00:00:00 +00:00",
+      "rectangle": null
+    },
+    {
+      "type": "video",
+      "rank_group": 1,
+      "rank_absolute": 11,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[21]",
+      "items": [
+        {
+          "type": "video_element",
+          "source": "Bank of England",
+          "title": "What is inflation?",
+          "timestamp": "2023-09-22 00:00:00 +00:00",
+          "url": "https://www.youtube.com/watch?v=abdq4p2HaJo"
+        },
+        {
+          "type": "video_element",
+          "source": "IMF",
+          "title": "What is Inflation? | Ask an Economist",
+          "timestamp": "2022-06-11 00:00:00 +00:00",
+          "url": "https://www.youtube.com/watch?v=F0VaaZdH1x0"
+        },
+        {
+          "type": "video_element",
+          "source": "Business School 101",
+          "title": "What is Inflation? Macroeconomics | From A Business Professor",
+          "timestamp": "2024-12-16 00:00:00 +00:00",
+          "url": "https://www.youtube.com/watch?v=mifIdYnZW2s"
+        }
+      ],
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 8,
+      "rank_absolute": 12,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[23]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.equifax.com",
+      "title": "What Is Inflation: How it Works & How to Beat it",
+      "url": "https://www.equifax.com/personal/education/personal-finance/articles/-/learn/what-is-inflation/",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.equifax.com",
+      "website_name": "Equifax",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "Inflation occurs when the prices of goods and services increase over a long period of time, causing your purchasing power, or the amount of goods and services ...",
+      "pre_snippet": null,
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": null,
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": null,
+      "rectangle": null
+    },
+    {
+      "type": "organic",
+      "rank_group": 9,
+      "rank_absolute": 13,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[3]/div[1]/div[1]/div[25]/div[1]/div[1]/div[1]/div[1]",
+      "domain": "www.blackrock.com",
+      "title": "What is Inflation? - BlackRock",
+      "url": "https://www.blackrock.com/us/individual/education/inflation",
+      "cache_url": null,
+      "related_search_url": null,
+      "breadcrumb": "https://www.blackrock.com",
+      "website_name": "blackrock.com",
+      "is_image": false,
+      "is_video": false,
+      "is_featured_snippet": false,
+      "is_malicious": false,
+      "is_web_story": false,
+      "description": "Inflation is defined as the rate of change in prices over time. And price increases are correlated with a reduction in purchasing power, which means your money ...",
+      "pre_snippet": null,
+      "extended_snippet": null,
+      "images": null,
+      "amp_version": false,
+      "rating": null,
+      "price": null,
+      "highlighted": [
+        "the rate of change in prices over time"
+      ],
+      "links": null,
+      "faq": null,
+      "extended_people_also_search": [
+        "what is",
+        "what is inflation",
+        "what is inflation",
+        "what is",
+        "how is inflation",
+        "what is",
+        "what is inflation",
+        "what is inflation"
+      ],
+      "about_this_result": null,
+      "related_result": null,
+      "timestamp": null,
+      "rectangle": null
+    },
+    {
+      "type": "people_also_search",
+      "rank_group": 2,
+      "rank_absolute": 14,
+      "page": 1,
+      "position": "left",
+      "xpath": "/html[1]/body[1]/div[4]/div[2]/div[1]/div[12]/div[4]/div[1]/div[3]/div[1]",
+      "title": "People also search for",
+      "items": [
+        "What is inflation this year",
+        "What is inflation uk 2026",
+        "What is inflation in the UK 2025",
+        "What is inflation for kids",
+        "What is inflation and deflation",
+        "Importance of inflation"
+      ],
+      "rectangle": null
+    }
+  ],
+  "se_results_count": 0
+}
