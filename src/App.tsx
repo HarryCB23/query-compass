@@ -10,6 +10,7 @@ import ProjectSelector from "./pages/ProjectSelector";
 import ProjectOverview from "./pages/ProjectOverview";
 import ProjectSettings from "./pages/ProjectSettings";
 import ImportView from "./pages/ImportView";
+import DesignSystem from "./pages/DesignSystem";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,8 @@ const App = () => (
           <Route path="/projects/:projectId" element={<AuthGuard><ProjectOverview /></AuthGuard>} />
           <Route path="/projects/:projectId/settings" element={<AuthGuard><ProjectSettings /></AuthGuard>} />
           <Route path="/projects/:projectId/imports/:importId" element={<AuthGuard><ImportView /></AuthGuard>} />
+          {/* Design system reference — dev only, no auth guard */}
+          <Route path="/design" element={<DesignSystem />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
