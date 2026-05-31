@@ -78,6 +78,67 @@ export function VerticalBarChart({
   )
 }
 
+// ── GroupedVerticalBarChart ───────────────────────────────────────────────────
+// Multiple series, side-by-side bars per label. Colours from caller.
+
+export interface GroupedBarSeries {
+  key:   string
+  name:  string
+  color: string
+}
+
+interface GroupedVerticalBarChartProps {
+  data:            Array<{ label: string; [k: string]: string | number }>
+  series:          GroupedBarSeries[]
+  valueFormatter?: (v: number) => string
+  height?:         number
+  className?:      string
+}
+
+export function GroupedVerticalBarChart({
+  data,
+  series,
+  valueFormatter = (v) => `${v.toFixed(0)}%`,
+  height = 260,
+  className,
+}: GroupedVerticalBarChartProps) {
+  return (
+    <div className={cn('w-full', className)} style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          margin={{ top: 24, right: 4, left: 4, bottom: 0 }}
+          barCategoryGap="30%"
+          barGap={3}
+        >
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter, sans-serif' }}
+          />
+          <YAxis hide />
+          {series.map(s => (
+            <Bar key={s.key} dataKey={s.key} fill={s.color} radius={[3, 3, 0, 0]} isAnimationActive={false}>
+              <LabelList
+                dataKey={s.key}
+                position="top"
+                formatter={valueFormatter}
+                style={{
+                  fontSize: 9,
+                  fill: 'hsl(var(--muted-foreground))',
+                  fontVariantNumeric: 'tabular-nums',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              />
+            </Bar>
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
 // ── DonutChart ────────────────────────────────────────────────────────────────
 // 2+ segment donut. Big center label. Risk slice red, others grey.
 

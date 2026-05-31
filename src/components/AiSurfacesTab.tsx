@@ -1,35 +1,36 @@
+/**
+ * AiSurfacesTab — Phase 6.2c redesign on design system.
+ * Red = AI-driven risk only. All colours via tokens. No ad-hoc colours.
+ *
+ * Panel A — Coverage by category (grouped vertical bar: AIO red, TS dark grey)
+ * Panel B — SERP feature prevalence (KPITiles, category-filtered)
+ * Panel C — Featured Snippet ownership (DonutChart, category-filtered)
+ * Panel D — Top competing domains (bar list, category-filtered)
+ */
 import { useMemo, useState } from 'react'
 import { X } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CategoryBadge } from './CategoryBadge'
+import { MetricCard, KPITile, type DataColumn, DataTable } from '@/components/ui/metric-card'
+import {
+  GroupedVerticalBarChart, DonutChart,
+  RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR,
+  type GroupedBarSeries, type DonutSegment,
+} from '@/components/ui/charts'
 import type { QueryData, QueryCategory } from '@/types/query'
+import { CATEGORY_LABELS } from '@/types/query'
 import type { SerpSnapshotData } from './QueryTable'
 import { cn } from '@/lib/utils'
 
 interface AiSurfacesTabProps {
   classifiedData: QueryData[]
-  serpSnapshots: Map<string, SerpSnapshotData>
-  locationCode: number
+  serpSnapshots:  Map<string, SerpSnapshotData>
+  locationCode:   number
 }
 
 const CATEGORIES: QueryCategory[] = [
   'branded', 'informational', 'news', 'product', 'commercial', 'transactional', 'other',
 ]
 
-function ProgressBar({ value, max, colorClass }: { value: number; max: number; colorClass?: string }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-        <div
-          className={cn('h-full rounded-full transition-all', colorClass ?? 'bg-primary')}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="text-xs font-mono text-muted-foreground w-10 text-right">{pct}%</span>
-    </div>
-  )
-}
+// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationCode: _locationCode }: AiSurfacesTabProps) {
   const [selectedCategory, setSelectedCategory] = useState<QueryCategory | null>(null)
@@ -39,7 +40,6 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     [classifiedData, serpSnapshots],
   )
 
-  // When a category is active, filter all panels to that category's queries.
   const activeQueries = useMemo(
     () => selectedCategory ? enrichedQueries.filter(q => q.category === selectedCategory) : enrichedQueries,
     [enrichedQueries, selectedCategory],
@@ -53,29 +53,39 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     setSelectedCategory(prev => prev === cat ? null : cat)
   }
 
-  // ── Panel 1: AIO coverage by category ────────────────────────────────────
+  // ── Panel A: coverage by category — always unfiltered ─────────────────────
 
-  const aioCoverage = useMemo(() => {
+  const coverageChartData = useMemo(() => {
     return CATEGORIES.map(cat => {
-      const catQueries = enrichedQueries.filter(q => q.category === cat)
-      const withAio   = catQueries.filter(q => serpSnapshots.get(q.query)?.has_ai_overview).length
-      const pubInAio  = catQueries.filter(q => serpSnapshots.get(q.query)?.publisher_in_ai_overview).length
-      return { cat, total: catQueries.length, withAio, pubInAio }
-    }).filter(r => r.total > 0)
+      const catQ  = enrichedQueries.filter(q => q.category === cat)
+      const total = catQ.length
+      if (total === 0) return null
+      const withAio = catQ.filter(q => serpSnapshots.get(q.query)?.has_ai_overview).length
+      const withTS  = catQ.filter(q => serpSnapshots.get(q.query)?.has_top_stories).length
+      return {
+        label: CATEGORY_LABELS[cat].replace('/', '/\u200B'),   // allow line-break on slash
+        aio:   Math.round((withAio / total) * 100),
+        ts:    Math.round((withTS  / total) * 100),
+      }
+    }).filter(Boolean) as Array<{ label: string; aio: number; ts: number }>
   }, [enrichedQueries, serpSnapshots])
 
-  // ── Panel 2: Top Stories coverage ────────────────────────────────────────
+  const coverageSeries: GroupedBarSeries[] = [
+    { key: 'aio', name: 'AI Overview',  color: RISK_COLOR    },
+    { key: 'ts',  name: 'Top Stories',  color: NEUTRAL_COLOR },
+  ]
 
-  const topStoriesCoverage = useMemo(() => {
-    return CATEGORIES.map(cat => {
-      const catQueries = enrichedQueries.filter(q => q.category === cat)
-      const withTS    = catQueries.filter(q => serpSnapshots.get(q.query)?.has_top_stories).length
-      const pubInTS   = catQueries.filter(q => serpSnapshots.get(q.query)?.publisher_in_top_stories).length
-      return { cat, total: catQueries.length, withTS, pubInTS }
-    }).filter(r => r.total > 0)
-  }, [enrichedQueries, serpSnapshots])
+  // ── Panel B: SERP feature prevalence (filtered) ───────────────────────────
 
-  // ── Panel 3: Featured Snippet ownership (filtered) ────────────────────────
+  const serpPrevalence = useMemo(() => {
+    const n   = activeCount
+    const aio = activeQueries.filter(q => serpSnapshots.get(q.query)?.has_ai_overview).length
+    const ts  = activeQueries.filter(q => serpSnapshots.get(q.query)?.has_top_stories).length
+    const fs  = activeQueries.filter(q => serpSnapshots.get(q.query)?.has_featured_snippet).length
+    return { aio, ts, fs, n }
+  }, [activeQueries, serpSnapshots, activeCount])
+
+  // ── Panel C: Featured Snippet ownership (filtered) ────────────────────────
 
   const fsCoverage = useMemo(() => {
     const withFs    = activeQueries.filter(q => serpSnapshots.get(q.query)?.has_featured_snippet)
@@ -84,22 +94,17 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     return { total: withFs.length, pubOwns, competitor }
   }, [activeQueries, serpSnapshots])
 
-  // ── Panel 4: SERP feature prevalence (filtered) ───────────────────────────
+  const fsSegments: DonutSegment[] = useMemo(() => [
+    { value: fsCoverage.pubOwns,    color: NEUTRAL_COLOR, label: 'Publisher owns'  },
+    { value: fsCoverage.competitor, color: RISK_COLOR,    label: 'Competitor owns' },
+  ], [fsCoverage])
 
-  const busyness = useMemo(() => {
-    const features = [
-      { label: 'AI Overview',       key: 'has_ai_overview',       colorClass: 'bg-violet-500' },
-      { label: 'Top Stories',       key: 'has_top_stories',       colorClass: 'bg-orange-500' },
-      { label: 'Featured Snippet',  key: 'has_featured_snippet',  colorClass: 'bg-cyan-500'   },
-    ] as const
-    return features.map(f => ({
-      label: f.label,
-      colorClass: f.colorClass,
-      count: activeQueries.filter(q => (serpSnapshots.get(q.query) as Record<string, unknown>)?.[f.key]).length,
-    }))
-  }, [activeQueries, serpSnapshots])
+  const fsCenterPct = fsCoverage.total > 0
+    ? Math.round((fsCoverage.competitor / fsCoverage.total) * 100)
+    : 0
+  const fsCenterIsCompetitor = fsCoverage.total === 0 || fsCoverage.competitor >= fsCoverage.pubOwns
 
-  // ── Panel 6: Top competing domains (filtered) ─────────────────────────────
+  // ── Panel D: top competing domains (filtered) ─────────────────────────────
 
   const topDomains = useMemo(() => {
     const freq = new Map<string, number>()
@@ -110,14 +115,14 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
         freq.set(d, (freq.get(d) ?? 0) + 1)
       }
     }
-    return [...freq.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 15)
+    return [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15)
   }, [activeQueries, serpSnapshots])
+
+  // ── Empty state ───────────────────────────────────────────────────────────
 
   if (!hasData) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
+      <div className="container py-8 flex flex-col items-center justify-center py-24 text-center gap-3">
         <p className="text-muted-foreground text-sm">No SERP data for this location yet.</p>
         <p className="text-muted-foreground/60 text-xs">
           Use the Enrich SERP button to fetch data, then check back here.
@@ -126,197 +131,144 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     )
   }
 
+  const pct = (n: number, d: number) => d > 0 ? `${Math.round((n / d) * 100)}%` : '0%'
+
   return (
-    <div className="space-y-6">
+    <div className="container py-8 space-y-6">
 
-      {/* Summary row + active filter chip */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <p className="text-xs text-muted-foreground">
-          {selectedCategory
-            ? `${activeCount.toLocaleString()} of ${enrichedCount.toLocaleString()} enriched queries`
-            : `${enrichedCount.toLocaleString()} enriched ${enrichedCount === 1 ? 'query' : 'queries'} of ${classifiedData.length.toLocaleString()} total`
-          }
-        </p>
-        {selectedCategory && (
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border border-border bg-muted hover:bg-muted/80 transition-colors"
-          >
-            Filtered: <CategoryBadge category={selectedCategory} />
-            <X className="w-3 h-3 ml-0.5 text-muted-foreground" />
-          </button>
-        )}
-        {!selectedCategory && (
-          <p className="text-xs text-muted-foreground/60">
-            Click a category row to filter all panels.
-          </p>
-        )}
-      </div>
-
-      {/* Row 1 — category breakdown panels (always show all categories) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Panel 1 – AIO coverage by category */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">AI Overview Coverage by Category</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {aioCoverage.map(({ cat, total, withAio, pubInAio }) => (
-              <div
-                key={cat}
-                onClick={() => toggleCategory(cat)}
-                className={cn(
-                  'space-y-1 rounded-md px-2 py-1.5 cursor-pointer transition-colors',
-                  selectedCategory === cat
-                    ? 'bg-muted ring-1 ring-border'
-                    : 'hover:bg-muted/50',
-                  selectedCategory && selectedCategory !== cat && 'opacity-40',
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <CategoryBadge category={cat} />
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {withAio}/{total}
-                    {pubInAio > 0 && (
-                      <span className="ml-1 text-violet-400">({pubInAio} cited)</span>
-                    )}
-                  </span>
-                </div>
-                <ProgressBar value={withAio} max={total} colorClass="bg-violet-500" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Panel 2 – Top Stories coverage */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Top Stories Coverage by Category</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {topStoriesCoverage.map(({ cat, total, withTS, pubInTS }) => (
-              <div
-                key={cat}
-                onClick={() => toggleCategory(cat)}
-                className={cn(
-                  'space-y-1 rounded-md px-2 py-1.5 cursor-pointer transition-colors',
-                  selectedCategory === cat
-                    ? 'bg-muted ring-1 ring-border'
-                    : 'hover:bg-muted/50',
-                  selectedCategory && selectedCategory !== cat && 'opacity-40',
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <CategoryBadge category={cat} />
-                  <span className="text-xs text-muted-foreground font-mono">
-                    {withTS}/{total}
-                    {pubInTS > 0 && (
-                      <span className="ml-1 text-orange-400">({pubInTS} featured)</span>
-                    )}
-                  </span>
-                </div>
-                <ProgressBar value={withTS} max={total} colorClass="bg-orange-500" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Row 2 — filtered panels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        {/* Panel 3 – Featured Snippet ownership */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Featured Snippet Ownership</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Queries with a Featured Snippet</span>
-              <span className="font-mono">{fsCoverage.total}</span>
+      {/* ── Panel A — coverage by category (unfiltered) ───────────────────── */}
+      <MetricCard title="Coverage by category">
+        {/* Legend */}
+        <div className="flex items-center gap-6 mb-4">
+          {coverageSeries.map(s => (
+            <div key={s.key} className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+              {s.name}
             </div>
-            {fsCoverage.total > 0 && (
-              <>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>Publisher owns</span>
-                    <span className="font-mono text-emerald-400">{fsCoverage.pubOwns}</span>
-                  </div>
-                  <ProgressBar value={fsCoverage.pubOwns} max={fsCoverage.total} colorClass="bg-emerald-500" />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>Competitor owns</span>
-                    <span className="font-mono text-rose-400">{fsCoverage.competitor}</span>
-                  </div>
-                  <ProgressBar value={fsCoverage.competitor} max={fsCoverage.total} colorClass="bg-rose-500" />
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+          ))}
+          <span className="text-xs text-muted-foreground/60 ml-auto">% of enriched queries in each category</span>
+        </div>
+        <GroupedVerticalBarChart data={coverageChartData} series={coverageSeries} />
+      </MetricCard>
 
-        {/* Panel 4 – SERP feature prevalence */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">SERP Feature Prevalence</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {busyness.map(({ label, colorClass, count }) => (
-              <div key={label} className="space-y-1">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{label}</span>
-                  <span className="font-mono">{count} / {activeCount}</span>
-                </div>
-                <ProgressBar value={count} max={activeCount} colorClass={colorClass} />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      {/* ── Category filter (for Panels B, C, D) ─────────────────────────── */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-muted-foreground">Filter B–D:</span>
+        <button
+          onClick={() => setSelectedCategory(null)}
+          className={cn(
+            'px-3 py-1 text-xs rounded-md border transition-colors',
+            selectedCategory === null
+              ? 'bg-foreground text-background border-foreground'
+              : 'bg-background border-border text-muted-foreground hover:text-foreground',
+          )}
+        >
+          All
+        </button>
+        {CATEGORIES.filter(cat => enrichedQueries.some(q => q.category === cat)).map(cat => (
+          <button
+            key={cat}
+            onClick={() => toggleCategory(cat)}
+            className={cn(
+              'px-3 py-1 text-xs rounded-md border transition-colors',
+              selectedCategory === cat
+                ? 'bg-foreground text-background border-foreground'
+                : 'bg-background border-border text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {CATEGORY_LABELS[cat]}
+          </button>
+        ))}
+        <span className="text-xs text-muted-foreground/60">
+          {selectedCategory
+            ? `${activeCount.toLocaleString()} of ${enrichedCount.toLocaleString()} queries`
+            : `${enrichedCount.toLocaleString()} enriched ${enrichedCount === 1 ? 'query' : 'queries'}`}
+        </span>
       </div>
 
-      {/* Row 3 */}
+      {/* ── Panels B + C ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        {/* Panel 5 – Pixel-height placeholder */}
-        <Card className="border-dashed opacity-60">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-muted-foreground">
-              Pixel-Displacement Analysis
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs text-muted-foreground">
-              Coming in Phase 4.5 — measures how far SERP features push organic results below the fold.
-            </p>
-          </CardContent>
-        </Card>
+        {/* Panel B — SERP feature prevalence */}
+        <MetricCard title="SERP feature prevalence">
+          <div className="grid grid-cols-3 gap-4">
+            <KPITile
+              label="AI Overview"
+              value={serpPrevalence.aio.toLocaleString()}
+              caption={`${pct(serpPrevalence.aio, serpPrevalence.n)} of enriched queries`}
+              valueClassName="text-risk"
+            />
+            <KPITile
+              label="Top Stories"
+              value={serpPrevalence.ts.toLocaleString()}
+              caption={`${pct(serpPrevalence.ts, serpPrevalence.n)} of enriched queries`}
+            />
+            <KPITile
+              label="Featured Snippet"
+              value={serpPrevalence.fs.toLocaleString()}
+              caption={`${pct(serpPrevalence.fs, serpPrevalence.n)} of enriched queries`}
+            />
+          </div>
+        </MetricCard>
 
-        {/* Panel 6 – Top competing domains */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Top Competing Domains</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {topDomains.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No organic domain data available.</p>
-            ) : (
-              <div className="space-y-1.5">
-                {topDomains.map(([domain, count]) => (
-                  <div key={domain} className="space-y-0.5">
-                    <div className="flex justify-between text-xs">
-                      <span className="font-mono truncate max-w-[200px]" title={domain}>{domain}</span>
-                      <span className="text-muted-foreground font-mono shrink-0 ml-2">{count}</span>
+        {/* Panel C — Featured Snippet ownership */}
+        <MetricCard title="Featured Snippet ownership">
+          {fsCoverage.total === 0 ? (
+            <p className="text-xs text-muted-foreground py-4 text-center">
+              No Featured Snippets in this selection.
+            </p>
+          ) : (
+            <div className="flex items-center gap-8">
+              <DonutChart
+                segments={fsSegments}
+                centerLabel={fsCenterIsCompetitor ? `${fsCenterPct}%` : `${100 - fsCenterPct}%`}
+                centerSubline={fsCenterIsCompetitor ? 'competitor' : 'publisher'}
+                size={140}
+              />
+              <div className="space-y-3 flex-1">
+                {fsSegments.map(s => {
+                  const count = s.label === 'Publisher owns' ? fsCoverage.pubOwns : fsCoverage.competitor
+                  const p = Math.round((count / fsCoverage.total) * 100)
+                  return (
+                    <div key={s.label} className="flex items-center gap-2 text-sm">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                      <span className="text-muted-foreground flex-1">{s.label}</span>
+                      <span className="font-semibold tabular-nums">{count}</span>
+                      <span className="text-muted-foreground text-xs w-8 text-right">{p}%</span>
                     </div>
-                    <ProgressBar value={count} max={topDomains[0][1]} colorClass="bg-sky-500" />
-                  </div>
-                ))}
+                  )
+                })}
+                <p className="text-[10px] text-muted-foreground/60 pt-1">
+                  of {fsCoverage.total} queries with a Featured Snippet
+                </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+        </MetricCard>
       </div>
+
+      {/* ── Panel D — top competing domains ──────────────────────────────── */}
+      {topDomains.length > 0 && (
+        <MetricCard title="Top competing domains">
+          <div className="space-y-1.5">
+            {topDomains.map(([domain, count]) => {
+              const w = topDomains[0][1] > 0 ? Math.min(100, (count / topDomains[0][1]) * 100) : 0
+              return (
+                <div key={domain} className="space-y-0.5">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-mono truncate max-w-[200px]" title={domain}>{domain}</span>
+                    <span className="text-muted-foreground font-mono shrink-0 ml-2">{count}</span>
+                  </div>
+                  <div className="h-1 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full rounded-full bg-chart-neutral" style={{ width: `${w}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </MetricCard>
+      )}
+
     </div>
   )
 }
