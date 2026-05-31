@@ -1048,12 +1048,51 @@ framed as "right now" (a temporal observation, not a classification). The correc
 observing the flip over time is Phase 6.3 (cross-import trends), where change between
 enrichment snapshots can be visualised honestly.
 
-#### Phase 6.2 candidates (deferred — no immediate trigger)
+### Phase 6.2 — Design system established + applied app-wide ✅ CLOSED
+
+#### Scope shipped
+
+**6.2a — Token foundation**
+- Pure-grey neutral CSS variable system (no coloured shadows, no dark scaffold remnants).
+- Custom tokens: `--risk`, `--tier-high/medium/low`, `--chart-risk/neutral/muted`.
+- Governing rule established: **red = AI-driven risk only.** No green/orange/amber/purple/teal anywhere in the product.
+
+**6.2b — Design system primitives (`/design` route)**
+- `MetricCard`, `HeroNumber`, `TierDot`, `KPITile`, `TrendIndicator` (monochrome, weight encodes magnitude).
+- `VerticalBarChart`, `GroupedVerticalBarChart`, `DonutChart`, `DataTable`.
+- `/design` route is the living style guide. All tab rebuilds reference it.
+
+**6.2c — Applied to all four tabs**
+- **Overview** — rebuilt 6.2b (ref: closed).
+- **Risk Summary** — full rebuild: MetricCard/HeroNumber/KPITile/DataTable/TierDot. Fixed pre-existing hooks-after-early-return violation. No amber/emerald/rose.
+- **AI Surfaces** — full rebuild: Panel A grouped vertical bar (AIO red vs TS dark grey), Panel B KPITiles, Panel C DonutChart FS ownership. Ad-hoc colours removed.
+- **Queries** — restyle: MetricCard+KPITile stats row, MetricCard chart sections, TierDot column, TrendIndicator for Δ cells, monochrome feature dots, no CategoryBadge.
+
+**Opening cleanup**
+- `expires_at` filter removed from `loadSerpSnapshots` — snapshots are point-in-time consultancy records, not perishable live data.
+
+**Colour sweep outcome**
+- `grep -rE "text-(amber|emerald|rose|orange|purple|teal|pink|blue)-[0-9]" src/` → 0 matches.
+- `grep -rE "bg-(amber|emerald|rose|orange|purple|teal|pink|blue)-[0-9]" src/` → 0 matches.
+
+#### Design system reference
+- Primitives: `MetricCard`, `HeroNumber`, `TierDot`, `KPITile`, `TrendIndicator`, `VerticalBarChart`, `GroupedVerticalBarChart`, `DonutChart`, `DataTable`.
+- All in `src/components/ui/metric-card.tsx` and `src/components/ui/charts.tsx`.
+- Token reference: `src/index.css` `:root` block.
+- Living style guide: `/design` route (dev only, no auth guard).
+
+#### Phase 6.2d polish candidates (identified after seeing all four tabs together)
+- QueryTable virtualisation for >1 000 rows (currently paginates at 100).
+- Tier column sortability (added in 6.2c) exposes a UX gap: default sort is by clicks, not risk — may want risk-first default when SERP data is present.
+- `CategoryBadge` is now monochrome; categories are distinguishable by label only. A subtle single-character prefix or icon treatment may aid scanning in the query table.
+- Top competing domains panel in AI Surfaces could benefit from a DataTable treatment for consistency.
+
+#### Phase 6.3 candidates (deferred — no immediate trigger)
 
 - PDF / CSV export of risk analysis for client deliverables.
 - Project-level summary across imports (depends on 6.3 data shape).
 
-#### Phase 6.3 (deferred — blocked on data)
+#### Phase 6.4 (deferred — blocked on data)
 
 - Cross-import aggregation and trend over time.
 - Requires a second GSC import on the same project to test meaningfully.
