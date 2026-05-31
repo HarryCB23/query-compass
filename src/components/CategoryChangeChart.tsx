@@ -1,15 +1,15 @@
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
   ResponsiveContainer,
-  Cell,
-  ReferenceLine
+  ReferenceLine,
 } from 'recharts';
 import type { CategoryStats } from '@/types/query';
 import { CATEGORY_LABELS } from '@/types/query';
+import { NEUTRAL_COLOR } from '@/components/ui/charts';
 
 interface CategoryChangeChartProps {
   stats: CategoryStats[];
@@ -18,9 +18,8 @@ interface CategoryChangeChartProps {
 export function CategoryChangeChart({ stats }: CategoryChangeChartProps) {
   const chartData = stats
     .map(stat => ({
-      category: CATEGORY_LABELS[stat.category],
-      categoryKey: stat.category,
-      change: stat.clicksChangePercent,
+      category:       CATEGORY_LABELS[stat.category],
+      change:         stat.clicksChangePercent,
       absoluteChange: stat.clicksChange,
     }))
     .sort((a, b) => b.change - a.change);
@@ -33,14 +32,14 @@ export function CategoryChangeChart({ stats }: CategoryChangeChartProps) {
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           layout="vertical"
         >
-          <XAxis 
+          <XAxis
             type="number"
             tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `${value > 0 ? '+' : ''}${value.toFixed(0)}%`}
+            tickFormatter={(v) => `${v > 0 ? '+' : ''}${v.toFixed(0)}%`}
           />
-          <YAxis 
+          <YAxis
             type="category"
             dataKey="category"
             tick={{ fontSize: 12, fill: 'hsl(var(--foreground))', fontWeight: 500 }}
@@ -48,39 +47,27 @@ export function CategoryChangeChart({ stats }: CategoryChangeChartProps) {
             axisLine={false}
             width={100}
           />
-          <Tooltip 
+          <Tooltip
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
               border: '1px solid hsl(var(--border))',
-              borderRadius: '12px',
-              boxShadow: '0 4px 12px -2px rgb(0 0 0 / 0.08)',
+              borderRadius: '8px',
               padding: '12px 16px',
             }}
-            labelStyle={{
-              color: 'hsl(var(--foreground))',
-              fontWeight: 600,
-              marginBottom: '4px',
-            }}
-            formatter={(value: number, name: string, props: any) => [
+            labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: '4px' }}
+            formatter={(value: number, _name: string, props: { payload: { absoluteChange: number } }) => [
               `${value > 0 ? '+' : ''}${value.toFixed(1)}% (${props.payload.absoluteChange > 0 ? '+' : ''}${props.payload.absoluteChange.toLocaleString()} clicks)`,
-              'Change'
+              'Change',
             ]}
             cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
           />
           <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={1} />
-          <Bar 
-            dataKey="change" 
+          <Bar
+            dataKey="change"
+            fill={NEUTRAL_COLOR}
             radius={[0, 6, 6, 0]}
             barSize={24}
-          >
-            {chartData.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={entry.change >= 0 ? 'hsl(160, 84%, 39%)' : 'hsl(350, 89%, 60%)'} 
-                fillOpacity={0.9}
-              />
-            ))}
-          </Bar>
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

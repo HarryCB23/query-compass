@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client'
 import { CLASSIFIER_PROMPT_VERSION } from '@/lib/classifierVersion'
 import { classifyQuery } from '@/lib/queryClassifier'
 import { SERP_LOCATIONS, locationLabel } from '@/lib/serpLocations'
-import { StatCard } from '@/components/StatCard'
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart'
 import { CategoryChangeChart } from '@/components/CategoryChangeChart'
 import { CategoryMetricCards } from '@/components/CategoryMetricCards'
@@ -20,8 +19,8 @@ import { QueryTable, type SerpSnapshotData } from '@/components/QueryTable'
 import { CategoryFilter } from '@/components/CategoryFilter'
 import { EntityExplorer } from '@/components/EntityExplorer'
 import { TopShiftingQueries } from '@/components/TopShiftingQueries'
-import { SectionHeader } from '@/components/SectionHeader'
 import AiSurfacesTab from '@/components/AiSurfacesTab'
+import { MetricCard, KPITile, TrendIndicator } from '@/components/ui/metric-card'
 import RiskSummaryTab from '@/components/RiskSummaryTab'
 import OverviewTab from '@/components/OverviewTab'
 import { Button } from '@/components/ui/button'
@@ -33,7 +32,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import {
-  ArrowLeft, BarChart3, TrendingUp, MousePointer, Eye, Search,
+  ArrowLeft, BarChart3, TrendingUp, Search,
   Target, Percent, Users, Filter, Download, Sparkles, Loader2, Globe,
 } from 'lucide-react'
 import { UserMenu } from '@/components/UserMenu'
@@ -676,52 +675,67 @@ export default function ImportView() {
       ) : (
         <main className="container py-8 space-y-8 animate-fade-in">
           {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard title="Total Queries"      value={overallStats.queryCount}              icon={<Search       className="w-5 h-5 text-primary" />} />
-            <StatCard title="Total Clicks"       value={overallStats.totalClicksCurrent}      change={overallStats.clicksChange}      icon={<MousePointer className="w-5 h-5 text-primary" />} />
-            <StatCard title="Total Impressions"  value={overallStats.totalImpressionsCurrent} change={overallStats.impressionsChange}  icon={<Eye          className="w-5 h-5 text-primary" />} />
-            <StatCard title="Biggest Shift"
-              value={CATEGORY_LABELS[[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.category ?? 'other']}
-              change={[...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]?.clicksChangePercent ?? 0}
-              icon={<TrendingUp className="w-5 h-5 text-primary" />}
-            />
-          </div>
+          {(() => {
+            const biggestShift = [...categoryStats].sort((a, b) => Math.abs(b.clicksChangePercent) - Math.abs(a.clicksChangePercent))[0]
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <MetricCard>
+                  <KPITile label="Total Queries" value={overallStats.queryCount.toLocaleString()} />
+                </MetricCard>
+                <MetricCard>
+                  <KPITile
+                    label="Total Clicks"
+                    value={overallStats.totalClicksCurrent.toLocaleString()}
+                    trend={{ value: Math.abs(overallStats.clicksChange), direction: overallStats.clicksChange > 0 ? 'up' : overallStats.clicksChange < 0 ? 'down' : 'neutral' }}
+                  />
+                </MetricCard>
+                <MetricCard>
+                  <KPITile
+                    label="Total Impressions"
+                    value={overallStats.totalImpressionsCurrent.toLocaleString()}
+                    trend={{ value: Math.abs(overallStats.impressionsChange), direction: overallStats.impressionsChange > 0 ? 'up' : overallStats.impressionsChange < 0 ? 'down' : 'neutral' }}
+                  />
+                </MetricCard>
+                <MetricCard>
+                  <KPITile
+                    label="Biggest Shift"
+                    value={CATEGORY_LABELS[biggestShift?.category ?? 'other']}
+                    trend={biggestShift ? { value: Math.abs(biggestShift.clicksChangePercent), direction: biggestShift.clicksChangePercent > 0 ? 'up' : biggestShift.clicksChangePercent < 0 ? 'down' : 'neutral' } : undefined}
+                  />
+                </MetricCard>
+              </div>
+            )
+          })()}
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-6 glass-card">
-              <SectionHeader icon={<BarChart3 className="w-4 h-4" />} title="Clicks by Category" />
+            <MetricCard title="Clicks by Category">
               <CategoryDistributionChart stats={categoryStats} dataKey="clicks" />
-            </div>
-            <div className="p-6 glass-card">
-              <SectionHeader icon={<TrendingUp className="w-4 h-4" />} title="Category Change (% Clicks)" />
+            </MetricCard>
+            <MetricCard title="Category Change (% Clicks)">
               <CategoryChangeChart stats={categoryStats} />
-            </div>
+            </MetricCard>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="p-6 glass-card">
-              <SectionHeader icon={<Target className="w-4 h-4" />} title="Average Position by Category" subtitle="(lower is better)" />
+            <MetricCard title="Average Position by Category">
               <CategoryMetricCards stats={categoryStats} metric="position" />
-            </div>
-            <div className="p-6 glass-card">
-              <SectionHeader icon={<Percent className="w-4 h-4" />} title="CTR by Category" />
+            </MetricCard>
+            <MetricCard title="CTR by Category">
               <CategoryMetricCards stats={categoryStats} metric="ctr" />
-            </div>
+            </MetricCard>
           </div>
 
           {/* Entity explorer */}
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<Users className="w-4 h-4" />} title="News Entity Explorer" subtitle="Click an entity to see performance" />
+          <MetricCard title="News Entity Explorer">
             <EntityExplorer queries={classifiedData} onEntitySelect={(entity, queries) => {
               setEntityFilter(entity); setCategoryFilter('news')
               toast.success(`Filtered to "${entity}" — ${queries.length} queries`)
             }} />
-          </div>
+          </MetricCard>
 
           {/* Category filter */}
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<Filter className="w-4 h-4" />} title="Filter by Category" subtitle={entityFilter ? `Filtered: "${entityFilter}"` : undefined} />
+          <MetricCard title={entityFilter ? `Filter by Category — "${entityFilter}"` : 'Filter by Category'}>
             {entityFilter && (
               <Button variant="ghost" size="sm" onClick={() => setEntityFilter(null)} className="text-xs mb-4">
                 Clear entity filter
@@ -732,30 +746,28 @@ export default function ImportView() {
               onChange={cat => { setCategoryFilter(cat); if (cat !== 'news') setEntityFilter(null) }}
               counts={categoryCounts}
             />
-          </div>
+          </MetricCard>
 
           {selectedCategoryStats && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <CategoryMetricsPanel stats={selectedCategoryStats} />
-              <div className="p-6 glass-card">
-                <SectionHeader icon={<TrendingUp className="w-4 h-4" />} title="Top 20 Shifting Queries" subtitle="by absolute click change" />
+              <MetricCard title="Top 20 Shifting Queries">
                 <div className="max-h-80 overflow-y-auto">
                   <TopShiftingQueries queries={classifiedData} category={categoryFilter as QueryCategory} limit={20} />
                 </div>
-              </div>
+              </MetricCard>
             </div>
           )}
 
           {/* Query table */}
-          <div className="p-6 glass-card">
-            <SectionHeader icon={<Search className="w-4 h-4" />} title="Query Details" subtitle={entityFilter ? `Filtered by "${entityFilter}"` : undefined} />
+          <MetricCard title={entityFilter ? `Query Details — filtered by "${entityFilter}"` : 'Query Details'}>
             <QueryTable
               data={entityFilter ? classifiedData.filter(q => q.query.toLowerCase().includes(entityFilter.toLowerCase())) : classifiedData}
               categoryFilter={categoryFilter}
               onCategoryFilterChange={setCategoryFilter}
               serpSnapshots={serpSnapshots}
             />
-          </div>
+          </MetricCard>
         </main>
       )}
 

@@ -3,26 +3,20 @@ import { ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CategoryBadge } from './CategoryBadge';
+import { TierDot, TrendIndicator } from '@/components/ui/metric-card';
 import type { QueryData, QueryCategory } from '@/types/query';
+import { CATEGORY_LABELS } from '@/types/query';
 import { scoreQuery, type RiskTier } from '@/lib/riskScoring';
 import { cn } from '@/lib/utils';
 
-// Small pill showing classification source — informative but visually quiet.
+// Classification source badge — informative metadata, not a risk signal.
 function SourceBadge({ source }: { source: QueryData['classificationSource'] }) {
   if (!source) {
     return <span className="text-[10px] font-mono text-muted-foreground/40 select-none" title="Not yet classified">~</span>
   }
-  if (source === 'pattern') {
-    return (
-      <span className="inline-flex items-center text-[10px] font-mono text-muted-foreground/60 border border-border/60 rounded px-1 leading-4 select-none">
-        pat
-      </span>
-    )
-  }
   return (
-    <span className="inline-flex items-center text-[10px] font-mono text-violet-400 border border-violet-500/30 rounded px-1 leading-4 select-none">
-      AI
+    <span className="inline-flex items-center text-[10px] font-mono text-muted-foreground/60 border border-border/60 rounded px-1 leading-4 select-none">
+      {source === 'pattern' ? 'pat' : 'AI'}
     </span>
   )
 }
@@ -43,20 +37,33 @@ export interface SerpSnapshotData {
   top_organic_domains: string[]
 }
 
+// Feature presence dot — variant controls colour.
+function SerpDot({ value, variant = 'neutral' }: { value: boolean; variant?: 'risk' | 'neutral' }) {
+  return (
+    <span className={cn(
+      'inline-block w-2 h-2 rounded-full',
+      value
+        ? variant === 'risk' ? 'bg-risk' : 'bg-chart-neutral'
+        : 'bg-muted-foreground/20',
+    )} />
+  )
+}
+
 interface QueryTableProps {
   data: QueryData[];
   categoryFilter?: QueryCategory | 'all';
   onCategoryFilterChange?: (category: QueryCategory | 'all') => void;
-  // keyed by query_text; when present + non-empty, SERP columns are shown
   serpSnapshots?: Map<string, SerpSnapshotData>;
 }
 
-type SortKey = 'query' | 'clicksCurrent' | 'clicksChange' | 'impressionsCurrent' | 'impressionsChange' | 'category' | 'estLost';
+type SortKey =
+  | 'query' | 'clicksCurrent' | 'clicksChange'
+  | 'impressionsCurrent' | 'impressionsChange'
+  | 'category' | 'tier' | 'estLost';
 type SortDirection = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 100;
 
-// Relative age: "2h ago", "3d ago", etc.
 function ageLabel(capturedAt: string): string {
   const diffMs = Date.now() - new Date(capturedAt).getTime()
   const h = Math.floor(diffMs / 3_600_000)
@@ -64,34 +71,12 @@ function ageLabel(capturedAt: string): string {
   return `${Math.floor(h / 24)}d ago`
 }
 
-// Tier chip for risk column
-function TierBadge({ tier }: { tier: RiskTier }) {
-  return (
-    <span className={cn(
-      'inline-flex items-center rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide',
-      tier === 'high'   && 'bg-rose-500/15 text-rose-400',
-      tier === 'medium' && 'bg-amber-500/15 text-amber-400',
-      tier === 'low'    && 'bg-emerald-500/15 text-emerald-400',
-    )}>
-      {tier === 'high' ? 'AIO' : tier === 'medium' ? 'rich' : 'low'}
-    </span>
-  )
-}
+const TIER_ORDER: Record<RiskTier, number> = { high: 0, medium: 1, low: 2 }
 
-// Feature pill: filled dot = true, empty = false
-function SerpBool({ value }: { value: boolean }) {
-  return (
-    <span className={cn(
-      'inline-block w-2 h-2 rounded-full',
-      value ? 'bg-emerald-500' : 'bg-muted-foreground/20',
-    )} />
-  )
-}
-
-export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChange, serpSnapshots }: QueryTableProps) {
-  const [sortKey, setSortKey] = useState<SortKey>('clicksCurrent');
+export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChange: _onCatChange, serpSnapshots }: QueryTableProps) {
+  const [sortKey, setSortKey]           = useState<SortKey>('clicksCurrent');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm]     = useState('');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   const showSerp = !!serpSnapshots && serpSnapshots.size > 0;
@@ -109,11 +94,8 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
     let result = [...data];
 
     if (searchTerm) {
-      result = result.filter(q =>
-        q.query.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      result = result.filter(q => q.query.toLowerCase().includes(searchTerm.toLowerCase()));
     }
-
     if (categoryFilter !== 'all') {
       result = result.filter(q => q.category === categoryFilter);
     }
@@ -121,16 +103,22 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
     result.sort((a, b) => {
       let comparison = 0;
       switch (sortKey) {
-        case 'query':           comparison = a.query.localeCompare(b.query); break;
-        case 'clicksCurrent':   comparison = a.clicksCurrent - b.clicksCurrent; break;
-        case 'clicksChange':    comparison = a.clicksChangePercent - b.clicksChangePercent; break;
+        case 'query':              comparison = a.query.localeCompare(b.query); break;
+        case 'clicksCurrent':      comparison = a.clicksCurrent - b.clicksCurrent; break;
+        case 'clicksChange':       comparison = a.clicksChangePercent - b.clicksChangePercent; break;
         case 'impressionsCurrent': comparison = a.impressionsCurrent - b.impressionsCurrent; break;
         case 'impressionsChange':  comparison = a.impressionsChangePercent - b.impressionsChangePercent; break;
-        case 'category':        comparison = a.category.localeCompare(b.category); break;
+        case 'category':           comparison = a.category.localeCompare(b.category); break;
+        case 'tier': {
+          const tA = serpSnapshots ? scoreQuery(serpSnapshots.get(a.query) ?? null, a.clicksCurrent, a.clicksPrevious).tier : 'low';
+          const tB = serpSnapshots ? scoreQuery(serpSnapshots.get(b.query) ?? null, b.clicksCurrent, b.clicksPrevious).tier : 'low';
+          comparison = TIER_ORDER[tA] - TIER_ORDER[tB];
+          break;
+        }
         case 'estLost': {
-          const lostA = serpSnapshots ? scoreQuery(serpSnapshots.get(a.query) ?? null, a.clicksCurrent, a.clicksPrevious).estLostCurrent : 0;
-          const lostB = serpSnapshots ? scoreQuery(serpSnapshots.get(b.query) ?? null, b.clicksCurrent, b.clicksPrevious).estLostCurrent : 0;
-          comparison = lostA - lostB;
+          const lA = serpSnapshots ? scoreQuery(serpSnapshots.get(a.query) ?? null, a.clicksCurrent, a.clicksPrevious).estLostCurrent : 0;
+          const lB = serpSnapshots ? scoreQuery(serpSnapshots.get(b.query) ?? null, b.clicksCurrent, b.clicksPrevious).estLostCurrent : 0;
+          comparison = lA - lB;
           break;
         }
       }
@@ -143,34 +131,19 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
     if (sortKey !== columnKey) return <ArrowUpDown className="w-4 h-4 text-muted-foreground/50" />;
     return sortDirection === 'asc'
-      ? <ArrowUp className="w-4 h-4 text-primary" />
-      : <ArrowDown className="w-4 h-4 text-primary" />;
-  };
-
-  const formatChange = (change: number, isPercent: boolean = false) => {
-    const prefix = change > 0 ? '+' : '';
-    const suffix = isPercent ? '%' : '';
-    const value = isPercent ? change.toFixed(1) : change.toLocaleString();
-    return (
-      <span className={cn(
-        change > 0 && 'change-positive',
-        change < 0 && 'change-negative',
-        change === 0 && 'change-neutral'
-      )}>
-        {prefix}{value}{suffix}
-      </span>
-    );
+      ? <ArrowUp className="w-4 h-4 text-foreground" />
+      : <ArrowDown className="w-4 h-4 text-foreground" />;
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search queries..."
+            placeholder="Search queries…"
             className="pl-10"
           />
         </div>
@@ -179,38 +152,41 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
         </p>
       </div>
 
-      <div className="overflow-x-auto border rounded-xl">
-        <table className="data-table">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('query')}>
+      <div className="overflow-x-auto border border-border rounded-lg">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/50">
+              <th className="text-left font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('query')}>
                 <div className="flex items-center gap-2">Query <SortIcon columnKey="query" /></div>
               </th>
-              <th className="cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('category')}>
+              <th className="text-left font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('category')}>
                 <div className="flex items-center gap-2">Category <SortIcon columnKey="category" /></div>
               </th>
-              <th className="cursor-pointer hover:bg-muted transition-colors text-right" onClick={() => handleSort('clicksCurrent')}>
+              <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('clicksCurrent')}>
                 <div className="flex items-center justify-end gap-2">Clicks <SortIcon columnKey="clicksCurrent" /></div>
               </th>
-              <th className="cursor-pointer hover:bg-muted transition-colors text-right" onClick={() => handleSort('clicksChange')}>
+              <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('clicksChange')}>
                 <div className="flex items-center justify-end gap-2">Δ Clicks <SortIcon columnKey="clicksChange" /></div>
               </th>
-              <th className="cursor-pointer hover:bg-muted transition-colors text-right" onClick={() => handleSort('impressionsCurrent')}>
+              <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('impressionsCurrent')}>
                 <div className="flex items-center justify-end gap-2">Impressions <SortIcon columnKey="impressionsCurrent" /></div>
               </th>
-              <th className="cursor-pointer hover:bg-muted transition-colors text-right" onClick={() => handleSort('impressionsChange')}>
+              <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('impressionsChange')}>
                 <div className="flex items-center justify-end gap-2">Δ Impr. <SortIcon columnKey="impressionsChange" /></div>
               </th>
               {showSerp && (
                 <>
-                  <th className="cursor-pointer hover:bg-muted transition-colors text-right" onClick={() => handleSort('estLost')}>
-                    <div className="flex items-center justify-end gap-2 text-xs">Est. Lost <SortIcon columnKey="estLost" /></div>
+                  <th className="text-left font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('tier')}>
+                    <div className="flex items-center gap-2">Tier <SortIcon columnKey="tier" /></div>
                   </th>
-                  <th className="text-center text-xs">AIO</th>
-                  <th className="text-center text-xs">Top Stories</th>
-                  <th className="text-center text-xs">Feat. Snippet</th>
-                  <th className="text-right text-xs">Org. Pos.</th>
-                  <th className="text-right text-xs">Age</th>
+                  <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors" onClick={() => handleSort('estLost')}>
+                    <div className="flex items-center justify-end gap-2">Est. Lost <SortIcon columnKey="estLost" /></div>
+                  </th>
+                  <th className="text-center font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider">AIO</th>
+                  <th className="text-center font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider">Top Stories</th>
+                  <th className="text-center font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider">Feat. Snippet</th>
+                  <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider">Org. Pos.</th>
+                  <th className="text-right font-medium text-muted-foreground p-3 text-xs uppercase tracking-wider">Age</th>
                 </>
               )}
             </tr>
@@ -218,61 +194,70 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
           <tbody>
             {filteredAndSortedData.slice(0, visibleCount).map((row, index) => {
               const snap = serpSnapshots?.get(row.query)
+              const rs   = showSerp ? scoreQuery(snap ?? null, row.clicksCurrent, row.clicksPrevious) : null
               return (
-                <tr key={index} className="animate-fade-in" style={{ animationDelay: `${Math.min(index, 20) * 10}ms` }}>
-                  <td className="font-medium max-w-xs truncate">{row.query}</td>
-                  <td>
+                <tr key={index} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                  <td className="p-3 font-medium max-w-xs truncate">{row.query}</td>
+                  <td className="p-3">
                     <div className="flex items-center gap-1.5">
                       {row.classificationReasoning ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="cursor-help"><CategoryBadge category={row.category} /></span>
+                            <span className="cursor-help text-sm text-foreground">{CATEGORY_LABELS[row.category]}</span>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs text-xs">
                             {row.classificationReasoning}
                           </TooltipContent>
                         </Tooltip>
                       ) : (
-                        <CategoryBadge category={row.category} />
+                        <span className="text-sm text-foreground">{CATEGORY_LABELS[row.category]}</span>
                       )}
                       <SourceBadge source={row.classificationSource} />
                     </div>
                   </td>
-                  <td className="text-right font-mono">{row.clicksCurrent.toLocaleString()}</td>
-                  <td className="text-right font-mono">{formatChange(row.clicksChangePercent, true)}</td>
-                  <td className="text-right font-mono">{row.impressionsCurrent.toLocaleString()}</td>
-                  <td className="text-right font-mono">{formatChange(row.impressionsChangePercent, true)}</td>
-                  {showSerp && (() => {
-                    const rs = scoreQuery(snap ?? null, row.clicksCurrent, row.clicksPrevious)
-                    return (
-                      <td className="text-right">
+                  <td className="p-3 text-right font-mono">{row.clicksCurrent.toLocaleString()}</td>
+                  <td className="p-3 text-right">
+                    <TrendIndicator
+                      value={Math.abs(row.clicksChangePercent)}
+                      direction={row.clicksChangePercent > 0 ? 'up' : row.clicksChangePercent < 0 ? 'down' : 'neutral'}
+                    />
+                  </td>
+                  <td className="p-3 text-right font-mono">{row.impressionsCurrent.toLocaleString()}</td>
+                  <td className="p-3 text-right">
+                    <TrendIndicator
+                      value={Math.abs(row.impressionsChangePercent)}
+                      direction={row.impressionsChangePercent > 0 ? 'up' : row.impressionsChangePercent < 0 ? 'down' : 'neutral'}
+                    />
+                  </td>
+                  {showSerp && rs && (
+                    <>
+                      {/* Tier */}
+                      <td className="p-3">
+                        {rs.scored ? <TierDot tier={rs.tier} /> : <span className="text-muted-foreground/30 text-xs">—</span>}
+                      </td>
+                      {/* Est. Lost */}
+                      <td className="p-3 text-right">
                         {rs.scored ? (
-                          <div className="flex items-center justify-end gap-1">
-                            <TierBadge tier={rs.tier} />
-                            {rs.estLostCurrent > 0 && (
-                              <span className={cn(
-                                'font-mono text-xs',
-                                rs.tier === 'high' ? 'text-rose-400' : 'text-amber-400',
-                              )}>
-                                ~{Math.round(rs.estLostCurrent).toLocaleString()}
-                              </span>
-                            )}
-                          </div>
+                          <span className={cn(
+                            'font-mono text-xs',
+                            rs.tier === 'high'   ? 'text-risk font-semibold'
+                            : rs.tier === 'medium' ? 'text-foreground'
+                            : 'text-muted-foreground/50',
+                          )}>
+                            {rs.estLostCurrent > 0
+                              ? `~${Math.round(rs.estLostCurrent).toLocaleString()}`
+                              : '—'}
+                          </span>
                         ) : (
                           <span className="text-muted-foreground/30 text-xs">—</span>
                         )}
                       </td>
-                    )
-                  })()}
-                  {showSerp && (
-                    <>
-                      <td className="text-center">
+                      {/* AIO */}
+                      <td className="p-3 text-center">
                         {snap ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="cursor-default">
-                                <SerpBool value={snap.has_ai_overview} />
-                              </span>
+                              <span className="cursor-default"><SerpDot value={snap.has_ai_overview} variant="risk" /></span>
                             </TooltipTrigger>
                             {snap.has_ai_overview && (
                               <TooltipContent className="text-xs">
@@ -282,13 +267,12 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
                           </Tooltip>
                         ) : <span className="text-muted-foreground/30 text-xs">—</span>}
                       </td>
-                      <td className="text-center">
+                      {/* Top Stories */}
+                      <td className="p-3 text-center">
                         {snap ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="cursor-default">
-                                <SerpBool value={snap.has_top_stories} />
-                              </span>
+                              <span className="cursor-default"><SerpDot value={snap.has_top_stories} /></span>
                             </TooltipTrigger>
                             {snap.has_top_stories && (
                               <TooltipContent className="text-xs">
@@ -298,13 +282,12 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
                           </Tooltip>
                         ) : <span className="text-muted-foreground/30 text-xs">—</span>}
                       </td>
-                      <td className="text-center">
+                      {/* Featured Snippet */}
+                      <td className="p-3 text-center">
                         {snap ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="cursor-default">
-                                <SerpBool value={snap.has_featured_snippet} />
-                              </span>
+                              <span className="cursor-default"><SerpDot value={snap.has_featured_snippet} /></span>
                             </TooltipTrigger>
                             {snap.has_featured_snippet && (
                               <TooltipContent className="text-xs">
@@ -318,12 +301,14 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
                           </Tooltip>
                         ) : <span className="text-muted-foreground/30 text-xs">—</span>}
                       </td>
-                      <td className="text-right font-mono text-xs">
+                      {/* Org. Pos. */}
+                      <td className="p-3 text-right font-mono text-xs">
                         {snap
                           ? (snap.publisher_organic_position ?? <span className="text-muted-foreground/40">—</span>)
                           : <span className="text-muted-foreground/30">—</span>}
                       </td>
-                      <td className="text-right font-mono text-xs text-muted-foreground">
+                      {/* Age */}
+                      <td className="p-3 text-right font-mono text-xs text-muted-foreground">
                         {snap ? ageLabel(snap.captured_at) : <span className="text-muted-foreground/30">—</span>}
                       </td>
                     </>
