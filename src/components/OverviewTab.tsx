@@ -184,7 +184,7 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
 
   // ── Empty state ────────────────────────────────────────────────────────────
 
-  if (coverage.scored === 0) {
+  if (serpSnapshots.size === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
         <p className="text-muted-foreground text-sm">No SERP data enriched yet.</p>
