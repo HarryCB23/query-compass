@@ -100,7 +100,6 @@ export default function ImportView() {
       'publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet',
       'publisher_organic_position,publisher_in_organic_top_3,top_organic_domains',
     ].join(',')
-    const now = new Date().toISOString()
     let from = 0
 
     while (true) {
@@ -108,7 +107,6 @@ export default function ImportView() {
         .from('serp_snapshots')
         .select(COLS)
         .eq('location_code', loc)
-        .gt('expires_at', now)
         .range(from, from + PAGE - 1)
 
       if (!data || data.length === 0) break
