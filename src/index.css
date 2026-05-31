@@ -161,23 +161,23 @@
   }
 
   .category-news {
-    @apply bg-amber-100 text-amber-800 border border-amber-200;
+    @apply bg-muted text-muted-foreground border border-border;
   }
 
   .category-product {
-    @apply bg-emerald-100 text-emerald-800 border border-emerald-200;
+    @apply bg-muted text-muted-foreground border border-border;
   }
 
   .category-commercial {
-    @apply bg-violet-100 text-violet-800 border border-violet-200;
+    @apply bg-muted text-muted-foreground border border-border;
   }
 
   .category-transactional {
-    @apply bg-rose-100 text-rose-800 border border-rose-200;
+    @apply bg-muted text-muted-foreground border border-border;
   }
 
   .category-other {
-    @apply bg-slate-100 text-slate-700 border border-slate-200;
+    @apply bg-muted text-muted-foreground border border-border;
   }
 
   .upload-zone {
@@ -209,32 +209,15 @@
   }
 
   .change-positive {
-    @apply text-emerald-600 font-medium;
+    @apply text-foreground font-medium;
   }
 
   .change-negative {
-    @apply text-rose-500 font-medium;
+    @apply text-muted-foreground font-medium;
   }
 
   .change-neutral {
     @apply text-muted-foreground;
-  }
-
-  /* Entity heatmap rows */
-  .entity-row {
-    @apply flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer;
-  }
-
-  .entity-row-rising {
-    @apply bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-100/50;
-  }
-
-  .entity-row-stable {
-    @apply bg-slate-50/80 hover:bg-slate-100/80 border border-slate-100/50;
-  }
-
-  .entity-row-declining {
-    @apply bg-rose-50/80 hover:bg-rose-100/80 border border-rose-100/50;
   }
 
   /* Eyebrow label */
