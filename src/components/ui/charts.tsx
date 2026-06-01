@@ -139,6 +139,63 @@ export function GroupedVerticalBarChart({
   )
 }
 
+// ── HorizontalBarChart ────────────────────────────────────────────────────────
+// Horizontal bars (layout="vertical" in recharts). Long labels on Y-axis.
+// Values shown inside/end of bar. Good when one category dominates.
+
+interface HorizontalBarChartProps {
+  data: BarDatum[]
+  valueFormatter?: (v: number) => string
+  barColor?: string
+  height?: number
+  className?: string
+}
+
+export function HorizontalBarChart({
+  data,
+  valueFormatter = (v) => v.toLocaleString(),
+  barColor = RISK_COLOR,
+  height,
+  className,
+}: HorizontalBarChartProps) {
+  const autoHeight = Math.max(120, data.length * 38)
+  return (
+    <div className={cn('w-full', className)} style={{ height: height ?? autoHeight }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ top: 0, right: 56, left: 8, bottom: 0 }}
+          barCategoryGap="25%"
+        >
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            width={96}
+            tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))', fontFamily: 'Inter, sans-serif' }}
+          />
+          <Bar dataKey="value" fill={barColor} radius={[0, 3, 3, 0]} isAnimationActive={false}>
+            <LabelList
+              dataKey="value"
+              position="right"
+              formatter={valueFormatter}
+              style={{
+                fontSize: 11,
+                fill: 'hsl(var(--muted-foreground))',
+                fontVariantNumeric: 'tabular-nums',
+                fontFamily: 'Inter, sans-serif',
+              }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
 // ── DonutChart ────────────────────────────────────────────────────────────────
 // 2+ segment donut. Big center label. Risk slice red, others grey.
 

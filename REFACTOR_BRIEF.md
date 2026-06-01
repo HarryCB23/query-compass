@@ -1071,12 +1071,17 @@ enrichment snapshots can be visualised honestly.
 **Opening cleanup**
 - `expires_at` filter removed from `loadSerpSnapshots` — snapshots are point-in-time consultancy records, not perishable live data.
 
+**6.2 sign-off refinements**
+- AI Surfaces category filter label changed from placeholder "Filter B–D:" to "Filter by category:".
+- Overview "Risk by category" chart switched from vertical (`VerticalBarChart`) to horizontal (`HorizontalBarChart`, new primitive) — auto-height from row count, full `CATEGORY_LABELS` on Y-axis, prevents News from crowding out smaller categories on the value axis.
+- `HorizontalBarChart` added to `charts.tsx` (recharts `layout="vertical"`, Y-axis labels, right-side value `LabelList`, auto-height).
+
 **Colour sweep outcome**
 - `grep -rE "text-(amber|emerald|rose|orange|purple|teal|pink|blue)-[0-9]" src/` → 0 matches.
 - `grep -rE "bg-(amber|emerald|rose|orange|purple|teal|pink|blue)-[0-9]" src/` → 0 matches.
 
 #### Design system reference
-- Primitives: `MetricCard`, `HeroNumber`, `TierDot`, `KPITile`, `TrendIndicator`, `VerticalBarChart`, `GroupedVerticalBarChart`, `DonutChart`, `DataTable`.
+- Primitives: `MetricCard`, `HeroNumber`, `TierDot`, `KPITile`, `TrendIndicator`, `VerticalBarChart`, `HorizontalBarChart`, `GroupedVerticalBarChart`, `DonutChart`, `DataTable`.
 - All in `src/components/ui/metric-card.tsx` and `src/components/ui/charts.tsx`.
 - Token reference: `src/index.css` `:root` block.
 - Living style guide: `/design` route (dev only, no auth guard).

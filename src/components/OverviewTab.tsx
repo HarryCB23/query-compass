@@ -10,7 +10,7 @@
 import { useMemo } from 'react'
 import { CategoryBadge } from './CategoryBadge'
 import { MetricCard, HeroNumber, TierDot, KPITile, DataTable, type DataColumn } from '@/components/ui/metric-card'
-import { VerticalBarChart, RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR } from '@/components/ui/charts'
+import { HorizontalBarChart, RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR } from '@/components/ui/charts'
 import type { QueryData, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import type { SerpSnapshotData } from './QueryTable'
@@ -131,7 +131,7 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
 
   const barChartData = useMemo(() =>
     catRows.map(({ cat, agg }) => ({
-      label: CAT_SHORT[cat],
+      label: CATEGORY_LABELS[cat],
       value: Math.round(agg.buckets.high.estLostClicks + agg.buckets.medium.estLostClicks),
       cat,
     })),
@@ -384,11 +384,10 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
             ))}
           </div>
 
-          {/* Vertical bar chart — all bars red, sorted by est. lost */}
-          <VerticalBarChart
+          {/* Horizontal bar chart — all bars red, sorted by est. lost */}
+          <HorizontalBarChart
             data={barChartData}
             barColor={RISK_COLOR}
-            height={200}
             valueFormatter={(v) => v > 0 ? `~${v.toLocaleString()}` : '0'}
           />
 

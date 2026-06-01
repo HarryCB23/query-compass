@@ -153,7 +153,7 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
 
       {/* ── Category filter (for Panels B, C, D) ─────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-muted-foreground">Filter B–D:</span>
+        <span className="text-xs text-muted-foreground">Filter by category:</span>
         <button
           onClick={() => setSelectedCategory(null)}
           className={cn(
