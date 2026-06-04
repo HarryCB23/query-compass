@@ -1086,10 +1086,68 @@ enrichment snapshots can be visualised honestly.
 - Token reference: `src/index.css` `:root` block.
 - Living style guide: `/design` route (dev only, no auth guard).
 
+### Phase 6.2d — Design polish ✅ CLOSED
+
+#### Scope shipped
+
+**Design system revisions**
+- Added `--trend-up` (green-600 #16A34A), `--trend-down` (=--risk), `--risk-deep` (red-900 #7F1D1D) tokens.
+- Added 7 `--cat-*` palette tokens (news/info/product/branded/comm/trans/other).
+- All tokens exposed as Tailwind utilities (`text-trend-up`, `bg-risk-deep`, `bg-cat-news`, etc.).
+- `TrendIndicator` updated: colour now encodes direction (green up / red down / muted neutral). Old weight-encodes-magnitude logic removed.
+- `CategoryTag` primitive added to `metric-card.tsx`: coloured pill using `--cat-*` token tint (10% opacity bg, full colour text).
+- `/design` route updated: `--risk-deep` swatch, all `--cat-*` swatches, `--trend-*` swatches, TrendIndicator 3-state demo, CategoryTag 7-variant row.
+
+**Overview tab**
+- Replaced hero card + 2×2 KPI grid + composition bar with 4-tile horizontal strip.
+  - Tile 1 (red-tinted `bg-risk-subtle/30`): Estimated Click Loss
+  - Tile 2: Queries at Risk
+  - Tile 3: AI Overview Exposure (red text)
+  - Tile 4: Latent Risk
+- Removed standalone Latent/Recurring Risk callout card (info now in Tile 4).
+- Removed composition bar / sub-explainer copy.
+
+**Risk Summary tab**
+- Same 4-tile strip pattern but prevalence-focused metrics:
+  - Tile 1 (red-tinted): Estimated Click Loss
+  - Tile 2: Queries at Risk
+  - Tile 3: AI Overview Coverage % (red) — N of M queries
+  - Tile 4: Top Stories Coverage % (black) — N of M queries
+- Removed latent callout card from this tab (Overview only).
+- Narrative distinction: Overview = magnitudes; Risk Summary = prevalences.
+
+**Queries tab**
+- `CategoryDistributionChart`: Current Period bars = `--foreground` (black); Last Period = `--risk-deep` (dark red).
+- `CategoryChangeChart`: per-bar `Cell` colouring — positive bars `--trend-up` (green), negative `--trend-down` (red).
+- `QueryTable` category column: replaced bare text + SourceBadge with `CategoryTag` pill. SourceBadge removed (AI dot column already carries classification signal).
+- Δ Clicks / Δ Impr TrendIndicator colour update is automatic from the primitive change.
+
+**Colour sweep outcome**
+- `grep -rE "text-(amber|emerald|rose|orange|purple|teal|pink|blue)-[0-9]" src/` → 0 matches.
+- `grep -rE "bg-(amber|emerald|rose|orange|purple|teal|pink|blue)-[0-9]" src/` → 0 matches.
+- No hardcoded hex colours introduced.
+
+**Not touched in 6.2d (per brief)**
+- Position/CTR card grids on Queries
+- News Entity Explorer columns on Queries
+- Top Competing Domains horizontal bars on AI Surfaces
+
+#### Design system reference (updated)
+- Primitives: `MetricCard`, `HeroNumber`, `TierDot`, `KPITile`, `TrendIndicator`, `CategoryTag`, `HorizontalBarChart`, `GroupedVerticalBarChart`, `VerticalBarChart`, `DonutChart`, `DataTable`.
+- All in `src/components/ui/metric-card.tsx` and `src/components/ui/charts.tsx`.
+- Token reference: `src/index.css` `:root` block.
+- Living style guide: `/design` route (dev only, no auth guard).
+
+#### Phase 6.2e candidates (deferred — needs 6.2d sign-off)
+- Bubble chart / scatter for query portfolio view.
+- Competitor matrix with logos (AI Surfaces tab).
+- QueryTable virtualisation for >1 000 rows (currently paginates at 100).
+- Tier column UX: default sort when SERP data present — risk-first vs clicks-first.
+
 #### Phase 6.2d polish candidates (identified after seeing all four tabs together)
 - QueryTable virtualisation for >1 000 rows (currently paginates at 100).
 - Tier column sortability (added in 6.2c) exposes a UX gap: default sort is by clicks, not risk — may want risk-first default when SERP data is present.
-- `CategoryBadge` is now monochrome; categories are distinguishable by label only. A subtle single-character prefix or icon treatment may aid scanning in the query table.
+- ~~`CategoryBadge` is now monochrome~~ — replaced by `CategoryTag` in 6.2d.
 - Top competing domains panel in AI Surfaces could benefit from a DataTable treatment for consistency.
 
 #### Phase 6.3 candidates (deferred — no immediate trigger)
