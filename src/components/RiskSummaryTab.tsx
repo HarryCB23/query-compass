@@ -7,7 +7,7 @@ import type { QueryData, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import type { SerpSnapshotData } from './QueryTable'
 import {
-  MetricCard, HeroNumber, KPITile, TierDot,
+  MetricCard, KPITile, TierDot,
   DataTable, type DataColumn,
 } from '@/components/ui/metric-card'
 import {
@@ -137,6 +137,23 @@ export default function RiskSummaryTab({ classifiedData, serpSnapshots }: RiskSu
   const overall = useMemo(() => aggregateRisk(scoredQueries), [scoredQueries])
   const byCat   = useMemo(() => aggregateByCategory(scoredQueries, CATEGORIES), [scoredQueries])
 
+  const serpCoverage = useMemo(() => {
+    let aioCount = 0
+    let tsCount  = 0
+    serpSnapshots.forEach(snap => {
+      if (snap.has_ai_overview) aioCount++
+      if (snap.has_top_stories) tsCount++
+    })
+    const total = serpSnapshots.size
+    return {
+      aioCount,
+      tsCount,
+      total,
+      aioPct: total > 0 ? (aioCount / total) * 100 : 0,
+      tsPct:  total > 0 ? (tsCount  / total) * 100 : 0,
+    }
+  }, [serpSnapshots])
+
   if (serpSnapshots.size === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
@@ -148,8 +165,7 @@ export default function RiskSummaryTab({ classifiedData, serpSnapshots }: RiskSu
     )
   }
 
-  const { blendedComposite, aiComponent, serpComponent, pctQueriesAtRisk,
-          buckets, latent, coverage } = overall
+  const { blendedComposite, pctQueriesAtRisk, buckets } = overall
 
   const tierRows: TierRow[] = [
     { tier: 'high',   desc: 'AIO 75%',       queryCount: buckets.high.queryCount,   currentClicks: buckets.high.currentClicks,   estLost: buckets.high.estLostClicks   },
@@ -160,75 +176,38 @@ export default function RiskSummaryTab({ classifiedData, serpSnapshots }: RiskSu
   return (
     <div className="container py-8 space-y-6">
 
-      {/* ── Row 1: hero + KPI tiles ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-        <MetricCard riskAccent className="md:col-span-1">
-          <div className="flex flex-col items-center text-center gap-1">
-            <HeroNumber
-              value={`≈${(blendedComposite * 100).toFixed(1)}%`}
-              label="Estimated Click Loss"
-              subline="of current clicks lost to SERP features"
-              valueClassName="text-risk"
-            />
-            <p className="text-xs text-muted-foreground mt-2 font-mono">
-              = {(aiComponent * 100).toFixed(1)}% AI Overviews
-              {' + '}
-              {(serpComponent * 100).toFixed(1)}% busy SERPs
-            </p>
-          </div>
+      {/* ── 4-KPI strip ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard className="bg-risk-subtle/30">
+          <KPITile
+            label="Estimated Click Loss"
+            value={`≈${(blendedComposite * 100).toFixed(1)}%`}
+            caption="to SERP features"
+          />
         </MetricCard>
-
-        <MetricCard className="md:col-span-2">
-          <div className="grid grid-cols-2 gap-6">
-            <KPITile
-              label="Queries at Risk"
-              value={`${pctQueriesAtRisk.toFixed(1)}%`}
-              caption="of scored queries (AIO or rich SERP)"
-            />
-            <KPITile
-              label="Coverage"
-              value={coverage.scored.toLocaleString()}
-              caption={`of ${coverage.total.toLocaleString()} total · ${coverage.scoredClickPct.toFixed(0)}% of clicks`}
-            />
-            <KPITile
-              label="AI Overview component"
-              value={`${(aiComponent * 100).toFixed(1)}%`}
-              caption="AIO queries at 75% CTR drop"
-              valueClassName="text-risk"
-            />
-            <KPITile
-              label="Rich SERP component"
-              value={`${(serpComponent * 100).toFixed(1)}%`}
-              caption="video / local / FS at 15% (provisional)"
-            />
-          </div>
+        <MetricCard>
+          <KPITile
+            label="Queries at Risk"
+            value={`${pctQueriesAtRisk.toFixed(1)}%`}
+            caption="of scored queries"
+          />
+        </MetricCard>
+        <MetricCard>
+          <KPITile
+            label="AI Overview Coverage"
+            value={`${serpCoverage.aioPct.toFixed(1)}%`}
+            caption={`${serpCoverage.aioCount.toLocaleString()} of ${serpCoverage.total.toLocaleString()} queries`}
+            valueClassName="text-risk"
+          />
+        </MetricCard>
+        <MetricCard>
+          <KPITile
+            label="Top Stories Coverage"
+            value={`${serpCoverage.tsPct.toFixed(1)}%`}
+            caption={`${serpCoverage.tsCount.toLocaleString()} of ${serpCoverage.total.toLocaleString()} queries`}
+          />
         </MetricCard>
       </div>
-
-      {/* ── Latent callout ────────────────────────────────────────────────── */}
-      {(latent?.queryCount ?? 0) > 0 && latent?.composite != null && (
-        <MetricCard riskAccent>
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Latent / Recurring Risk</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {latent.queryCount.toLocaleString()}{' '}
-                {latent.queryCount === 1 ? 'query' : 'queries'} with zero current clicks
-                but {(latent.previousClicks ?? 0).toLocaleString()} previous-period clicks, on at-risk SERPs.
-                Est. {(latent.estLostLatent ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} clicks
-                lost when they resurface.
-              </p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-data-num text-risk tabular-nums">
-                ≈{(latent.composite * 100).toFixed(1)}%
-              </p>
-              <p className="text-xs text-muted-foreground">weighted composite</p>
-            </div>
-          </div>
-        </MetricCard>
-      )}
 
       {/* ── Tier breakdown + logic ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
