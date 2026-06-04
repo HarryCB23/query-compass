@@ -1,16 +1,11 @@
 /**
- * OverviewTab — Phase 6.2b reskin on the design system.
- *
- * DATA / AGGREGATION: identical to Phase 6.1 — no logic changes.
- * PRESENTATION: all primitives + tokens; zero hardcoded colours.
+ * OverviewTab — Phase 6.2e: combined Overview + Risk Summary.
  *
  * Governing rule: red = AI-driven risk only.
- * Dark grey = publisher-owned / protected. Light grey = scaffolding.
+ * DATA / AGGREGATION: unchanged from Phase 6.1 + Risk Summary metrics added.
  */
 import { useMemo } from 'react'
-import { CategoryBadge } from './CategoryBadge'
-import { MetricCard, TierDot, KPITile, DataTable, type DataColumn } from '@/components/ui/metric-card'
-import { HorizontalBarChart, RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR } from '@/components/ui/charts'
+import { CategoryTag, MetricCard, TierDot, KPITile, DataTable, type DataColumn } from '@/components/ui/metric-card'
 import type { QueryData, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import type { SerpSnapshotData } from './QueryTable'
@@ -19,16 +14,57 @@ import {
   aggregateRisk,
   aggregateByCategory,
   type ScoredQuery,
+  type AggregateRisk,
 } from '@/lib/riskScoring'
 
 const CATEGORIES: QueryCategory[] = [
   'branded', 'informational', 'news', 'product', 'commercial', 'transactional', 'other',
 ]
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function pct(n: number | null | undefined, decimals = 1): string {
   return `${(n ?? 0).toFixed(decimals)}%`
+}
+
+// ── Category risk row (deep table) ────────────────────────────────────────────
+
+function CategoryRiskRow({ cat, agg }: { cat: QueryCategory; agg: AggregateRisk }) {
+  const { coverage, blendedComposite, aiComponent, serpComponent, buckets } = agg
+  if (coverage.total === 0) return null
+  return (
+    <tr className="border-b border-border/40 hover:bg-muted/40 transition-colors">
+      <td className="py-2.5 pr-4 text-sm font-medium w-36">
+        {CATEGORY_LABELS[cat]}
+      </td>
+      <td className="py-2.5 pr-4 min-w-[130px]">
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-chart-neutral"
+              style={{ width: `${Math.min(100, blendedComposite * 100)}%` }}
+            />
+          </div>
+          <span className="text-xs font-mono tabular-nums text-foreground w-8 text-right">
+            {(blendedComposite * 100).toFixed(0)}%
+          </span>
+        </div>
+      </td>
+      <td className="py-2.5 pr-4 text-right font-mono text-xs text-muted-foreground tabular-nums">
+        {coverage.scored}/{coverage.total}
+      </td>
+      <td className="py-2.5 pr-4 font-mono text-xs text-muted-foreground tabular-nums whitespace-nowrap">
+        {(aiComponent * 100).toFixed(0)}% AI · {(serpComponent * 100).toFixed(0)}% rich
+      </td>
+      <td className="py-2.5">
+        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
+          <TierDot tier="high"   showLabel={false} />{buckets.high.queryCount}
+          <span className="mx-0.5 text-border">·</span>
+          <TierDot tier="medium" showLabel={false} />{buckets.medium.queryCount}
+          <span className="mx-0.5 text-border">·</span>
+          <TierDot tier="low"    showLabel={false} />{buckets.low.queryCount}
+        </span>
+      </td>
+    </tr>
+  )
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -39,11 +75,56 @@ interface OverviewTabProps {
   onNavigateToQueries: (category?: QueryCategory) => void
 }
 
+// ── Tier breakdown config ──────────────────────────────────────────────────────
+
+interface TierRow {
+  tier: 'high' | 'medium' | 'low'
+  desc: string
+  queryCount: number
+  currentClicks: number
+  estLost: number
+}
+
+const tierColumns: DataColumn<TierRow>[] = [
+  {
+    key: 'tier', header: 'Tier',
+    render: r => (
+      <span className="inline-flex items-center gap-2">
+        <TierDot tier={r.tier} />
+        <span className="text-xs text-muted-foreground">{r.desc}</span>
+      </span>
+    ),
+  },
+  {
+    key: 'queries', header: 'Queries', align: 'right',
+    render: r => <span className="font-mono text-xs">{r.queryCount.toLocaleString()}</span>,
+  },
+  {
+    key: 'clicks', header: 'Curr. Clicks', align: 'right',
+    render: r => <span className="font-mono text-xs">{r.currentClicks.toLocaleString()}</span>,
+  },
+  {
+    key: 'lost', header: 'Est. Lost', align: 'right',
+    render: r => (
+      <span className={[
+        'font-mono text-xs',
+        r.tier === 'high'   ? 'text-risk font-semibold'
+        : r.tier === 'medium' ? 'text-foreground'
+        : 'text-muted-foreground/50',
+      ].join(' ')}>
+        {r.estLost > 0
+          ? `~${r.estLost.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+          : '—'}
+      </span>
+    ),
+  },
+]
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateToQueries }: OverviewTabProps) {
 
-  // ── Core aggregation (unchanged from Phase 6.1) ────────────────────────────
+  // ── Core aggregation ────────────────────────────────────────────────────────
 
   const scoredQueries = useMemo((): Array<ScoredQuery & { category: string; query: string }> =>
     classifiedData.map(q => ({
@@ -55,12 +136,30 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
     })),
   [classifiedData, serpSnapshots])
 
-  const overall  = useMemo(() => aggregateRisk(scoredQueries), [scoredQueries])
-  const byCat    = useMemo(() => aggregateByCategory(scoredQueries, CATEGORIES), [scoredQueries])
+  const overall = useMemo(() => aggregateRisk(scoredQueries), [scoredQueries])
+  const byCat   = useMemo(() => aggregateByCategory(scoredQueries, CATEGORIES), [scoredQueries])
 
-  const { blendedComposite, aiComponent, serpComponent, pctQueriesAtRisk, latent, coverage } = overall
+  const { blendedComposite, pctQueriesAtRisk, latent, buckets } = overall
 
-  // ── B3: News SERP-state ────────────────────────────────────────────────────
+  // ── SERP coverage counts (for KPI strip + supporting text) ─────────────────
+
+  const serpCoverage = useMemo(() => {
+    let aioCount = 0, tsCount = 0, fsCount = 0
+    serpSnapshots.forEach(snap => {
+      if (snap.has_ai_overview)       aioCount++
+      if (snap.has_top_stories)       tsCount++
+      if (snap.has_featured_snippet)  fsCount++
+    })
+    const total = serpSnapshots.size
+    return {
+      aioCount, tsCount, fsCount, total,
+      aioPct: total > 0 ? (aioCount / total) * 100 : 0,
+      tsPct:  total > 0 ? (tsCount  / total) * 100 : 0,
+      fsPct:  total > 0 ? (fsCount  / total) * 100 : 0,
+    }
+  }, [serpSnapshots])
+
+  // ── News SERP-state ─────────────────────────────────────────────────────────
 
   const newsSerpState = useMemo(() => {
     const newsQueries = classifiedData.filter(q => q.category === 'news')
@@ -78,13 +177,13 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
       totalQueries:  newsQueries.length,
       enrichedCount: enriched.length,
       totalClicks,
-      withTS:   { queries: withTS.length,    clicks: tsClicks,   pct: totalClicks > 0 ? (tsClicks   / totalClicks) * 100 : 0 },
-      withoutTS:{ queries: withoutTS.length, clicks: noTsClicks, pct: totalClicks > 0 ? (noTsClicks / totalClicks) * 100 : 0 },
+      withTS:    { queries: withTS.length,    clicks: tsClicks,   pct: totalClicks > 0 ? (tsClicks   / totalClicks) * 100 : 0 },
+      withoutTS: { queries: withoutTS.length, clicks: noTsClicks, pct: totalClicks > 0 ? (noTsClicks / totalClicks) * 100 : 0 },
       lowCoverage,
     }
   }, [classifiedData, serpSnapshots])
 
-  // ── B4: Top 8 loss queries ─────────────────────────────────────────────────
+  // ── Top 8 loss queries ──────────────────────────────────────────────────────
 
   const topLossQueries = useMemo(() => {
     return scoredQueries
@@ -104,7 +203,7 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
       })
   }, [scoredQueries, classifiedData])
 
-  // ── B6: Category breakdown sorted by est. lost clicks ─────────────────────
+  // ── Category rows sorted by est. lost ──────────────────────────────────────
 
   const catRows = useMemo(() => {
     return CATEGORIES
@@ -117,47 +216,31 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
       })
   }, [byCat])
 
-  // ── Bar chart data for B6 ──────────────────────────────────────────────────
+  // ── Tier rows ───────────────────────────────────────────────────────────────
 
-  const CAT_SHORT: Record<QueryCategory, string> = {
-    branded:       'Brand',
-    informational: 'Info',
-    news:          'News',
-    product:       'Prod',
-    commercial:    'Comm',
-    transactional: 'Trans',
-    other:         'Other',
-  }
+  const tierRows: TierRow[] = [
+    { tier: 'high',   desc: 'AIO present',     queryCount: buckets.high.queryCount,   currentClicks: buckets.high.currentClicks,   estLost: buckets.high.estLostClicks   },
+    { tier: 'medium', desc: 'Rich SERP',        queryCount: buckets.medium.queryCount, currentClicks: buckets.medium.currentClicks, estLost: buckets.medium.estLostClicks },
+    { tier: 'low',    desc: 'Clean / news TS',  queryCount: buckets.low.queryCount,    currentClicks: buckets.low.currentClicks,    estLost: buckets.low.estLostClicks    },
+  ]
 
-  const barChartData = useMemo(() =>
-    catRows.map(({ cat, agg }) => ({
-      label: CATEGORY_LABELS[cat],
-      value: Math.round(agg.buckets.high.estLostClicks + agg.buckets.medium.estLostClicks),
-      cat,
-    })),
-  [catRows])
-
-  // ── DataTable columns for top-loss queries ─────────────────────────────────
+  // ── DataTable columns (top loss) ────────────────────────────────────────────
 
   type LossRow = typeof topLossQueries[number]
 
   const lossColumns: DataColumn<LossRow>[] = [
     {
-      key: 'rank',
-      header: '#',
-      render: (_r, i) => (
-        <span className="text-xs text-muted-foreground w-4 block">{i + 1}</span>
-      ),
+      key: 'rank', header: '#',
+      render: (_r, i) => <span className="text-xs text-muted-foreground">{i + 1}</span>,
       className: 'w-8',
     },
     {
-      key: 'query',
-      header: 'Query',
+      key: 'query', header: 'Query',
       render: (r) => (
         <div>
           <p className="text-sm font-medium truncate max-w-[260px]">{r.query}</p>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <CategoryBadge category={r.category} />
+            <CategoryTag category={r.category} />
             <TierDot tier={r.tier} showLabel={false} />
             <span className="text-xs text-muted-foreground">{r.clicks.toLocaleString()} clicks</span>
           </div>
@@ -165,14 +248,11 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
       ),
     },
     {
-      key: 'tier',
-      header: 'Tier',
+      key: 'tier', header: 'Tier',
       render: (r) => <TierDot tier={r.tier} />,
     },
     {
-      key: 'estLost',
-      header: 'Est. Lost',
-      align: 'right',
+      key: 'estLost', header: 'Est. Lost', align: 'right',
       render: (r) => (
         <div className="text-right">
           <p className="text-sm font-semibold tabular-nums text-risk">~{Math.round(r.estLost).toLocaleString()}</p>
@@ -182,7 +262,7 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
     },
   ]
 
-  // ── Empty state ────────────────────────────────────────────────────────────
+  // ── Empty state ─────────────────────────────────────────────────────────────
 
   if (serpSnapshots.size === 0) {
     return (
@@ -211,14 +291,14 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
           <KPITile
             label="Queries at Risk"
             value={`${pctQueriesAtRisk.toFixed(1)}%`}
-            caption="of scored queries"
+            caption="of scored queries (AIO or rich SERP)"
           />
         </MetricCard>
         <MetricCard>
           <KPITile
-            label="AI Overview Exposure"
-            value={pct(aiComponent * 100, 1)}
-            caption="AI-attributable loss"
+            label="AI Overview Coverage"
+            value={`${serpCoverage.aioPct.toFixed(1)}%`}
+            caption={`${serpCoverage.aioCount.toLocaleString()} of ${serpCoverage.total.toLocaleString()} queries`}
             valueClassName="text-risk"
           />
         </MetricCard>
@@ -231,7 +311,14 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
         </MetricCard>
       </div>
 
-      {/* ── B3: News SERP-state snapshot ─────────────────────────────────── */}
+      {/* Supporting text */}
+      <p className="text-xs text-muted-foreground -mt-2">
+        Top Stories present on {serpCoverage.tsPct.toFixed(0)}% of queries ({serpCoverage.tsCount.toLocaleString()} of {serpCoverage.total.toLocaleString()})
+        {' · '}
+        Featured Snippet on {serpCoverage.fsPct.toFixed(0)}% ({serpCoverage.fsCount.toLocaleString()})
+      </p>
+
+      {/* ── News SERP-state snapshot ──────────────────────────────────────── */}
       {newsSerpState && (
         <MetricCard title="Your news coverage right now">
           {newsSerpState.lowCoverage && (
@@ -239,8 +326,6 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
               Based on {newsSerpState.enrichedCount} of {newsSerpState.totalQueries} news queries enriched
             </p>
           )}
-
-          {/* Two-segment bar: protected (dark) / exposed (red) */}
           <div className="h-3 w-full rounded-full overflow-hidden flex">
             <div
               className="h-full bg-chart-neutral rounded-l-full"
@@ -252,7 +337,6 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
               title={`No Top Stories — ${pct(newsSerpState.withoutTS.pct)} of news clicks`}
             />
           </div>
-
           <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
             <div className="flex gap-2 items-start">
               <span className="w-2.5 h-2.5 rounded-full bg-chart-neutral mt-1 shrink-0" />
@@ -283,14 +367,13 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
               </div>
             </div>
           </div>
-
           <p className="text-[11px] text-muted-foreground/50 mt-4">
             SERP state is captured at enrichment time and may shift as news cycles change.
           </p>
         </MetricCard>
       )}
 
-      {/* ── B4: Top loss queries ──────────────────────────────────────────── */}
+      {/* ── Top queries by estimated click loss ──────────────────────────── */}
       {topLossQueries.length > 0 && (
         <MetricCard title="Top queries by estimated click loss">
           <DataTable
@@ -309,51 +392,73 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
         </MetricCard>
       )}
 
-      {/* ── B6: Risk by category ──────────────────────────────────────────── */}
+      {/* ── Risk by category (deep table) ────────────────────────────────── */}
       {catRows.length > 0 && (
         <MetricCard title="Risk by category">
-          <p className="text-xs text-muted-foreground mb-4">
-            Estimated click loss · click a category badge to filter Queries tab
+          <p className="text-xs text-muted-foreground -mt-2 mb-4">
+            Blended risk % · scored ratio · AI + Rich split · tier dot counts
           </p>
-
-          {/* Category nav badges */}
-          <div className="flex flex-wrap gap-2 mb-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left pb-2 text-eyebrow pr-4">Category</th>
+                <th className="text-left pb-2 text-eyebrow pr-4">Blended risk</th>
+                <th className="text-right pb-2 text-eyebrow pr-4">Scored</th>
+                <th className="text-left pb-2 text-eyebrow pr-4">AI + Rich split</th>
+                <th className="text-left pb-2 text-eyebrow">Tiers</th>
+              </tr>
+            </thead>
+            <tbody>
+              {catRows.map(({ cat, agg }) => (
+                <CategoryRiskRow key={cat} cat={cat} agg={agg} />
+              ))}
+            </tbody>
+          </table>
+          <div className="mt-4 flex flex-wrap gap-2">
             {catRows.map(({ cat }) => (
               <button
                 key={cat}
                 onClick={() => onNavigateToQueries(cat)}
-                className="hover:opacity-75 transition-opacity"
-                title={`View ${CATEGORY_LABELS[cat]} queries`}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors border border-border/60 rounded px-2 py-0.5 hover:border-border"
               >
-                <CategoryBadge category={cat} />
+                {CATEGORY_LABELS[cat]} →
               </button>
             ))}
           </div>
-
-          {/* Horizontal bar chart — all bars red, sorted by est. lost */}
-          <HorizontalBarChart
-            data={barChartData}
-            barColor={RISK_COLOR}
-            valueFormatter={(v) => v > 0 ? `~${v.toLocaleString()}` : '0'}
-          />
-
-          {/* Detail rows */}
-          <div className="mt-4 space-y-1">
-            {catRows.map(({ cat, agg }) => {
-              const estLost = Math.round(agg.buckets.high.estLostClicks + agg.buckets.medium.estLostClicks)
-              return (
-                <div key={cat} className="flex items-center gap-3 text-xs text-muted-foreground py-0.5">
-                  <span className="w-10 font-mono shrink-0">{CAT_SHORT[cat]}</span>
-                  <span>{agg.coverage.total.toLocaleString()} queries</span>
-                  {estLost > 0 && (
-                    <span className="text-risk font-medium ml-auto">~{estLost.toLocaleString()} est. lost</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
         </MetricCard>
       )}
+
+      {/* ── Tier breakdown + logic ────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <MetricCard title="Tier Breakdown">
+          <DataTable
+            columns={tierColumns}
+            rows={tierRows}
+            rowKey={r => r.tier}
+          />
+        </MetricCard>
+
+        <MetricCard title="Tier Logic">
+          <div className="space-y-3 text-xs text-muted-foreground">
+            <p>
+              <span className="font-medium text-foreground">High (AIO)</span>
+              {' '}— AI Overview present, no Top Stories. 75% modelled CTR loss.
+            </p>
+            <p>
+              <span className="font-medium text-foreground">Medium (Rich SERP)</span>
+              {' '}— AIO + Top Stories co-occurrence, or Video / Local Pack / Featured Snippet alone. 15% modelled CTR loss.
+            </p>
+            <p>
+              <span className="font-medium text-foreground">Low</span>
+              {' '}— Top Stories only (no AIO), or clean SERP. No modelled loss.
+            </p>
+            <p className="text-muted-foreground/60">
+              AIO + TS → Medium: AIO renders above the Top Stories carousel, cannibalising organic CTR regardless of TS presence.
+            </p>
+          </div>
+        </MetricCard>
+      </div>
 
     </div>
   )

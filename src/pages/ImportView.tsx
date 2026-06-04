@@ -21,7 +21,6 @@ import { EntityExplorer } from '@/components/EntityExplorer'
 import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import AiSurfacesTab from '@/components/AiSurfacesTab'
 import { MetricCard, KPITile, TrendIndicator } from '@/components/ui/metric-card'
-import RiskSummaryTab from '@/components/RiskSummaryTab'
 import OverviewTab from '@/components/OverviewTab'
 import { Button } from '@/components/ui/button'
 import {
@@ -52,7 +51,7 @@ export default function ImportView() {
   const { projectId, importId } = useParams<{ projectId: string; importId: string }>()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const tab = (searchParams.get('tab') ?? 'overview') as 'overview' | 'queries' | 'ai-surfaces' | 'risk-summary'
+  const tab = (searchParams.get('tab') ?? 'overview') as 'overview' | 'queries' | 'ai-surfaces'
 
   // ── Core data ─────────────────────────────────────────────────────────────
   const [projectName, setProjectName]         = useState<string>('')
@@ -603,7 +602,7 @@ export default function ImportView() {
 
         {/* ── Tab bar ──────────────────────────────────────────────────── */}
         <div className="container flex items-center gap-1 pb-0 border-t border-border/50">
-          {(['overview', 'queries', 'ai-surfaces', 'risk-summary'] as const).map(t => (
+          {(['overview', 'queries', 'ai-surfaces'] as const).map(t => (
             <button
               key={t}
               onClick={() => setSearchParams(t === 'overview' ? {} : { tab: t })}
@@ -614,7 +613,7 @@ export default function ImportView() {
                   : 'border-transparent text-muted-foreground hover:text-foreground',
               ].join(' ')}
             >
-              {t === 'overview' ? 'Overview' : t === 'queries' ? 'Queries' : t === 'ai-surfaces' ? 'AI Surfaces' : 'Risk Summary'}
+              {t === 'overview' ? 'Overview' : t === 'queries' ? 'Queries' : 'AI Surfaces'}
             </button>
           ))}
 
@@ -657,13 +656,6 @@ export default function ImportView() {
               }
               setSearchParams({ tab: 'queries' })
             }}
-          />
-        </main>
-      ) : tab === 'risk-summary' ? (
-        <main className="container py-8 animate-fade-in">
-          <RiskSummaryTab
-            classifiedData={classifiedData}
-            serpSnapshots={serpSnapshots}
           />
         </main>
       ) : tab === 'ai-surfaces' ? (
