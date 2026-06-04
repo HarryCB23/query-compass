@@ -1,12 +1,14 @@
 /**
- * Design system primitives — Phase 6.2
- * MetricCard, HeroNumber, TierDot, KPITile, TrendIndicator, DataTable
+ * Design system primitives — Phase 6.2d
+ * MetricCard, HeroNumber, TierDot, KPITile, TrendIndicator, CategoryTag, DataTable
  *
  * Governing rule: red = AI-driven risk only. Severity via size/weight/position.
  * All colours via tokens — no hardcoded hex.
  */
 import { type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import type { QueryCategory } from '@/types/query'
+import { CATEGORY_LABELS } from '@/types/query'
 
 // ── MetricCard ────────────────────────────────────────────────────────────────
 
@@ -85,7 +87,7 @@ export function TierDot({ tier, showLabel = true, className }: TierDotProps) {
 }
 
 // ── TrendIndicator ────────────────────────────────────────────────────────────
-// Monochrome — weight encodes magnitude, never coloured.
+// Colour encodes direction: green up, red down, muted neutral.
 
 interface TrendIndicatorProps {
   value: number
@@ -94,14 +96,50 @@ interface TrendIndicatorProps {
 
 export function TrendIndicator({ value, direction }: TrendIndicatorProps) {
   const dir = direction ?? (value > 0 ? 'up' : value < 0 ? 'down' : 'neutral')
-  const weight =
-    Math.abs(value) > 20 ? 'font-semibold' :
-    Math.abs(value) > 5  ? 'font-medium'   :
-                            'font-normal'
   const arrow = dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→'
+  const colorCls =
+    dir === 'up'   ? 'text-trend-up' :
+    dir === 'down' ? 'text-trend-down' :
+                     'text-muted-foreground'
   return (
-    <span className={cn('text-xs text-muted-foreground tabular-nums', weight)}>
+    <span className={cn('text-xs tabular-nums font-medium', colorCls)}>
       {arrow} {Math.abs(value).toFixed(1)}%
+    </span>
+  )
+}
+
+// ── CategoryTag ───────────────────────────────────────────────────────────────
+// Coloured pill for each query category. Uses --cat-* tokens.
+
+const CAT_TOKEN_KEY: Record<QueryCategory, string> = {
+  news:          'news',
+  informational: 'info',
+  product:       'product',
+  branded:       'branded',
+  commercial:    'comm',
+  transactional: 'trans',
+  other:         'other',
+}
+
+interface CategoryTagProps {
+  category: QueryCategory
+  className?: string
+}
+
+export function CategoryTag({ category, className }: CategoryTagProps) {
+  const key = CAT_TOKEN_KEY[category]
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium',
+        className,
+      )}
+      style={{
+        background: `hsl(var(--cat-${key}) / 0.1)`,
+        color:      `hsl(var(--cat-${key}))`,
+      }}
+    >
+      {CATEGORY_LABELS[category]}
     </span>
   )
 }

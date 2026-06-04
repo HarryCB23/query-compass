@@ -41,6 +41,11 @@
     --risk:            0 72% 51%;   /* #DC2626 — AI-driven risk, nothing else */
     --risk-foreground: 0 0% 100%;
     --risk-subtle:     0 93% 94%;   /* #FEE2E2 */
+    --risk-deep:       0 63% 31%;   /* #7F1D1D — two-series chart last-period */
+
+    /* ── Trend tokens ────────────────────────────────────────────────────── */
+    --trend-up:   142 71% 45%;   /* green-600  #16A34A */
+    --trend-down: 0   72% 51%;   /* same as --risk */
 
     --tier-high:   0 72% 51%;   /* red  */
     --tier-medium: 0 0% 45%;    /* grey */
@@ -61,6 +66,15 @@
     --category-commercial:    280 68% 60%;
     --category-transactional: 346 77% 50%;
     --category-other:         220  9% 46%;
+
+    /* ── CategoryTag palette ────────────────────────────────────────────── */
+    --cat-news:    244 54% 41%;   /* deep indigo  #3730A3 */
+    --cat-info:    192 82% 31%;   /* blue-teal    #0E7490 */
+    --cat-product: 262 83% 58%;   /* violet       #7C3AED */
+    --cat-branded:  33 95% 44%;   /* amber        #D97706 */
+    --cat-comm:    191 91% 37%;   /* cyan         #0891B2 */
+    --cat-trans:   215 19% 35%;   /* slate        #475569 */
+    --cat-other:   220  9% 46%;   /* medium grey  #6B7280 */
 
     /* ── Sidebar (layout compat) ────────────────────────────────────────── */
     --sidebar-background:          0 0% 98%;
@@ -97,6 +111,16 @@
     --risk: 0 72% 51%;
     --risk-foreground: 0 0% 100%;
     --risk-subtle: 0 93% 94%;
+    --risk-deep: 0 63% 31%;
+    --trend-up: 142 71% 45%;
+    --trend-down: 0 72% 51%;
+    --cat-news: 244 54% 41%;
+    --cat-info: 192 82% 31%;
+    --cat-product: 262 83% 58%;
+    --cat-branded: 33 95% 44%;
+    --cat-comm: 191 91% 37%;
+    --cat-trans: 215 19% 35%;
+    --cat-other: 220 9% 46%;
     --tier-high: 0 72% 51%;
     --tier-medium: 0 0% 45%;
     --tier-low: 0 0% 82%;

@@ -31,11 +31,15 @@ interface VerticalBarChartProps {
   className?: string
 }
 
-const RISK_COLOR    = 'hsl(var(--chart-risk))'
-const NEUTRAL_COLOR = 'hsl(var(--chart-neutral))'
-const MUTED_COLOR   = 'hsl(var(--chart-muted))'
+const RISK_COLOR       = 'hsl(var(--chart-risk))'
+const NEUTRAL_COLOR    = 'hsl(var(--chart-neutral))'
+const MUTED_COLOR      = 'hsl(var(--chart-muted))'
+const RISK_DEEP_COLOR  = 'hsl(var(--risk-deep))'
+const FOREGROUND_COLOR = 'hsl(var(--foreground))'
+const TREND_UP_COLOR   = 'hsl(var(--trend-up))'
+const TREND_DOWN_COLOR = 'hsl(var(--trend-down))'
 
-export { RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR }
+export { RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR, RISK_DEEP_COLOR, FOREGROUND_COLOR, TREND_UP_COLOR, TREND_DOWN_COLOR }
 
 export function VerticalBarChart({
   data,

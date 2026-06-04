@@ -74,6 +74,20 @@ export default {
           DEFAULT:    "hsl(var(--risk))",
           foreground: "hsl(var(--risk-foreground))",
           subtle:     "hsl(var(--risk-subtle))",
+          deep:       "hsl(var(--risk-deep))",
+        },
+        trend: {
+          up:   "hsl(var(--trend-up))",
+          down: "hsl(var(--trend-down))",
+        },
+        cat: {
+          news:    "hsl(var(--cat-news))",
+          info:    "hsl(var(--cat-info))",
+          product: "hsl(var(--cat-product))",
+          branded: "hsl(var(--cat-branded))",
+          comm:    "hsl(var(--cat-comm))",
+          trans:   "hsl(var(--cat-trans))",
+          other:   "hsl(var(--cat-other))",
         },
         tier: {
           high:   "hsl(var(--tier-high))",
