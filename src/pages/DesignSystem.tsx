@@ -4,8 +4,9 @@
  *
  * Shows: colour tokens, type scale, every primitive with sample data.
  */
-import { MetricCard, HeroNumber, TierDot, KPITile, TrendIndicator, DataTable, type DataColumn } from '@/components/ui/metric-card'
+import { MetricCard, HeroNumber, TierDot, KPITile, TrendIndicator, CategoryTag, DataTable, type DataColumn } from '@/components/ui/metric-card'
 import { VerticalBarChart, DonutChart, RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR } from '@/components/ui/charts'
+import type { QueryCategory } from '@/types/query'
 
 // ── Sample data ───────────────────────────────────────────────────────────────
 
@@ -75,12 +76,22 @@ export default function DesignSystem() {
           <Swatch token="--muted-foreground"        hex="#737373"  className="bg-muted-foreground" />
           <Swatch token="--border"                  hex="#E5E5E5"  className="bg-border" />
           <Swatch token="--risk / --tier-high"      hex="#DC2626"  className="bg-risk" />
+          <Swatch token="--risk-deep"               hex="#7F1D1D"  className="bg-risk-deep" />
           <Swatch token="--risk-subtle"             hex="#FEE2E2"  className="bg-risk-subtle" />
           <Swatch token="--tier-medium"             hex="#737373"  className="bg-tier-medium" />
           <Swatch token="--tier-low"                hex="#D1D5DB"  className="bg-tier-low" />
           <Swatch token="--chart-risk"              hex="#DC2626"  className="bg-chart-risk" />
           <Swatch token="--chart-neutral"           hex="#333333"  className="bg-chart-neutral" />
           <Swatch token="--chart-muted"             hex="#D1D5DB"  className="bg-chart-muted" />
+          <Swatch token="--trend-up"                hex="#16A34A"  className="bg-trend-up" />
+          <Swatch token="--trend-down"              hex="#DC2626"  className="bg-trend-down" />
+          <Swatch token="--cat-news"                hex="#3730A3"  className="bg-cat-news" />
+          <Swatch token="--cat-info"                hex="#0E7490"  className="bg-cat-info" />
+          <Swatch token="--cat-product"             hex="#7C3AED"  className="bg-cat-product" />
+          <Swatch token="--cat-branded"             hex="#D97706"  className="bg-cat-branded" />
+          <Swatch token="--cat-comm"                hex="#0891B2"  className="bg-cat-comm" />
+          <Swatch token="--cat-trans"               hex="#475569"  className="bg-cat-trans" />
+          <Swatch token="--cat-other"               hex="#6B7280"  className="bg-cat-other" />
         </div>
       </section>
 
@@ -116,13 +127,23 @@ export default function DesignSystem() {
         </MetricCard>
 
         {/* TrendIndicator */}
-        <MetricCard title="TrendIndicator — monochrome, weight encodes magnitude">
+        <MetricCard title="TrendIndicator — colour encodes direction">
           <div className="flex gap-6 flex-wrap">
             <TrendIndicator value={28.5} direction="up" />
             <TrendIndicator value={8.2}  direction="up" />
             <TrendIndicator value={1.1}  direction="up" />
-            <TrendIndicator value={-15.4} direction="down" />
+            <TrendIndicator value={15.4} direction="down" />
+            <TrendIndicator value={3.2}  direction="down" />
             <TrendIndicator value={0}    direction="neutral" />
+          </div>
+        </MetricCard>
+
+        {/* CategoryTag */}
+        <MetricCard title="CategoryTag — all 7 variants">
+          <div className="flex flex-wrap gap-2">
+            {(['news', 'informational', 'product', 'branded', 'commercial', 'transactional', 'other'] as QueryCategory[]).map(cat => (
+              <CategoryTag key={cat} category={cat} />
+            ))}
           </div>
         </MetricCard>
 
