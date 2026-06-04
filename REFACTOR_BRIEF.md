@@ -1138,6 +1138,45 @@ enrichment snapshots can be visualised honestly.
 - Token reference: `src/index.css` `:root` block.
 - Living style guide: `/design` route (dev only, no auth guard).
 
+### Phase 6.2e — Visualisation overhaul ✅ CLOSED
+
+#### Scope shipped
+
+**Step 1 — Combine Overview + Risk Summary into single tab**
+- `RiskSummaryTab.tsx` deleted; content merged into `OverviewTab.tsx`.
+- App now has three tabs: Overview / Queries / AI Surfaces.
+- Combined 4-KPI strip: Tile 1 (red-tinted) = Est. Click Loss, Tile 2 = Queries at Risk, Tile 3 = AI Overview Coverage % (red, N of M queries), Tile 4 = Latent Risk.
+- Supporting text line: TS + FS coverage below the strip.
+- Sections in order: News SERP-state bar → Top loss queries → Risk by category (deep table) → Tier breakdown → Tier logic (2-col grid).
+
+**Step 2 — CategoryScatterChart replaces Position/CTR card grids**
+- `CategoryScatterChart.tsx` created: recharts ScatterChart, one dot per category, X = avg position (reversed — better right), Y = CTR %, bubble area ∝ query count, dots coloured by `--cat-*` token.
+- Custom tooltip shows position + CTR with period-over-period deltas.
+- Inline legend below chart. Empty-state guard.
+- Replaces both "Average Position by Category" and "CTR by Category" `CategoryMetricCards` grids.
+
+**Step 3 — EntityBubbleChart replaces Rising/Stable/Declining columns**
+- `EntityBubbleChart.tsx` created: recharts ScatterChart, one bubble per entity.
+- X-axis: % click change with symmetric-log transform (`sign(x) * log10(|x|+1)`) to handle outliers (e.g. Venezuela +25 000%).
+- Y-axis: total clicks, log scale (`scale="log"`).
+- Bubble area ∝ query count. Colour encodes AIO tier: high (>50% AIO queries, red), medium (20–50%, grey), low (<20%, light grey).
+- Labels rendered on top 8 entities by click volume using SVG `<text>` inside custom dot shape.
+- Tier legend below chart. Empty-state guard.
+
+**Step 4 — CompetitorMatrix replaces Top Competing Domains bar list**
+- `SerpSnapshotData.top_stories_domains: string[]` added to interface.
+- `loadSerpSnapshots` SELECT updated to include `top_stories_domains`.
+- `src/lib/serpAggregations.ts` created: `normalizeDomain(d)` strips www/amp/m/mobile prefixes; `aggregateCompetitorDomains(snapshots, filter?)` merges organic + top-stories domain frequencies.
+- `CompetitorMatrix.tsx` created: sortable table with Clearbit logo (Globe fallback on error), domain, organic count, top stories count, total. 15-row default + "Show all" button. Sort resets to desc on column change.
+- Replaces the horizontal bar list in Panel D of `AiSurfacesTab`.
+
+#### Architecture decisions
+
+- **raw_serp_data not used client-side**: 1 867 snapshots × 1–5 KB each ≈ 9 MB. Using pre-aggregated `top_organic_domains` + `top_stories_domains` arrays instead. AIO/Video/FS domain breakdown deferred to server-side aggregation if ever needed.
+- **AIO domain breakdown dropped**: Only 144/381 AIO blocks have non-null `references[].domain` — too sparse for a meaningful competitor view. Not surfaced in v1.
+- **Recharts scatter for all 3 charts**: consistent rendering model; no new charting library introduced.
+- **Symmetric log X-axis**: custom transform applied to data values; standard linear XAxis with custom tickFormatter inverts back to readable % labels.
+
 #### Phase 6.2e candidates (deferred — needs 6.2d sign-off)
 - Bubble chart / scatter for query portfolio view.
 - Competitor matrix with logos (AI Surfaces tab).
