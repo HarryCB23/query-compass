@@ -1,6 +1,7 @@
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -9,7 +10,7 @@ import {
 } from 'recharts';
 import type { CategoryStats } from '@/types/query';
 import { CATEGORY_LABELS } from '@/types/query';
-import { NEUTRAL_COLOR } from '@/components/ui/charts';
+import { TREND_UP_COLOR, TREND_DOWN_COLOR } from '@/components/ui/charts';
 
 interface CategoryChangeChartProps {
   stats: CategoryStats[];
@@ -64,10 +65,17 @@ export function CategoryChangeChart({ stats }: CategoryChangeChartProps) {
           <ReferenceLine x={0} stroke="hsl(var(--border))" strokeWidth={1} />
           <Bar
             dataKey="change"
-            fill={NEUTRAL_COLOR}
             radius={[0, 6, 6, 0]}
             barSize={24}
-          />
+            isAnimationActive={false}
+          >
+            {chartData.map((entry, index) => (
+              <Cell
+                key={index}
+                fill={entry.change >= 0 ? TREND_UP_COLOR : TREND_DOWN_COLOR}
+              />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

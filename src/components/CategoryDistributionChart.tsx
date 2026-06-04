@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import type { CategoryStats } from '@/types/query';
 import { CATEGORY_LABELS } from '@/types/query';
-import { NEUTRAL_COLOR, MUTED_COLOR } from '@/components/ui/charts';
+import { FOREGROUND_COLOR, RISK_DEEP_COLOR } from '@/components/ui/charts';
 
 interface CategoryDistributionChartProps {
   stats: CategoryStats[];
@@ -63,14 +63,14 @@ export function CategoryDistributionChart({
           <Bar
             dataKey="previous"
             name="Last Period"
-            fill={MUTED_COLOR}
+            fill={RISK_DEEP_COLOR}
             radius={[4, 4, 0, 0]}
             barSize={28}
           />
           <Bar
             dataKey="current"
             name="Current Period"
-            fill={NEUTRAL_COLOR}
+            fill={FOREGROUND_COLOR}
             radius={[6, 6, 0, 0]}
             barSize={32}
           />

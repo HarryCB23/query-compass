@@ -3,23 +3,11 @@ import { ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { TierDot, TrendIndicator } from '@/components/ui/metric-card';
+import { TierDot, TrendIndicator, CategoryTag } from '@/components/ui/metric-card';
 import type { QueryData, QueryCategory } from '@/types/query';
-import { CATEGORY_LABELS } from '@/types/query';
 import { scoreQuery, type RiskTier } from '@/lib/riskScoring';
 import { cn } from '@/lib/utils';
 
-// Classification source badge — informative metadata, not a risk signal.
-function SourceBadge({ source }: { source: QueryData['classificationSource'] }) {
-  if (!source) {
-    return <span className="text-[10px] font-mono text-muted-foreground/40 select-none" title="Not yet classified">~</span>
-  }
-  return (
-    <span className="inline-flex items-center text-[10px] font-mono text-muted-foreground/60 border border-border/60 rounded px-1 leading-4 select-none">
-      {source === 'pattern' ? 'pat' : 'AI'}
-    </span>
-  )
-}
 
 export interface SerpSnapshotData {
   captured_at: string
@@ -199,21 +187,18 @@ export function QueryTable({ data, categoryFilter = 'all', onCategoryFilterChang
                 <tr key={index} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                   <td className="p-3 font-medium max-w-xs truncate">{row.query}</td>
                   <td className="p-3">
-                    <div className="flex items-center gap-1.5">
-                      {row.classificationReasoning ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="cursor-help text-sm text-foreground">{CATEGORY_LABELS[row.category]}</span>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs text-xs">
-                            {row.classificationReasoning}
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : (
-                        <span className="text-sm text-foreground">{CATEGORY_LABELS[row.category]}</span>
-                      )}
-                      <SourceBadge source={row.classificationSource} />
-                    </div>
+                    {row.classificationReasoning ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <CategoryTag category={row.category} className="cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">
+                          {row.classificationReasoning}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <CategoryTag category={row.category} />
+                    )}
                   </td>
                   <td className="p-3 text-right font-mono">{row.clicksCurrent.toLocaleString()}</td>
                   <td className="p-3 text-right">
