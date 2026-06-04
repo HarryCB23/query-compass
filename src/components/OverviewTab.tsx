@@ -9,7 +9,7 @@
  */
 import { useMemo } from 'react'
 import { CategoryBadge } from './CategoryBadge'
-import { MetricCard, HeroNumber, TierDot, KPITile, DataTable, type DataColumn } from '@/components/ui/metric-card'
+import { MetricCard, TierDot, KPITile, DataTable, type DataColumn } from '@/components/ui/metric-card'
 import { HorizontalBarChart, RISK_COLOR, NEUTRAL_COLOR, MUTED_COLOR } from '@/components/ui/charts'
 import type { QueryData, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
@@ -58,7 +58,7 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
   const overall  = useMemo(() => aggregateRisk(scoredQueries), [scoredQueries])
   const byCat    = useMemo(() => aggregateByCategory(scoredQueries, CATEGORIES), [scoredQueries])
 
-  const { blendedComposite, aiComponent, serpComponent, latent, coverage } = overall
+  const { blendedComposite, aiComponent, serpComponent, pctQueriesAtRisk, latent, coverage } = overall
 
   // ── B3: News SERP-state ────────────────────────────────────────────────────
 
@@ -195,71 +195,39 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
     )
   }
 
-  const estLostTotal = Math.round(
-    overall.buckets.high.estLostClicks + overall.buckets.medium.estLostClicks,
-  )
-
   return (
     <div className="space-y-6">
 
-      {/* ── B2: Hero composite ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-        {/* Hero number */}
-        <MetricCard className="md:col-span-1 flex flex-col items-center justify-center">
-          <HeroNumber
-            value={`≈${pct(blendedComposite * 100, 1)}`}
+      {/* ── 4-KPI strip ──────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard className="bg-risk-subtle/30">
+          <KPITile
             label="Estimated Click Loss"
-            subline="of current clicks lost to SERP features"
+            value={`≈${pct(blendedComposite * 100, 1)}`}
+            caption="to SERP features"
           />
-
-          {/* Composition bar: AI (red) | SERP (dark) | clean (muted track) */}
-          <div className="w-full mt-5">
-            <div className="h-1.5 w-full rounded-full bg-chart-muted overflow-hidden flex">
-              <div
-                className="h-full bg-chart-risk transition-all"
-                style={{ width: `${Math.min(100, aiComponent * 100)}%` }}
-              />
-              <div
-                className="h-full bg-chart-neutral transition-all"
-                style={{ width: `${Math.min(100 - aiComponent * 100, serpComponent * 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Composition label */}
-          <p className="text-[11px] text-muted-foreground mt-2 font-mono">
-            = <span className="text-risk">{pct(aiComponent * 100, 1)} AI Overviews</span>
-            {' + '}
-            <span className="text-foreground/60">{pct(serpComponent * 100, 1)} busy SERPs</span>
-          </p>
         </MetricCard>
-
-        {/* 4 KPI tiles */}
-        <MetricCard className="md:col-span-2">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-            <KPITile
-              label="Enriched Queries"
-              value={coverage.scored.toLocaleString()}
-              caption={`of ${coverage.total.toLocaleString()} total · ${pct(coverage.scoredClickPct, 0)} of clicks`}
-            />
-            <KPITile
-              label="AI Overview component"
-              value={pct(aiComponent * 100, 1)}
-              caption="AIO queries at 75% CTR drop"
-              valueClassName="text-risk"
-            />
-            <KPITile
-              label="Rich SERP component"
-              value={pct(serpComponent * 100, 1)}
-              caption="video / local / shopping / FS at 15%"
-            />
-            <KPITile
-              label="Est. lost clicks"
-              value={`~${estLostTotal.toLocaleString()}`}
-              caption="across enriched queries"
-            />
-          </div>
+        <MetricCard>
+          <KPITile
+            label="Queries at Risk"
+            value={`${pctQueriesAtRisk.toFixed(1)}%`}
+            caption="of scored queries"
+          />
+        </MetricCard>
+        <MetricCard>
+          <KPITile
+            label="AI Overview Exposure"
+            value={pct(aiComponent * 100, 1)}
+            caption="AI-attributable loss"
+            valueClassName="text-risk"
+          />
+        </MetricCard>
+        <MetricCard>
+          <KPITile
+            label="Latent Risk"
+            value={latent?.composite != null ? `≈${(latent.composite * 100).toFixed(1)}%` : '—'}
+            caption="recurring loss"
+          />
         </MetricCard>
       </div>
 
@@ -319,28 +287,6 @@ export default function OverviewTab({ classifiedData, serpSnapshots, onNavigateT
           <p className="text-[11px] text-muted-foreground/50 mt-4">
             SERP state is captured at enrichment time and may shift as news cycles change.
           </p>
-        </MetricCard>
-      )}
-
-      {/* ── B5: Latent / recurring risk ───────────────────────────────────── */}
-      {(latent?.queryCount ?? 0) > 0 && latent?.composite != null && (
-        <MetricCard riskAccent>
-          <div className="flex items-start gap-4">
-            <div className="flex-1">
-              <p className="text-eyebrow text-risk mb-1">Latent / Recurring Risk</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {latent.queryCount.toLocaleString()}{' '}
-                {latent.queryCount === 1 ? 'query' : 'queries'} with zero current clicks
-                but {(latent.previousClicks ?? 0).toLocaleString()} previous-period clicks, on at-risk SERPs.
-                Est. {(latent.estLostLatent ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })} clicks
-                lost when they resurface.
-              </p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-data-num text-risk">≈{pct(latent.composite * 100, 1)}</p>
-              <p className="text-[10px] text-muted-foreground">weighted composite</p>
-            </div>
-          </div>
         </MetricCard>
       )}
 
