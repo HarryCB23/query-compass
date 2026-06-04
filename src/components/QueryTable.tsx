@@ -23,6 +23,7 @@ export interface SerpSnapshotData {
   publisher_organic_position: number | null
   publisher_in_organic_top_3: boolean
   top_organic_domains: string[]
+  top_stories_domains: string[]
 }
 
 // Feature presence dot — variant controls colour.

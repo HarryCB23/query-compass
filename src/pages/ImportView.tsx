@@ -96,7 +96,7 @@ export default function ImportView() {
       'query_id,captured_at',
       'has_ai_overview,has_top_stories,has_featured_snippet,has_video,has_local_pack,has_shopping',
       'publisher_in_ai_overview,publisher_in_top_stories,publisher_in_featured_snippet',
-      'publisher_organic_position,publisher_in_organic_top_3,top_organic_domains',
+      'publisher_organic_position,publisher_in_organic_top_3,top_organic_domains,top_stories_domains',
     ].join(',')
     let from = 0
 

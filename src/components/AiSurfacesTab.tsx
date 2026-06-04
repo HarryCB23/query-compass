@@ -18,6 +18,7 @@ import {
 import type { QueryData, QueryCategory } from '@/types/query'
 import { CATEGORY_LABELS } from '@/types/query'
 import type { SerpSnapshotData } from './QueryTable'
+import { CompetitorMatrix } from './CompetitorMatrix'
 import { cn } from '@/lib/utils'
 
 interface AiSurfacesTabProps {
@@ -104,19 +105,6 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
     : 0
   const fsCenterIsCompetitor = fsCoverage.total === 0 || fsCoverage.competitor >= fsCoverage.pubOwns
 
-  // ── Panel D: top competing domains (filtered) ─────────────────────────────
-
-  const topDomains = useMemo(() => {
-    const freq = new Map<string, number>()
-    for (const q of activeQueries) {
-      const snap = serpSnapshots.get(q.query)
-      if (!snap) continue
-      for (const d of snap.top_organic_domains ?? []) {
-        freq.set(d, (freq.get(d) ?? 0) + 1)
-      }
-    }
-    return [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15)
-  }, [activeQueries, serpSnapshots])
 
   // ── Empty state ───────────────────────────────────────────────────────────
 
@@ -247,27 +235,10 @@ export default function AiSurfacesTab({ classifiedData, serpSnapshots, locationC
         </MetricCard>
       </div>
 
-      {/* ── Panel D — top competing domains ──────────────────────────────── */}
-      {topDomains.length > 0 && (
-        <MetricCard title="Top competing domains">
-          <div className="space-y-1.5">
-            {topDomains.map(([domain, count]) => {
-              const w = topDomains[0][1] > 0 ? Math.min(100, (count / topDomains[0][1]) * 100) : 0
-              return (
-                <div key={domain} className="space-y-0.5">
-                  <div className="flex justify-between text-xs">
-                    <span className="font-mono truncate max-w-[200px]" title={domain}>{domain}</span>
-                    <span className="text-muted-foreground font-mono shrink-0 ml-2">{count}</span>
-                  </div>
-                  <div className="h-1 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full bg-chart-neutral" style={{ width: `${w}%` }} />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </MetricCard>
-      )}
+      {/* ── Panel D — competitor matrix ───────────────────────────────────── */}
+      <MetricCard title="Top competing domains">
+        <CompetitorMatrix queries={activeQueries} serpSnapshots={serpSnapshots} />
+      </MetricCard>
 
     </div>
   )
