@@ -13,8 +13,8 @@ import { classifyQuery } from '@/lib/queryClassifier'
 import { SERP_LOCATIONS, locationLabel } from '@/lib/serpLocations'
 import { CategoryDistributionChart } from '@/components/CategoryDistributionChart'
 import { CategoryChangeChart } from '@/components/CategoryChangeChart'
-import { CategoryMetricCards } from '@/components/CategoryMetricCards'
 import { CategoryMetricsPanel } from '@/components/CategoryMetricsPanel'
+import { CategoryScatterChart } from '@/components/CategoryScatterChart'
 import { QueryTable, type SerpSnapshotData } from '@/components/QueryTable'
 import { CategoryFilter } from '@/components/CategoryFilter'
 import { EntityExplorer } from '@/components/EntityExplorer'
@@ -709,14 +709,9 @@ export default function ImportView() {
             </MetricCard>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MetricCard title="Average Position by Category">
-              <CategoryMetricCards stats={categoryStats} metric="position" />
-            </MetricCard>
-            <MetricCard title="CTR by Category">
-              <CategoryMetricCards stats={categoryStats} metric="ctr" />
-            </MetricCard>
-          </div>
+          <MetricCard title="Position vs CTR by Category">
+            <CategoryScatterChart stats={categoryStats} />
+          </MetricCard>
 
           {/* Entity explorer */}
           <MetricCard title="News Entity Explorer">
