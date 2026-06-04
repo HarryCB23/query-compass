@@ -17,7 +17,7 @@ import { CategoryMetricsPanel } from '@/components/CategoryMetricsPanel'
 import { CategoryScatterChart } from '@/components/CategoryScatterChart'
 import { QueryTable, type SerpSnapshotData } from '@/components/QueryTable'
 import { CategoryFilter } from '@/components/CategoryFilter'
-import { EntityExplorer } from '@/components/EntityExplorer'
+import { EntityBubbleChart } from '@/components/EntityBubbleChart'
 import { TopShiftingQueries } from '@/components/TopShiftingQueries'
 import AiSurfacesTab from '@/components/AiSurfacesTab'
 import { MetricCard, KPITile, TrendIndicator } from '@/components/ui/metric-card'
@@ -713,12 +713,9 @@ export default function ImportView() {
             <CategoryScatterChart stats={categoryStats} />
           </MetricCard>
 
-          {/* Entity explorer */}
+          {/* Entity bubble chart */}
           <MetricCard title="News Entity Explorer">
-            <EntityExplorer queries={classifiedData} onEntitySelect={(entity, queries) => {
-              setEntityFilter(entity); setCategoryFilter('news')
-              toast.success(`Filtered to "${entity}" — ${queries.length} queries`)
-            }} />
+            <EntityBubbleChart queries={classifiedData} serpSnapshots={serpSnapshots} />
           </MetricCard>
 
           {/* Category filter */}
